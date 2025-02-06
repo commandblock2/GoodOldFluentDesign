@@ -195,7 +195,7 @@
     width: 600px;
     border-radius: 0px;
     overflow: hidden;
-    transition: ease border-radius: 0px;
+    transition: ease border-radius 0;
     box-shadow: 0 0 10px rgba($clickgui-base-color, 0.5);
 
     &.has-results {

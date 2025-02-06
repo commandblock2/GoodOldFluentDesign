@@ -101,7 +101,7 @@
         align-items: center;
         justify-content: space-between;
         border-radius: 0px;
-        transition: ease border-radius: 0px;
+        transition: ease border-radius 0;
       }
     }
   }

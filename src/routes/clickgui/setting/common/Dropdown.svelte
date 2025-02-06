@@ -77,7 +77,7 @@
     align-items: center;
     position: relative;
     border-radius: 0px;
-    transition: ease border-radius: 0px;
+    transition: ease border-radius 0;
 
     .text {
       font-weight: 500;
