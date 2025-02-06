@@ -52,7 +52,7 @@
     padding: 40px;
     display: flex;
     flex-direction: column;
-    border-radius: 0 px;
+    border-radius: 0px;
     box-shadow: 0 0 10px rgba($menu-base-color, 0.5);
   }
 
@@ -74,7 +74,7 @@
       bottom: -25px;
       left: 50%;
       transform: translateX(-50%);
-      border-radius: 0 px;
+      border-radius: 0px;
     }
   }
 
@@ -92,7 +92,7 @@
     justify-content: center;
     background-color: transparent;
     border: solid 2px $menu-text-color;
-    border-radius: 50%;
+    border-radius: 0px;
     cursor: pointer;
     top: 20px;
     right: 20px;

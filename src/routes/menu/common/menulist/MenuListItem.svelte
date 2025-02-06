@@ -57,7 +57,7 @@
     background-color: rgba($menu-base-color, .36);
     padding: 15px 25px;
     column-gap: 15px;
-    border-radius: 0 px;
+    border-radius: 0px;
     transition: ease background-color .2s;
     align-items: center;
     cursor: grab;
@@ -89,7 +89,7 @@
     .preview {
       height: 68px;
       width: 68px;
-      border-radius: 50%;
+      border-radius: 0px;
       image-rendering: pixelated;
     }
 
@@ -107,7 +107,7 @@
       color: $menu-text-color;
       font-size: 12px;
       padding: 3px 10px;
-      border-radius: 0 px;
+      border-radius: 0px;
 
       &.visible {
         display: block;

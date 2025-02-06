@@ -44,7 +44,7 @@
     height: 25px;
     margin: 4px;
     border: 4px solid currentColor;
-    border-radius: 50%;
+    border-radius: 0px;
     animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
     border-color: currentColor transparent transparent transparent;
   }

@@ -106,7 +106,7 @@
   .change-bind {
     background-color: transparent;
     border: solid 2px $accent-color;
-    border-radius: 0 px;
+    border-radius: 0px;
     cursor: pointer;
     padding: 4px;
     font-weight: 500;

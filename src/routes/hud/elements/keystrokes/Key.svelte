@@ -31,7 +31,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 0 px;
+    border-radius: 0px;
     font-size: 14px;
     font-weight: 500;
     transition: ease box-shadow .2s;

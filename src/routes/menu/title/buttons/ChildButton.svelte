@@ -33,7 +33,7 @@
       position: relative;
       display: flex;
       align-items: center;
-      border-radius: 0 px;
+      border-radius: 0px;
       background-color: $accent-color;
       transition: ease background-color .2s;
       padding: 15px;

@@ -86,7 +86,7 @@
     background-color: $accent-color;
     border: none;
     padding: 6px 10px;
-    border-radius: 0 px;
+    border-radius: 0px;
     width: 100%;
     cursor: pointer;
     transition: ease background-color .2s;
@@ -105,7 +105,7 @@
     border: none;
     border-bottom: solid 2px $accent-color;
     padding: 6px;
-    border-radius: 0 px;
+    border-radius: 0px;
     transition: ease border-color .2s;
 
     &::-webkit-scrollbar {

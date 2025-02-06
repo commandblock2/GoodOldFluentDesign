@@ -245,7 +245,7 @@
   @use "../../colors.scss" as *;
 
   .panel {
-    border-radius: 0 px;
+    border-radius: 0px;
     width: 250px;
     position: absolute;
     overflow: hidden;

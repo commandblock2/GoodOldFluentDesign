@@ -53,7 +53,7 @@
     background-color: rgba($hotbar-base-color, 0.68);
     width: 488px;
     padding: 15px 18px;
-    border-radius: 0 px;
+    border-radius: 0px;
     align-items: center;
     display: grid;
     grid-template-areas:
@@ -66,7 +66,7 @@
   .avatar {
     height: 68px;
     width: 68px;
-    border-radius: 50%;
+    border-radius: 0px;
     grid-area: a;
   }
 

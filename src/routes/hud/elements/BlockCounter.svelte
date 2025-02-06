@@ -35,7 +35,7 @@
 
   .counter {
     background-color: rgba($blockcounter-base-color, 0.68);
-    border-radius: 0 px;
+    border-radius: 0px;
     white-space: nowrap;
     padding: 5px 8px;
     font-weight: 500;

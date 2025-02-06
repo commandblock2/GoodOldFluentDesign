@@ -36,7 +36,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 5px 0 0 5px;
+    border-radius: 0px;
   }
 
   .input {
@@ -46,7 +46,7 @@
     background-color: rgba($menu-base-color, .36);
     border: none;
     padding: 0 20px 0 18px;
-    border-radius: 0 5px 5px 0;
+    border-radius: 0px;
     border-left: solid 2px $menu-base-color;
     width: 100%;
 

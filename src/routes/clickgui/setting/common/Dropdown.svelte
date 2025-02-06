@@ -64,7 +64,7 @@
       }
 
       .head {
-        border-radius: 3px 3px 0 0;
+        border-radius: 0px;
       }
     }
   }
@@ -76,8 +76,8 @@
     display: flex;
     align-items: center;
     position: relative;
-    border-radius: 0 px;
-    transition: ease border-radius .2s;
+    border-radius: 0px;
+    transition: ease border-radius: 0px;
 
     .text {
       font-weight: 500;
@@ -112,7 +112,7 @@
     background-color: $clickgui-base-color;
     border: solid 1px $accent-color;
     border-top: none;
-    border-radius: 0 0 3px 3px;
+    border-radius: 0px;
     z-index: 9999;
     width: 100%;
     position: absolute;

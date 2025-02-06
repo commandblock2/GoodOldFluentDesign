@@ -7,6 +7,6 @@
     height: 100%;
     width: 4px;
     background-color: rgba($menu-base-color, .36);
-    border-radius: 0 px;
+    border-radius: 0px;
   }
 </style>

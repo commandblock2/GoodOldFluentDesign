@@ -65,7 +65,7 @@
         right: 10px;
         background-color: #f8f9fa;
         padding: 10px;
-        border-radius: 0 px;
+        border-radius: 0px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
 
@@ -78,7 +78,7 @@
         width: 100%;
         padding: 10px;
         border: 1px solid #ced4da;
-        border-radius: 0 px;
+        border-radius: 0px;
         outline: none;
         font-size: 14px;
     }
@@ -89,7 +89,7 @@
         border: none;
         padding: 10px 15px;
         margin-left: 5px;
-        border-radius: 0 px;
+        border-radius: 0px;
         cursor: pointer;
         font-size: 14px;
     }

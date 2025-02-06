@@ -35,7 +35,7 @@
 
   .scoreboard {
     width: max-content;
-    border-radius: 0 px;
+    border-radius: 0px;
     overflow: hidden;
     font-size: 14px;
   }

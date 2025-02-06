@@ -139,7 +139,7 @@
         margin-top: -2px;
         margin-bottom: -2px;
         width: 30px;
-        border-radius: 0 px;
+        border-radius: 0px;
         background-color: blue;
         border-style: none;
     }

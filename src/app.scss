@@ -39,7 +39,7 @@
 }
 
 body {
-    font-family: "Inter", sans-serif;
+    font-family: "Hack", sans-serif;
     user-select: none;
     overflow: hidden;
 }
@@ -55,5 +55,5 @@ body {
 
 ::-webkit-scrollbar-thumb {
     background-color: $accent-color;
-    border-radius: 0 px;
+    border-radius: 0px;
 }

@@ -43,7 +43,7 @@
     grid-template-columns: max-content 1fr max-content;
     align-items: center;
     cursor: pointer;
-    border-radius: 0 px;
+    border-radius: 0px;
     column-gap: 25px;
 
     background: linear-gradient(to left, rgba($menu-base-color, .68) 50%, $accent-color 50%);
@@ -65,7 +65,7 @@
     background-color: $accent-color;
     width: 90px;
     height: 90px;
-    border-radius: 50%;
+    border-radius: 0px;
     transition: ease background-color 0.2s;
     position: relative;
 

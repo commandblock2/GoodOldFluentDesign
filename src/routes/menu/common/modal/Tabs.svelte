@@ -51,7 +51,7 @@
     color: $menu-text-color;
     padding: 10px;
     border: solid 2px transparent;
-    border-radius: 0 px;
+    border-radius: 0px;
     flex-grow: 1;
     display: flex;
     flex-direction: column;

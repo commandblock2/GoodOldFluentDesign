@@ -9,7 +9,7 @@
       background-color: rgba($menu-base-color, 0.68);
       padding: 15px 30px;
       width: max-content;
-      border-radius: 0 px;
+      border-radius: 0px;
       display: flex;
       column-gap: 20px;
     }

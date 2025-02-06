@@ -44,7 +44,7 @@
 
   .progress {
     position: relative;
-    border-radius: 0 px;
+    border-radius: 0px;
     background-color: rgba($hotbar-base-color, .68);
 
     &.align-right {
@@ -61,7 +61,7 @@
   }
 
   .progress-bar {
-    border-radius: 0 px;
+    border-radius: 0px;
     height: 20px;
     will-change: width;
     transition: ease width 0.2s;

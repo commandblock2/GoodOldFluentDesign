@@ -70,7 +70,7 @@
       border: none;
       border-bottom: solid 2px $accent-color;
       padding: 5px;
-      border-radius: 0 px;
+      border-radius: 0px;
       transition: ease border-color .2s;
       appearance: textfield;
 
