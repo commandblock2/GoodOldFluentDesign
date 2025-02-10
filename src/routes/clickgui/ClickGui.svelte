@@ -1,15 +1,16 @@
 <script lang="ts">
-    import {onMount} from "svelte";
-    import {getGameWindow, getModules, getModuleSettings, setTyping} from "../../integration/rest";
-    import {groupByCategory} from "../../integration/util";
-    import type {ConfigurableSetting, GroupedModules, Module, TogglableSetting} from "../../integration/types";
+    import { onMount } from "svelte";
+    import { getGameWindow, getModules, getModuleSettings, setTyping } from "../../integration/rest";
+    import { groupByCategory } from "../../integration/util";
+    import type { ConfigurableSetting, GroupedModules, Module, TogglableSetting } from "../../integration/types";
     import Panel from "./Panel.svelte";
     import Search from "./Search.svelte";
     import Description from "./Description.svelte";
-    import {fade} from "svelte/transition";
-    import {listen} from "../../integration/ws";
-    import type {ClickGuiValueChangeEvent, ScaleFactorChangeEvent} from "../../integration/events";
-    import {gridSize, scaleFactor, showGrid, snappingEnabled} from "./clickgui_store";
+    import { fade } from "svelte/transition";
+    import { listen } from "../../integration/ws";
+    import type { ClickGuiValueChangeEvent, ScaleFactorChangeEvent } from "../../integration/events";
+    import { gridSize, scaleFactor, showGrid, snappingEnabled } from "./clickgui_store";
+    import { applyRevealEffect } from "./RevealEffect";
 
     let categories: GroupedModules = {};
     let modules: Module[] = [];
@@ -76,8 +77,14 @@
     top: 0;
 
     &.grid {
-      background-image: linear-gradient(to right, $clickgui-grid-color 1px, transparent 1px),
+    background-image:
+      linear-gradient(to right, $clickgui-grid-color 1px, transparent 1px),
       linear-gradient(to bottom, $clickgui-grid-color 1px, transparent 1px);
     }
+  }
+
+  :global(.module) {
+    position: relative;
+    overflow: hidden;
   }
 </style>
