@@ -171,6 +171,9 @@
       border: none;
       display: block;
 
+      font-weight: 500;
+      font-family: inherit;
+
       &:hover {
         background-color: rgba($clickgui-base-color, 0.85);
         color: $clickgui-text-color;
