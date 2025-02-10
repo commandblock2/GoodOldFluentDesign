@@ -1,6 +1,6 @@
 <script lang="ts">
     import {createEventDispatcher} from "svelte";
-    import {convertToSpacedString, spaceSeperatedNames} from "../../../../theme/theme_config";
+    import {convertToSpacedString, spaceSeparatedNames} from "../../../../theme/theme_config";
 
     export let name: string | null;
     export let options: string[];
@@ -29,10 +29,10 @@
 <div class="dropdown" class:expanded on:click={() => (expanded = !expanded)}>
     <div class="head" bind:this={dropdownHead}>
         {#if name !== null}
-            <span class="text">{$spaceSeperatedNames ? convertToSpacedString(name) : name}
-                &bull; {$spaceSeperatedNames ? convertToSpacedString(value) : value}</span>
+            <span class="text">{$spaceSeparatedNames ? convertToSpacedString(name) : name}
+                &bull; {$spaceSeparatedNames ? convertToSpacedString(value) : value}</span>
         {:else}
-            <span class="text">{$spaceSeperatedNames ? convertToSpacedString(value) : value}</span>
+            <span class="text">{$spaceSeparatedNames ? convertToSpacedString(value) : value}</span>
         {/if}
     </div>
 
@@ -44,7 +44,7 @@
                         class:active={o === value}
                         on:click={() => updateValue(o)}
                 >
-                    {$spaceSeperatedNames ? convertToSpacedString(o) : o}
+                    {$spaceSeparatedNames ? convertToSpacedString(o) : o}
                 </div>
             {/each}
         </div>
