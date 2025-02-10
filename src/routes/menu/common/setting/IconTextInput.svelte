@@ -41,7 +41,7 @@
 
   .input {
     color: $menu-text-color;
-    font-family: "Inter", sans-serif;
+    font-family: "Hack", monospace;
     font-size: 20px;
     background-color: rgba($menu-base-color, .36);
     border: none;

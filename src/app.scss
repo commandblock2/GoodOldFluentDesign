@@ -1,32 +1,5 @@
 @use "colors.scss" as *;
 
-@font-face {
-    font-family: "Inter";
-    src: url("./assets/font/inter/Inter-Bold.ttf") format("truetype");
-    font-weight: 600;
-    font-style: normal;
-}
-
-@font-face {
-    font-family: "Inter";
-    src: url("./assets/font/inter/Inter-Medium.ttf") format("truetype");
-    font-weight: 500;
-    font-style: normal;
-}
-
-@font-face {
-    font-family: "Inter";
-    src: url("./assets/font/inter/Inter-Regular.ttf") format("truetype");
-    font-weight: normal;
-    font-style: normal;
-}
-
-@font-face {
-    font-family: "Inter";
-    src: url("./assets/font/inter/Inter-Light.ttf") format("truetype");
-    font-weight: 300;
-    font-style: normal;
-}
 
 * {
     box-sizing: border-box;
@@ -39,7 +12,7 @@
 }
 
 body {
-    font-family: "Hack", sans-serif;
+    font-family: "Hack", monospace;
     user-select: none;
     overflow: hidden;
 }

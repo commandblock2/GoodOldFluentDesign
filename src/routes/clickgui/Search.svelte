@@ -267,7 +267,7 @@
     padding: 15px 25px;
     background-color: transparent;
     border: none;
-    font-family: "Inter", sans-serif;
+    font-family: "Hack", monospace;
     font-size: 16px;
     color: $clickgui-text-color;
     width: 100%;

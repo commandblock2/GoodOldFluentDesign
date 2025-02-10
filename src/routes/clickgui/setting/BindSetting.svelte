@@ -112,7 +112,7 @@
     font-weight: 500;
     color: $clickgui-text-color;
     font-size: 12px;
-    font-family: "Inter", sans-serif;
+    font-family: "Hack", monospace;
     width: 100%;
     display: flex;
     justify-content: center;
