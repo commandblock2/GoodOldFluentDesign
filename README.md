@@ -1,6 +1,8 @@
-# LiquidBounce Default Theme
+# Still haven't changed a lot from LiquidBounce Default Theme (Yet)
 
-This directory contains the source code of LiquidBounce's default theme made with [Svelte](https://svelte.dev/).
+**Special thanks to @RichardLuo0 for the reveal highlight effect.**
+
+This directory contains the source code of LiquidBounce's default theme made with [Svelte](https://svelte.dev/). With the addition of reveal highlight effect and default font changed to Hack and minor ui flaws.
 
 ## Development
 
