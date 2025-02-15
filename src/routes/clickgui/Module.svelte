@@ -144,7 +144,11 @@
   {#if expanded && configurable?.value.length > 0}
     <div class="settings" transition:slide>
       {#each configurable.value as setting}
-        <GenericSetting {setting} {path} />
+        <GenericSetting 
+          {setting} 
+          {path} 
+          on:change={updateModuleSettings}
+        />
       {/each}
     </div>
   {/if}
