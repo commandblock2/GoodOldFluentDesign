@@ -15,6 +15,7 @@
         snappingEnabled
     } from "./clickgui_store";
     import {setItem} from "../../integration/persistent_storage";
+  import { applyEffect } from "fluent-reveal-effect";
 
     export let category: string;
     export let modules: TModule[];
@@ -185,6 +186,18 @@
                 behavior: "smooth"
             })
         }, 500);
+
+        applyEffect(".modules", {
+            clickEffect: true,
+            lightColor: 'rgba(255,255,255,0.3)',
+            isContainer: true,
+            children: {
+                borderSelector: '.module-wrapper',
+                elementSelector: '.name',
+                lightColor: 'rgba(255,255,255,0.3)',
+                gradientSize: 120
+            }
+        });
     });
 
     function handleKeydown(e: KeyboardEvent) {

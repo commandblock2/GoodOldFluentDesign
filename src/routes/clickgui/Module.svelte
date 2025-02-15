@@ -37,12 +37,6 @@
 
     setTimeout(() => {
       expanded = localStorage.getItem(path) === "true";
-
-      applyEffect(".name", {
-        lightColor: "rgba(255,255,255,0.5)",
-        gradientSize: 150,
-        clickEffect: true,
-      });
     }, 500);
   });
 
@@ -118,79 +112,83 @@
   }
 </script>
 
-<div
-  class="module"
-  class:expanded
-  class:has-settings={configurable?.value.length > 2}
-  in:slide={{ duration: 500, easing: quintOut }}
-  out:slide={{ duration: 500, easing: quintOut }}
-  bind:this={moduleElement}
->
-  <button
-    type="button"
-    class="name"
-    on:contextmenu|preventDefault={toggleExpanded}
-    on:click={toggleModule}
-    on:keydown={handleKeyDown}
-    on:mouseenter={setDescription}
-    on:mouseleave={() => descriptionStore.set(null)}
-    bind:this={moduleNameElement}
-    class:enabled
-    class:highlight={name === $highlightModuleName}
-    aria-expanded={expanded}
-    aria-pressed={enabled}
+<div class="module-wrapper">
+  <div
+    class="module"
+    class:expanded
+    class:has-settings={configurable?.value.length > 2}
+    in:slide={{ duration: 500, easing: quintOut }}
+    out:slide={{ duration: 500, easing: quintOut }}
+    bind:this={moduleElement}
   >
-    {$spaceSeparatedNames ? convertToSpacedString(name) : name}
-  </button>
+    <button
+      type="button"
+      class="name"
+      on:contextmenu|preventDefault={toggleExpanded}
+      on:click={toggleModule}
+      on:keydown={handleKeyDown}
+      on:mouseenter={setDescription}
+      on:mouseleave={() => descriptionStore.set(null)}
+      bind:this={moduleNameElement}
+      class:enabled
+      class:highlight={name === $highlightModuleName}
+      aria-expanded={expanded}
+      aria-pressed={enabled}
+    >
+      {$spaceSeparatedNames ? convertToSpacedString(name) : name}
+    </button>
 
-  {#if expanded && configurable?.value.length > 0}
-    <div class="settings" transition:slide>
-      {#each configurable.value as setting}
-        <GenericSetting {setting} {path} on:change={updateModuleSettings} />
-      {/each}
-    </div>
-  {/if}
+    {#if expanded && configurable?.value.length > 0}
+      <div class="settings" transition:slide>
+        {#each configurable.value as setting}
+          <GenericSetting {setting} {path} on:change={updateModuleSettings} />
+        {/each}
+      </div>
+    {/if}
+  </div>
 </div>
 
 <style lang="scss">
   @use "../../colors.scss" as *;
 
-  .module {
-    position: relative;
-    overflow: hidden;
+  .module-wrapper {
     background-color: rgba($clickgui-base-color, 0.5);
-
-    .name {
-      cursor: pointer;
-      transition:
-        ease background-color 0.2s,
-        ease color 0.2s;
-      color: $clickgui-text-dimmed-color;
-      text-align: center;
-      font-size: 12px;
-      padding: 8px;
-      width: 100%;
-      background: inherit;
-      border: solid 1px rgba($clickgui-base-color, 0.5);
-      display: block;
+    .module {
       position: relative;
+      overflow: hidden;
+      background-color: rgba($clickgui-base-color, 0.5);
+      margin: 2px;
 
-      font-weight: 500;
-      font-family: inherit;
 
-      &:hover {
-        background-color: rgba($clickgui-base-color, 0.85);
-        color: $clickgui-text-color;
+      .name {
+        cursor: pointer;
+        transition:
+          ease background-color 0.2s,
+          ease color 0.2s;
+        color: $clickgui-text-dimmed-color;
+        text-align: center;
+        font-size: 12px;
+        padding: 8px;
+        width: 100%;
+        background: inherit;
+        border: none;
+        display: block;
+        position: relative;
+
+        font-weight: 500;
+        font-family: inherit;
+
+        &:hover {
+          background-color: rgba($clickgui-base-color, 0.85);
+          color: $clickgui-text-color;
+        }
+
+        &.enabled {
+          background-color: $accent-color;
+        }
       }
 
-      &.enabled {
-        background-color: $accent-color;
-      }
-
-
-    }
-
-    &.has-settings {
+      &.has-settings {
         .name::after {
           content: "";
           display: block;
@@ -216,10 +214,11 @@
         }
       }
 
-    .settings {
-      background-color: rgba($clickgui-base-color, 0.5);
-      border-left: solid 4px $accent-color;
-      padding: 0 11px 0 7px;
+      .settings {
+        background-color: rgba($clickgui-base-color, 0.5);
+        border-left: solid 4px $accent-color;
+        padding: 0 11px 0 7px;
+      }
     }
   }
 </style>
