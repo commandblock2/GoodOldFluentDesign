@@ -10,8 +10,7 @@
     import { listen } from "../../integration/ws";
     import type { ClickGuiValueChangeEvent, ScaleFactorChangeEvent } from "../../integration/events";
     import { gridSize, scaleFactor, showGrid, snappingEnabled } from "./clickgui_store";
-    import { applyRevealEffect } from "./RevealEffect";
-
+    
     let categories: GroupedModules = {};
     let modules: Module[] = [];
     let minecraftScaleFactor = 2;

@@ -19,7 +19,7 @@
     spaceSeparatedNames,
   } from "../../theme/theme_config";
   import { scaleFactor } from "./clickgui_store";
-  import { applyRevealEffect } from "./RevealEffect";
+  import { applyEffect } from "fluent-reveal-effect";
 
   export let name: string;
   export let enabled: boolean;
@@ -37,11 +37,13 @@
 
     setTimeout(() => {
       expanded = localStorage.getItem(path) === "true";
-    }, 500);
 
-    if (moduleElement) {
-      applyRevealEffect(moduleElement);
-    }
+      applyEffect(".name", {
+        lightColor: "rgba(255,255,255,0.5)",
+        gradientSize: 150,
+        clickEffect: true,
+      });
+    }, 500);
   });
 
   highlightModuleName.subscribe((m) => {
@@ -144,11 +146,7 @@
   {#if expanded && configurable?.value.length > 0}
     <div class="settings" transition:slide>
       {#each configurable.value as setting}
-        <GenericSetting 
-          {setting} 
-          {path} 
-          on:change={updateModuleSettings}
-        />
+        <GenericSetting {setting} {path} on:change={updateModuleSettings} />
       {/each}
     </div>
   {/if}
@@ -160,6 +158,7 @@
   .module {
     position: relative;
     overflow: hidden;
+    background-color: rgba($clickgui-base-color, 0.5);
 
     .name {
       cursor: pointer;
@@ -171,9 +170,10 @@
       font-size: 12px;
       padding: 8px;
       width: 100%;
-      background: none;
-      border: none;
+      background: inherit;
+      border: solid 1px rgba($clickgui-base-color, 0.5);
       display: block;
+      position: relative;
 
       font-weight: 500;
       font-family: inherit;
@@ -184,59 +184,42 @@
       }
 
       &.enabled {
-        color: $accent-color;
+        background-color: $accent-color;
       }
+
+
     }
+
+    &.has-settings {
+        .name::after {
+          content: "";
+          display: block;
+          position: absolute;
+          height: 10px;
+          width: 10px;
+          right: 15px;
+          top: 50%;
+          background-image: url("/img/clickgui/icon-settings-expand.svg");
+          background-position: center;
+          background-repeat: no-repeat;
+          opacity: 0.5;
+          transform-origin: 50% 50%;
+          transform: translateY(-50%) rotate(-90deg);
+          transition:
+            ease opacity 0.2s,
+            ease transform 0.4s;
+        }
+
+        &.expanded .name::after {
+          transform: translateY(-50%) rotate(0);
+          opacity: 1;
+        }
+      }
 
     .settings {
       background-color: rgba($clickgui-base-color, 0.5);
       border-left: solid 4px $accent-color;
       padding: 0 11px 0 7px;
-    }
-
-    &.has-settings {
-      .name::after {
-        content: "";
-        display: block;
-        position: absolute;
-        height: 10px;
-        width: 10px;
-        right: 15px;
-        top: 50%;
-        background-image: url("/img/clickgui/icon-settings-expand.svg");
-        background-position: center;
-        background-repeat: no-repeat;
-        opacity: 0.5;
-        transform-origin: 50% 50%;
-        transform: translateY(-50%) rotate(-90deg);
-        transition:
-          ease opacity 0.2s,
-          ease transform 0.4s;
-      }
-
-      &.expanded .name::after {
-        transform: translateY(-50%) rotate(0);
-        opacity: 1;
-      }
-    }
-
-
-    &::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        opacity: 0;
-        transition: opacity 0.3s;
-        background: radial-gradient(
-            600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-            rgba(255, 255, 255, 0.06),
-            transparent 40%
-        );
-        pointer-events: none;
-    }
-
-    &:hover::before {
-        opacity: 1;
     }
   }
 </style>
