@@ -1,19 +1,25 @@
 <script lang="ts">
-    import {onMount} from "svelte";
+    import { onMount } from "svelte";
     import {
         getModuleSettings,
         setModuleSettings,
         setModuleEnabled,
     } from "../../integration/rest";
-    import type {ConfigurableSetting} from "../../integration/types";
+    import type { ConfigurableSetting } from "../../integration/types";
     import GenericSetting from "./setting/common/GenericSetting.svelte";
-    import {slide} from "svelte/transition";
-    import {quintOut} from "svelte/easing";
-    import {description as descriptionStore, highlightModuleName} from "./clickgui_store";
-    import {setItem} from "../../integration/persistent_storage";
-    import {convertToSpacedString, spaceSeperatedNames} from "../../theme/theme_config";
-    import {scaleFactor} from "./clickgui_store";
-    import {reveal} from "../../effects/reveal";
+    import { slide } from "svelte/transition";
+    import { quintOut } from "svelte/easing";
+    import {
+        description as descriptionStore,
+        highlightModuleName,
+    } from "./clickgui_store";
+    import { setItem } from "../../integration/persistent_storage";
+    import {
+        convertToSpacedString,
+        spaceSeperatedNames,
+    } from "../../theme/theme_config";
+    import { scaleFactor } from "./clickgui_store";
+    import { reveal } from "../../effects/reveal";
 
     export let name: string;
     export let enabled: boolean;
@@ -30,7 +36,7 @@
         await fetchModuleSettings();
 
         setTimeout(() => {
-            expanded = localStorage.getItem(path) === "true"
+            expanded = localStorage.getItem(path) === "true";
         }, 500);
     });
 
@@ -52,7 +58,10 @@
 
     async function fetchModuleSettings() {
         configurable = await getModuleSettings(name);
-        hasSettings = configurable.value.filter(v => v.name !== "Bind" && v.name !== "Hidden").length > 0;
+        hasSettings =
+            configurable.value.filter(
+                (v) => v.name !== "Bind" && v.name !== "Hidden",
+            ).length > 0;
     }
 
     async function updateModuleSettings() {
@@ -68,11 +77,13 @@
         if (!moduleNameElement) return;
 
         const boundingRect = moduleNameElement.getBoundingClientRect();
-        const y = (boundingRect.top + (moduleNameElement.clientHeight / 2)) * (2 / $scaleFactor);
+        const y =
+            (boundingRect.top + moduleNameElement.clientHeight / 2) *
+            (2 / $scaleFactor);
 
         let moduleDescription = description;
         if (aliases.length > 0) {
-            moduleDescription += ` (aka ${aliases.map(name => $spaceSeperatedNames ? convertToSpacedString(name) : name).join(", ")})`;
+            moduleDescription += ` (aka ${aliases.map((name) => ($spaceSeperatedNames ? convertToSpacedString(name) : name)).join(", ")})`;
         }
 
         // If element is less than 300px from the right, display description on the left
@@ -82,7 +93,7 @@
                 x,
                 y,
                 anchor: "right",
-                description: moduleDescription
+                description: moduleDescription,
             });
         } else {
             const x = boundingRect.left * (2 / $scaleFactor);
@@ -91,7 +102,7 @@
                 x,
                 y,
                 anchor: "left",
-                description: moduleDescription
+                description: moduleDescription,
             });
         }
     }
@@ -104,23 +115,23 @@
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
-        class="module"
-        class:expanded
-        class:has-settings={hasSettings}
-        in:slide={{ duration: 500, easing: quintOut }}
-        out:slide={{ duration: 500, easing: quintOut }}
+    class="module"
+    class:expanded
+    class:has-settings={hasSettings}
+    in:slide={{ duration: 500, easing: quintOut }}
+    out:slide={{ duration: 500, easing: quintOut }}
 >
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
-            class="name"
-            use:reveal
-            on:contextmenu|preventDefault={toggleExpanded}
-            on:click={toggleModule}
-            on:mouseenter={setDescription}
-            on:mouseleave={() => descriptionStore.set(null)}
-            bind:this={moduleNameElement}
-            class:enabled
-            class:highlight={name === $highlightModuleName}
+        class="name"
+        use:reveal
+        on:contextmenu|preventDefault={toggleExpanded}
+        on:click={toggleModule}
+        on:mouseenter={setDescription}
+        on:mouseleave={() => descriptionStore.set(null)}
+        bind:this={moduleNameElement}
+        class:enabled
+        class:highlight={name === $highlightModuleName}
     >
         {$spaceSeperatedNames ? convertToSpacedString(name) : name}
     </div>
@@ -128,87 +139,104 @@
     {#if expanded && configurable}
         <div class="settings">
             {#each configurable.value as setting (setting.name)}
-                <GenericSetting {path} bind:setting on:change={updateModuleSettings}/>
+                <GenericSetting
+                    {path}
+                    bind:setting
+                    on:change={updateModuleSettings}
+                />
             {/each}
         </div>
     {/if}
 </div>
 
 <style lang="scss">
-  @use "../../colors" as *;
-  @use "./icon-settings-expand" as *;
+    @use "../../colors" as *;
+    @use "./icon-settings-expand" as *;
 
-  .module {
-    position: relative;
+    .module {
+        position: relative;
 
-    .name {
-      cursor: pointer;
-      transition: ease background-color 0.2s,
-      ease color 0.2s;
+        .name {
+            cursor: pointer;
+            transition:
+                ease background-color 0.2s,
+                ease color 0.2s;
 
-      color: $clickgui-text-dimmed-color;
-      position: relative;
-      overflow: hidden;
+            color: $clickgui-text-dimmed-color;
+            position: relative;
+            overflow: hidden;
 
-      &::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: radial-gradient(
+            &::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                background:
+                    radial-gradient(
                         circle $reveal-size at var(--mouse-x) var(--mouse-y),
                         $reveal-color,
                         transparent
-        );
-        opacity: 0;
-        transition: opacity 0.2s;
-        pointer-events: none;
-      }
+                    ),
+                    radial-gradient(
+                        circle 70px at var(--mouse-x) var(--mouse-y),
+                        rgba(255, 255, 255, 0),
+                        rgba(
+                            255,
+                            255,
+                            255,
+                            calc(var(--click-intensity, 0) * 0.2)
+                        ),
+                        rgba(255, 255, 255, 0)
+                    );
+                opacity: 0;
+                transition: opacity 0.2s;
+                pointer-events: none;
+            }
 
-      &:hover::before {
-        opacity: 1;
-      }
-      text-align: center;
-      font-size: 12px;
-      font-weight: 500;
-      position: relative;
-      padding: 10px;
+            &:hover::before {
+                opacity: 1;
+            }
+            text-align: center;
+            font-size: 12px;
+            font-weight: 500;
+            position: relative;
+            padding: 10px;
 
-      &.highlight::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: calc(100% - 4px);
-        height: calc(100% - 4px);
-        border: solid 2px $accent-color;
-      }
+            &.highlight::before {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: calc(100% - 4px);
+                height: calc(100% - 4px);
+                border: solid 2px $accent-color;
+            }
 
-      &:hover {
-        background-color: rgba($clickgui-base-color, 0.85);
-        color: $clickgui-text-color;
-      }
+            &:hover {
+                background-color: rgba($clickgui-base-color, 0.85);
+                color: $clickgui-text-color;
+            }
 
-      &.enabled {
-        color: $accent-color;
-      }
+            &.enabled {
+                color: $accent-color;
+            }
+        }
+
+        .settings {
+            background-color: rgba($clickgui-base-color, 0.5);
+            border-left: solid 4px $accent-color;
+            padding: 0 11px 0 7px;
+        }
+
+        &.has-settings {
+            .name::after {
+                @include icon-settings-expand($right: 15px);
+                opacity: 0.5;
+            }
+
+            &.expanded .name::after {
+                transform: translateY(-50%) rotate(0);
+                opacity: 1;
+            }
+        }
     }
-
-    .settings {
-      background-color: rgba($clickgui-base-color, 0.5);
-      border-left: solid 4px $accent-color;
-      padding: 0 11px 0 7px;
-    }
-
-    &.has-settings {
-      .name::after {
-        @include icon-settings-expand($right: 15px);
-        opacity: 0.5;
-      }
-
-      &.expanded .name::after {
-        transform: translateY(-50%) rotate(0);
-        opacity: 1;
-      }
-    }
-  }
 </style>

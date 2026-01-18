@@ -1,18 +1,29 @@
 <script lang="ts">
-    import type {ConfigurableSetting, Module} from "../../integration/types";
-    import {getModuleSettings, setModuleEnabled, setTyping} from "../../integration/rest";
-    import {listen} from "../../integration/ws";
-    import type {ClickGuiValueChangeEvent, KeyboardKeyEvent, ModuleToggleEvent} from "../../integration/events";
-    import {highlightModuleName} from "./clickgui_store";
-    import {onMount} from "svelte";
-    import {convertToSpacedString, spaceSeperatedNames} from "../../theme/theme_config";
-    import {reveal} from "../../effects/reveal";
+    import type { ConfigurableSetting, Module } from "../../integration/types";
+    import {
+        getModuleSettings,
+        setModuleEnabled,
+        setTyping,
+    } from "../../integration/rest";
+    import { listen } from "../../integration/ws";
+    import type {
+        ClickGuiValueChangeEvent,
+        KeyboardKeyEvent,
+        ModuleToggleEvent,
+    } from "../../integration/events";
+    import { highlightModuleName } from "./clickgui_store";
+    import { onMount } from "svelte";
+    import {
+        convertToSpacedString,
+        spaceSeperatedNames,
+    } from "../../theme/theme_config";
+    import { reveal } from "../../effects/reveal";
 
     export let modules: Module[];
 
     let resultElements: HTMLElement[] = [];
     let searchContainerElement: HTMLElement;
-    let autoFocus: boolean = true
+    let autoFocus: boolean = true;
     let searchInputElement: HTMLElement;
     let query: string;
     let filteredModules: Module[] = [];
@@ -34,14 +45,19 @@
 
         const pureQuery = query.toLowerCase().replaceAll(" ", "");
 
-        filteredModules = modules.filter((m) => m.name.toLowerCase().includes(pureQuery)
-            || m.aliases.some(a => a.toLowerCase().includes(pureQuery))
+        filteredModules = modules.filter(
+            (m) =>
+                m.name.toLowerCase().includes(pureQuery) ||
+                m.aliases.some((a) => a.toLowerCase().includes(pureQuery)),
         );
     }
 
     async function handleKeyDown(e: KeyboardKeyEvent) {
-        if (e.screen === undefined || !e.screen.class.startsWith("net.ccbluex.liquidbounce") ||
-            !(e.screen.title === "ClickGUI" || e.screen.title === "VS-CLICKGUI")) {
+        if (
+            e.screen === undefined ||
+            !e.screen.class.startsWith("net.ccbluex.liquidbounce") ||
+            !(e.screen.title === "ClickGUI" || e.screen.title === "VS-CLICKGUI")
+        ) {
             return;
         }
 
@@ -105,7 +121,9 @@
     }
 
     function applyValues(configurable: ConfigurableSetting) {
-        autoFocus = configurable.value.find(v => v.name === "SearchBarAutoFocus")?.value as boolean ?? true;
+        autoFocus =
+            (configurable.value.find((v) => v.name === "SearchBarAutoFocus")
+                ?.value as boolean) ?? true;
     }
 
     onMount(async () => {
@@ -133,47 +151,60 @@
     });
 </script>
 
-<svelte:window on:click={handleWindowClick} on:keydown={handleWindowKeyDown} on:contextmenu={handleWindowClick}/>
+<svelte:window
+    on:click={handleWindowClick}
+    on:keydown={handleWindowKeyDown}
+    on:contextmenu={handleWindowClick}
+/>
 
 <div
-        class="search"
-        class:has-results={query}
-        bind:this={searchContainerElement}
+    class="search"
+    class:has-results={query}
+    bind:this={searchContainerElement}
 >
     <input
-            type="text"
-            class="search-input"
-            placeholder="Search"
-            spellcheck="false"
-            bind:value={query}
-            bind:this={searchInputElement}
-            on:input={filterModules}
-            on:keydown={handleBrowserKeyDown}
-            on:focusin={async () => await setTyping(true)}
-            on:focusout={async () => await setTyping(false)}
+        type="text"
+        class="search-input"
+        placeholder="Search"
+        spellcheck="false"
+        bind:value={query}
+        bind:this={searchInputElement}
+        on:input={filterModules}
+        on:keydown={handleBrowserKeyDown}
+        on:focusin={async () => await setTyping(true)}
+        on:focusout={async () => await setTyping(false)}
     />
 
     {#if query}
         <div class="results">
             {#if filteredModules.length > 0}
-                {#each filteredModules as {name, enabled, aliases}, index (name)}
+                {#each filteredModules as { name, enabled, aliases }, index (name)}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <!-- svelte-ignore a11y-no-static-element-interactions -->
                     <div
-                            class="result"
-                            class:enabled
-                            use:reveal
-                            on:click={() => toggleModule(name, !enabled)}
-                            on:contextmenu|preventDefault={() => $highlightModuleName = name}
-                            class:selected={selectedIndex === index}
-                            bind:this={resultElements[index]}
+                        class="result"
+                        class:enabled
+                        use:reveal
+                        on:click={() => toggleModule(name, !enabled)}
+                        on:contextmenu|preventDefault={() =>
+                            ($highlightModuleName = name)}
+                        class:selected={selectedIndex === index}
+                        bind:this={resultElements[index]}
                     >
                         <div class="module-name">
-                            {$spaceSeperatedNames ? convertToSpacedString(name) : name}
+                            {$spaceSeperatedNames
+                                ? convertToSpacedString(name)
+                                : name}
                         </div>
                         <div class="aliases">
                             {#if aliases.length > 0}
-                                (aka {aliases.map(name => $spaceSeperatedNames ? convertToSpacedString(name) : name).join(", ")})
+                                (aka {aliases
+                                    .map((name) =>
+                                        $spaceSeperatedNames
+                                            ? convertToSpacedString(name)
+                                            : name,
+                                    )
+                                    .join(", ")})
                             {/if}
                         </div>
                     </div>
@@ -186,112 +217,124 @@
 </div>
 
 <style lang="scss">
-  @use "../../colors.scss" as *;
+    @use "../../colors.scss" as *;
 
-  .search {
-    position: fixed;
-    left: 50%;
-    top: 50px;
-    transform: translateX(-50%);
-    background-color: rgba($clickgui-base-color, 0.9);
-    width: 600px;
-    border-radius: 30px;
-    overflow: hidden;
-    transition: ease border-radius 0.2s;
-    box-shadow: 0 0 10px rgba($clickgui-base-color, 0.5);
+    .search {
+        position: fixed;
+        left: 50%;
+        top: 50px;
+        transform: translateX(-50%);
+        background-color: rgba($clickgui-base-color, 0.9);
+        width: 600px;
+        border-radius: 30px;
+        overflow: hidden;
+        transition: ease border-radius 0.2s;
+        box-shadow: 0 0 10px rgba($clickgui-base-color, 0.5);
 
-    &.has-results {
-      border-radius: 10px;
+        &.has-results {
+            border-radius: 10px;
+        }
+
+        &:focus-within {
+            z-index: 9999999999;
+        }
     }
 
-    &:focus-within {
-      z-index: 9999999999;
-    }
-  }
+    .results {
+        border-top: solid 2px $accent-color;
+        padding: 5px 25px;
+        max-height: 250px;
+        overflow: auto;
 
-  .results {
-    border-top: solid 2px $accent-color;
-    padding: 5px 25px;
-    max-height: 250px;
-    overflow: auto;
+        .result {
+            font-size: 16px;
+            padding: 10px 0;
+            transition: ease padding-left 0.2s;
+            cursor: pointer;
+            display: grid;
+            grid-template-columns: max-content 1fr max-content;
+            position: relative;
+            overflow: hidden;
 
-    .result {
-      font-size: 16px;
-      padding: 10px 0;
-      transition: ease padding-left 0.2s;
-      cursor: pointer;
-      display: grid;
-      grid-template-columns: max-content 1fr max-content;
-      position: relative;
-      overflow: hidden;
-
-      &::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: radial-gradient(
+            &::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                background:
+                    radial-gradient(
                         circle $reveal-size at var(--mouse-x) var(--mouse-y),
                         $reveal-color,
                         transparent
-        );
-        opacity: 0;
-        transition: opacity 0.2s;
-        pointer-events: none;
-      }
+                    ),
+                    radial-gradient(
+                        circle 70px at var(--mouse-x) var(--mouse-y),
+                        rgba(255, 255, 255, 0),
+                        rgba(
+                            255,
+                            255,
+                            255,
+                            calc(var(--click-intensity, 0) * 0.2)
+                        ),
+                        rgba(255, 255, 255, 0)
+                    );
+                opacity: 0;
+                transition: opacity 0.2s;
+                pointer-events: none;
+            }
 
-      &:hover::before {
-        opacity: 1;
-      }
+            &:hover::before {
+                opacity: 1;
+            }
 
-      .module-name {
-        color: $clickgui-text-dimmed-color;
-        transition: ease color 0.2s;
-      }
+            .module-name {
+                color: $clickgui-text-dimmed-color;
+                transition: ease color 0.2s;
+            }
 
-      &.enabled {
-        .module-name {
-          color: $accent-color;
+            &.enabled {
+                .module-name {
+                    color: $accent-color;
+                }
+            }
+
+            .aliases {
+                color: rgba($clickgui-text-dimmed-color, 0.6);
+                margin-left: 10px;
+            }
+
+            &.selected {
+                padding-left: 10px;
+            }
+
+            &:hover {
+                color: $clickgui-text-color;
+
+                &::after {
+                    content: "Right-click to locate";
+                    color: rgba($clickgui-text-color, 0.4);
+                    font-size: 12px;
+                }
+            }
         }
-      }
 
-      .aliases {
-        color: rgba($clickgui-text-dimmed-color, .6);
-        margin-left: 10px;
-      }
+        .placeholder {
+            color: $clickgui-text-dimmed-color;
+            font-size: 16px;
+            padding: 10px 0;
+        }
 
-      &.selected {
-        padding-left: 10px;
-      }
+        &::-webkit-scrollbar {
+            width: 0;
+        }
+    }
 
-      &:hover {
+    .search-input {
+        padding: 15px 25px;
+        background-color: transparent;
+        border: none;
+        font-family: "Inter", sans-serif;
+        font-size: 16px;
         color: $clickgui-text-color;
-
-        &::after {
-          content: "Right-click to locate";
-          color: rgba($clickgui-text-color, 0.4);
-          font-size: 12px;
-        }
-      }
+        width: 100%;
     }
-
-    .placeholder {
-      color: $clickgui-text-dimmed-color;
-      font-size: 16px;
-      padding: 10px 0;
-    }
-
-    &::-webkit-scrollbar {
-      width: 0;
-    }
-  }
-
-  .search-input {
-    padding: 15px 25px;
-    background-color: transparent;
-    border: none;
-    font-family: "Inter", sans-serif;
-    font-size: 16px;
-    color: $clickgui-text-color;
-    width: 100%;
-  }
 </style>

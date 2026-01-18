@@ -18,11 +18,19 @@ export function reveal(node: HTMLElement) {
     node.style.setProperty("--mouse-y", `${y}px`);
   };
 
+  const handleMouseDown = () =>
+    node.style.setProperty("--click-intensity", "1");
+  const handleMouseUp = () => node.style.setProperty("--click-intensity", "0");
+
   node.addEventListener("mousemove", handleMouseMove);
+  node.addEventListener("mousedown", handleMouseDown);
+  window.addEventListener("mouseup", handleMouseUp);
 
   return {
     destroy() {
       node.removeEventListener("mousemove", handleMouseMove);
+      node.removeEventListener("mousedown", handleMouseDown);
+      window.removeEventListener("mouseup", handleMouseUp);
     },
   };
 }
