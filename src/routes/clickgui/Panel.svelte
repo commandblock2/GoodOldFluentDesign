@@ -278,22 +278,30 @@
             content: "";
             position: absolute;
             inset: 0;
-            background:
-                radial-gradient(
-                    circle $reveal-size at var(--mouse-x) var(--mouse-y),
-                    $reveal-color,
-                    transparent
-                ),
+            pointer-events: none;
+            border: 1px solid transparent;
+            background-image:
                 radial-gradient(
                     circle var(--click-size, 0px) at
                         var(--click-x, var(--mouse-x))
                         var(--click-y, var(--mouse-y)),
                     rgba(255, 255, 255, calc(var(--click-intensity, 0) * 0.3)),
                     transparent
+                ),
+                radial-gradient(
+                    circle $reveal-size at var(--mouse-x) var(--mouse-y),
+                    $reveal-color,
+                    transparent
+                ),
+                radial-gradient(
+                    circle $reveal-size at var(--mouse-x) var(--mouse-y),
+                    $reveal-border-color,
+                    transparent
                 );
+            background-origin: padding-box, padding-box, border-box;
+            background-clip: padding-box, padding-box, border-box;
             opacity: 0;
             transition: opacity 0.2s;
-            pointer-events: none;
         }
 
         &:hover::before {

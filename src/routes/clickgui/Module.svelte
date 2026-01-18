@@ -165,17 +165,18 @@
             color: $clickgui-text-dimmed-color;
             position: relative;
             overflow: hidden;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 500;
+            padding: 10px;
 
             &::before {
                 content: "";
                 position: absolute;
                 inset: 0;
-                background:
-                    radial-gradient(
-                        circle $reveal-size at var(--mouse-x) var(--mouse-y),
-                        $reveal-color,
-                        transparent
-                    ),
+                pointer-events: none;
+                border: 1px solid transparent;
+                background-image:
                     radial-gradient(
                         circle var(--click-size, 0px) at
                             var(--click-x, var(--mouse-x))
@@ -187,29 +188,31 @@
                             calc(var(--click-intensity, 0) * 0.3)
                         ),
                         transparent
+                    ),
+                    radial-gradient(
+                        circle $reveal-size at var(--mouse-x) var(--mouse-y),
+                        $reveal-color,
+                        transparent
+                    ),
+                    radial-gradient(
+                        circle $reveal-size at var(--mouse-x) var(--mouse-y),
+                        $reveal-border-color,
+                        transparent
                     );
+                background-origin: padding-box, padding-box, border-box;
+                background-clip: padding-box, padding-box, border-box;
                 opacity: 0;
                 transition: opacity 0.2s;
-                pointer-events: none;
+                z-index: 1;
             }
 
             &:hover::before {
                 opacity: 1;
             }
-            text-align: center;
-            font-size: 12px;
-            font-weight: 500;
-            position: relative;
-            padding: 10px;
 
-            &.highlight::before {
-                content: "";
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: calc(100% - 4px);
-                height: calc(100% - 4px);
-                border: solid 2px $accent-color;
+            &.highlight {
+                outline: solid 2px $accent-color;
+                outline-offset: -2px;
             }
 
             &:hover {
