@@ -3,7 +3,7 @@ import {getModuleSettings} from "../integration/rest";
 import {writable} from "svelte/store";
 import type {SpaceSeperatedNamesChangeEvent} from "../integration/events";
 
-export let spaceSeparatedNames = writable(false);
+export let spaceSeperatedNames = writable(false);
 
 /**
  * Handles space seperated names if enabled.
@@ -15,10 +15,10 @@ export function convertToSpacedString(name: string): string {
 
 async function updateSettings() {
     const hudSettings = await getModuleSettings("HUD");
-    spaceSeparatedNames.set(hudSettings.value.find(n => n.name === "SpaceSeperatedNames")?.value as boolean ?? true);
+    spaceSeperatedNames.set(hudSettings.value.find(n => n.name === "SpaceSeperatedNames")?.value as boolean ?? true);
 }
 
 listenAlways("spaceSeperatedNamesChange", (e: SpaceSeperatedNamesChangeEvent) => {
-   spaceSeparatedNames.set(e.value);
+   spaceSeperatedNames.set(e.value);
 });
 updateSettings();

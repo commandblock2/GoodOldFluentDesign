@@ -5,7 +5,7 @@
     import noUiSlider, {type API} from "nouislider";
     import type {FloatSetting, ModuleSetting,} from "../../../integration/types";
     import ValueInput from "./common/ValueInput.svelte";
-    import {convertToSpacedString, spaceSeparatedNames} from "../../../theme/theme_config";
+    import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
 
     export let setting: ModuleSetting;
 
@@ -17,6 +17,16 @@
     let apiSlider: API;
 
     onMount(() => {
+        let step = 0.01;
+
+        if (cSetting.range.to > 100) {
+            step = 0.1;
+        } else if (cSetting.range.to <= 0.1) {
+            step = 0.0001;
+        } else if (cSetting.range.to <= 1.0) {
+            step = 0.001;
+        }
+
         apiSlider = noUiSlider.create(slider, {
             start: cSetting.value,
             connect: "lower",
@@ -24,7 +34,11 @@
                 min: cSetting.range.from,
                 max: cSetting.range.to,
             },
-            step: 0.01,
+            step: step,
+            format: {
+                to: (value) => parseFloat(value.toFixed(4)), // Display up to 4 decimal places
+                from: (value) => parseFloat(value), // Convert back to float
+            }
         });
 
         apiSlider.on("update", (values) => {
@@ -41,7 +55,7 @@
 </script>
 
 <div class="setting" class:has-suffix={cSetting.suffix !== ""}>
-    <div class="name">{$spaceSeparatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</div>
+    <div class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</div>
     <div class="value">
         <ValueInput valueType="float" value={cSetting.value}
                     on:change={(e) => apiSlider.set(e.detail.value)}/>

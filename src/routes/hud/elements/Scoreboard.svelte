@@ -4,6 +4,10 @@
     import TextComponent from "../../menu/common/TextComponent.svelte";
     import type {ClientPlayerDataEvent} from "../../../integration/events";
 
+    export let settings: { [name: string]: any };
+
+    const cSettings = settings as HudScoreboardSettings;
+
     let scoreboard: Scoreboard | null = null;
 
     listen("clientPlayerData", (e: ClientPlayerDataEvent) => {
@@ -14,7 +18,7 @@
 
 {#if scoreboard}
     <div class="scoreboard">
-        {#if scoreboard.header}
+        {#if scoreboard.header && cSettings.show.includes('Header')}
             <div class="header">
                 <TextComponent fontSize={14} allowPreformatting={true} textComponent={scoreboard.header}/>
             </div>
@@ -22,8 +26,12 @@
         <div class="entries">
             {#each scoreboard.entries as {name, score}}
                 <div class="row">
-                    <TextComponent fontSize={14} allowPreformatting={true} textComponent={name}/>
-                    <TextComponent fontSize={14} allowPreformatting={true} textComponent={score}/>
+                    {#if cSettings.show.includes('Name')}
+                        <TextComponent fontSize={14} allowPreformatting={true} textComponent={name}/>
+                    {/if}
+                    {#if cSettings.show.includes('Score')}
+                        <TextComponent fontSize={14} allowPreformatting={true} textComponent={score}/>
+                    {/if}
                 </div>
             {/each}
         </div>
@@ -35,7 +43,7 @@
 
   .scoreboard {
     width: max-content;
-    border-radius: 0px;
+    border-radius: 5px;
     overflow: hidden;
     font-size: 14px;
   }

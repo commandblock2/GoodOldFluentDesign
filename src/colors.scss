@@ -1,6 +1,6 @@
 $accent-color: #4677ff;
 
-$clickgui-base-color: rgb(36, 36, 36);
+$clickgui-base-color: black;
 $clickgui-text-color: white;
 $clickgui-text-dimmed-color: rgba(211, 211, 211, 255);
 $clickgui-grid-color: rgba(128, 128, 128, 0.25);
@@ -38,3 +38,13 @@ $scoreboard-base-color: black;
 $keystrokes-base-color: black;
 $keystrokes-text-color: white;
 
+$item-damage-base-color: black;
+
+$keybinds-base-color: black;
+$keybinds-text-color: white;
+$keybinds-enabled-color: #4dac68;
+
+$effects-amplifier-color: #FC4130;
+$effects-name-color: white;
+$effects-background-color: rgba(0, 0, 0, 0.5);
+$effects-duration-color: white;

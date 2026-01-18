@@ -1,7 +1,7 @@
 <script lang="ts">
     import {createEventDispatcher} from "svelte";
     import type {BlockHitResult, ModuleSetting, VectorSetting} from "../../../integration/types";
-    import {convertToSpacedString, spaceSeparatedNames} from "../../../theme/theme_config";
+    import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
     import {getCrosshairData, getPlayerData} from "../../../integration/rest";
 
     export let setting: ModuleSetting;
@@ -30,7 +30,7 @@
 </script>
 
 <div class="setting">
-    <div class="name">{$spaceSeparatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</div>
+    <div class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</div>
     <div class="input-group">
         <input type="number" class="value" spellcheck="false" placeholder="X" bind:value={cSetting.value.x}
                on:input={handleChange}/>
@@ -70,7 +70,7 @@
       border: none;
       border-bottom: solid 2px $accent-color;
       padding: 5px;
-      border-radius: 0px;
+      border-radius: 3px;
       transition: ease border-color .2s;
       appearance: textfield;
 

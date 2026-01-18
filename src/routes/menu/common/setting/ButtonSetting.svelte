@@ -38,9 +38,9 @@
     border: none;
     background-color: $accent-color;
     color: $menu-text-color;
-    font-family: "Hack", monospace;
+    font-family: "Inter", sans-serif;
     padding: 20px;
-    border-radius: 0px;
+    border-radius: 5px;
     font-size: 20px;
     transition: ease background-color .2s, ease opacity .2s;
 

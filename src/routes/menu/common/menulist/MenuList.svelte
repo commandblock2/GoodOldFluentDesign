@@ -49,7 +49,7 @@
   .menu-list {
     background-color: rgba($menu-base-color, 0.68);
     flex: 1;
-    border-radius: 0px;
+    border-radius: 5px;
     margin-bottom: 25px;
     position: relative;
   }

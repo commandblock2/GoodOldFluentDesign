@@ -14,7 +14,7 @@
     color: $menu-text-color;
     font-size: 12px;
     padding: 3px 10px;
-    border-radius: 0px;
+    border-radius: 20px;
     margin-left: 10px;
     transition: ease color .2s, ease background-color .2s;
     transform: translateY(-3px);

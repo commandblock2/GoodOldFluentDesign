@@ -15,7 +15,7 @@
     function startHideTimeout() {
         hideTimeout = setTimeout(() => {
             visible = false;
-        }, 500);
+        }, 1000);
     }
 
     listen("targetChange", (data: TargetChangeEvent) => {
@@ -79,7 +79,7 @@
 
     .targethud {
         background-color: rgba($targethud-base-color, 0.68);
-        border-radius: 0px;
+        border-radius: 5px;
         overflow: hidden;
     }
 
@@ -131,7 +131,7 @@
         background-image: url("/img/steve.png");
         background-repeat: no-repeat;
         background-size: cover;
-        border-radius: 0px;
+        border-radius: 5px;
         overflow: hidden;
 
         img {

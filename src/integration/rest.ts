@@ -4,11 +4,14 @@ import type {
     Browser,
     ClientInfo,
     ClientUpdate,
-    Component,
+    HudComponent,
     ConfigurableSetting,
+    FileSelectDialog,
+    FileSelectResult,
     GameWindow,
     GeneratorResult,
     HitResult,
+    Metadata,
     MinecraftKeybind,
     Module,
     PersistentStorageItem,
@@ -16,14 +19,24 @@ import type {
     PrintableKey,
     Protocol,
     Proxy,
-    Registries,
+    RegistryItem,
     Server,
     Session,
+    Theme,
     VirtualScreen,
     World
 } from "./types";
+import type {PlayerInventory} from "./events";
+import {isLoggingIn} from "../routes/menu/altmanager/altmanager_store";
 
 const API_BASE = `${REST_BASE}/api/v1`;
+
+export async function getMetadata(): Promise<Metadata> {
+    const response = await fetch(`metadata.json`);
+    const data: Metadata = await response.json();
+
+    return data;
+}
 
 export async function getModules(): Promise<Module[]> {
     const response = await fetch(`${API_BASE}/client/modules`);
@@ -131,6 +144,25 @@ export async function getPlayerData(): Promise<PlayerData> {
     return data;
 }
 
+export async function openFileDialog(body: FileSelectDialog): Promise<FileSelectResult> {
+    const response = await fetch(`${API_BASE}/client/fileDialog`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
+    });
+
+    return await response.json();
+}
+
+export async function getPlayerInventory(): Promise<PlayerInventory> {
+    const response = await fetch(`${API_BASE}/client/player/inventory`);
+    const data: PlayerInventory = await response.json();
+
+    return data;
+}
+
 export async function getCrosshairData(): Promise<HitResult> {
     const response = await fetch(`${API_BASE}/client/crosshair`);
     const data: HitResult = await response.json();
@@ -154,9 +186,9 @@ export async function getMinecraftKeybinds(): Promise<MinecraftKeybind[]> {
     return data;
 }
 
-export async function getRegistries(): Promise<Registries> {
-    const response = await fetch(`${API_BASE}/client/registries`);
-    const data: Registries = await response.json();
+export async function getRegistryItems(name: string): Promise<Record<string, RegistryItem>> {
+    const response = await fetch(`${API_BASE}/client/registry/${name}`);
+    const data: Record<string, RegistryItem> = await response.json();
 
     return data;
 }
@@ -175,6 +207,16 @@ export async function browse(target: string) {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({target})
+    });
+}
+
+export async function browsePath(path: string) {
+    await fetch(`${API_BASE}/client/browsePath`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({path})
     });
 }
 
@@ -282,9 +324,10 @@ export async function setSelectedProtocol(protocol: Protocol) {
 }
 
 export async function restoreSession() {
+    isLoggingIn.set(true);
     await fetch(`${API_BASE}/client/account/restore`, {
         method: "POST",
-    });
+    }).finally(() => isLoggingIn.set(false));
 }
 
 export async function orderAccounts(order: number[]) {
@@ -371,33 +414,36 @@ export async function removeAccount(id: number) {
 }
 
 export async function loginToAccount(id: number) {
+    isLoggingIn.set(true);
     await fetch(`${API_BASE}/client/account/login`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({id})
-    });
+    }).finally(() => isLoggingIn.set(false));
 }
 
 export async function directLoginToCrackedAccount(username: string, online: boolean) {
+    isLoggingIn.set(true);
     await fetch(`${API_BASE}/client/account/login/cracked`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({username, online})
-    });
+    }).finally(() => isLoggingIn.set(false));
 }
 
 export async function directLoginToSessionAccount(token: string) {
+    isLoggingIn.set(true);
     await fetch(`${API_BASE}/client/account/login/session`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({token})
-    });
+    }).finally(() => isLoggingIn.set(false));
 }
 
 export async function getAccounts(): Promise<Account[]> {
@@ -494,23 +540,23 @@ export async function setProxyFavorite(id: number, favorite: boolean) {
     }
 }
 
-export async function addProxy(host: string, port: number, username: string, password: string, forwardAuthentication: boolean) {
+export async function addProxy(host: string, port: number, username: string, password: string, type: string, forwardAuthentication: boolean) {
     await fetch(`${API_BASE}/client/proxies/add`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({host, port, username, password,forwardAuthentication})
+        body: JSON.stringify({host, port, username, password, type, forwardAuthentication})
     });
 }
 
-export async function editProxy(id: number, host: string, port: number, username: string, password: string, forwardAuthentication: boolean) {
+export async function editProxy(id: number, host: string, port: number, username: string, password: string, type: string, forwardAuthentication: boolean) {
     await fetch(`${API_BASE}/client/proxies/edit`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({id, host, port, username, password, forwardAuthentication})
+        body: JSON.stringify({id, host, port, username, password, type, forwardAuthentication})
     })
 }
 
@@ -547,8 +593,19 @@ export async function getGameWindow(): Promise<GameWindow> {
     return data;
 }
 
-export async function getComponents(): Promise<Component[]> {
-    const response = await fetch(`${API_BASE}/client/components`);
+/**
+ * @param id Use the ID from [getMetadata].
+ */
+export async function getTheme(id: string): Promise<Theme> {
+    const response = await fetch(`${API_BASE}/client/theme/${id}`);
+    return await response.json();
+}
+
+/**
+ * @param id Use the ID from [getMetadata].
+ */
+export async function getComponents(id: string): Promise<HudComponent[]> {
+    const response = await fetch(`${API_BASE}/client/components/${id}`);
     return await response.json();
 }
 
@@ -642,4 +699,12 @@ export async function setTyping(typing: boolean) {
         },
         body: JSON.stringify({typing})
     });
+}
+
+export function itemTextureUrl(identifier: string) {
+    return `${API_BASE}/client/resource/itemTexture?id=${identifier}`
+}
+
+export function effectTextureUrl(effectId: string) {
+    return `${API_BASE}/client/resource/effectTexture?id=${effectId}`
 }

@@ -46,7 +46,7 @@
 
   .description {
     position: relative;
-    border-radius: 0px;
+    border-radius: 5px;
     background-color: rgba($clickgui-base-color, .9);
     filter: drop-shadow(0 0 10px rgba($clickgui-base-color, 0.5));
 

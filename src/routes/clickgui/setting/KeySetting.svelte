@@ -1,18 +1,19 @@
 <script lang="ts">
     import type {KeySetting, ModuleSetting} from "../../../integration/types";
-    import {convertToSpacedString, spaceSeparatedNames} from "../../../theme/theme_config";
+    import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
     import {getPrintableKeyName} from "../../../integration/rest";
     import {createEventDispatcher} from "svelte";
     import {listen} from "../../../integration/ws";
-    import type {KeyboardKeyEvent} from "../../../integration/events";
+    import type {KeyboardKeyEvent, MouseButtonEvent} from "../../../integration/events";
+    import {isClickGuiScreen, UNKNOWN_KEY} from "../../../util/keybind_utils";
 
     export let setting: ModuleSetting;
 
     const cSetting = setting as KeySetting;
 
     const dispatch = createEventDispatcher();
-    const UNKNOWN_KEY = "key.keyboard.unknown";
 
+    let isHovered = false;
     let binding = false;
     let printableKeyName = "";
 
@@ -38,8 +39,7 @@
     }
 
     listen("keyboardKey", async (e: KeyboardKeyEvent) => {
-        if (e.screen === undefined || !e.screen.class.startsWith("net.ccbluex.liquidbounce") ||
-            !(e.screen.title === "ClickGUI" || e.screen.title === "VS-CLICKGUI")) {
+        if (!isClickGuiScreen(e.screen)) {
             return;
         }
 
@@ -59,12 +59,35 @@
 
         dispatch("change");
     });
+
+    listen("mouseButton", async (e: MouseButtonEvent) => {
+        if (!isClickGuiScreen(e.screen)) {
+            return;
+        }
+
+        if (!binding || (e.button === 0 && isHovered)) {
+            return;
+        }
+
+        binding = false;
+
+        cSetting.value = e.key;
+
+        setting = {...cSetting};
+
+        dispatch("change");
+    })
 </script>
 
 <div class="setting">
-    <button class="change-bind" on:click={toggleBinding}>
+    <button
+            class="change-bind"
+            on:click={toggleBinding}
+            on:mouseenter={() => isHovered = true}
+            on:mouseleave={() => isHovered = false}
+    >
         {#if !binding}
-            <div class="name">{$spaceSeparatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}:</div>
+            <div class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}:</div>
 
             {#if cSetting.value === UNKNOWN_KEY}
                 <span class="none">None</span>
@@ -87,13 +110,13 @@
   .change-bind {
     background-color: transparent;
     border: solid 2px $accent-color;
-    border-radius: 0px;
+    border-radius: 3px;
     cursor: pointer;
     padding: 4px;
     font-weight: 500;
     color: $clickgui-text-color;
     font-size: 12px;
-    font-family: "Hack", monospace;
+    font-family: "Inter", sans-serif;
     width: 100%;
     display: flex;
     justify-content: center;

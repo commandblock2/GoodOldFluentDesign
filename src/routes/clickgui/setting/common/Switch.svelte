@@ -45,7 +45,7 @@
     background-color: color.adjust($clickgui-text-color, $lightness: -55%);
     transition: ease 0.4s;
     height: 8px;
-    border-radius: 0px;
+    border-radius: 4px;
 
     &::before {
       position: absolute;
@@ -56,7 +56,7 @@
       left: 0;
       background-color: $clickgui-text-color;
       transition: ease 0.4s;
-      border-radius: 0px;
+      border-radius: 50%;
     }
   }
 

@@ -31,7 +31,7 @@
   .tooltip {
     color: white;
     padding: 10px 15px;
-    border-radius: 0px;
+    border-radius: 20px;
     font-size: 16px;
     font-weight: 600;
     position: absolute;

@@ -4,7 +4,7 @@
     import {createEventDispatcher, onMount} from "svelte";
     import type {ColorSetting, ModuleSetting,} from "../../../integration/types.js";
     import Pickr from "@simonwep/pickr";
-    import {convertToSpacedString, spaceSeparatedNames} from "../../../theme/theme_config";
+    import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
     import {intToRgba, rgbaToHex, rgbaToInt} from "../../../integration/util";
 
     export let setting: ModuleSetting;
@@ -63,7 +63,7 @@
 </script>
 
 <div class="setting">
-    <div class="name">{$spaceSeparatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</div>
+    <div class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</div>
     <div class="value-spot">
         <input
             class="value"
@@ -139,7 +139,7 @@
         margin-top: -2px;
         margin-bottom: -2px;
         width: 30px;
-        border-radius: 0px;
+        border-radius: 3px;
         background-color: blue;
         border-style: none;
     }

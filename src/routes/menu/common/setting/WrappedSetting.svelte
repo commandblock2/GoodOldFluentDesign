@@ -47,6 +47,8 @@
 
 <svelte:window on:click={handleWindowClick}/>
 
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="wrapped-setting" class:expanded class:has-nested-settings={value.value.length > 0}
      onclick={handleWrapperClick} bind:this={wrappedSettingElement}>
     <div class="header" bind:this={headerElement}>
@@ -65,7 +67,7 @@
     {#if expanded && value.value.length > 0}
         <div class="nested-settings" transition:fade|global={{ duration: 200, easing: quintOut }}>
             {#each value.value as setting, i (setting.name)}
-                <GenericSetting skipAnimationDelay={true} {path} bind:setting={value.value[i]} on:change/>
+                <GenericSetting {path} bind:setting={value.value[i]} on:change/>
             {/each}
         </div>
     {/if}
@@ -86,7 +88,7 @@
 
     &.expanded {
       .header {
-        border-radius: 0px;
+        border-radius: 5px 5px 0 0;
       }
     }
 
@@ -100,8 +102,8 @@
         column-gap: 20px;
         align-items: center;
         justify-content: space-between;
-        border-radius: 0px;
-        transition: ease border-radius 0;
+        border-radius: 5px;
+        transition: ease border-radius .2s;
       }
     }
   }
@@ -109,7 +111,7 @@
   .nested-settings {
     position: absolute;
     z-index: 1000;
-    border-radius: 0px;
+    border-radius: 0 0 5px 5px;
     background-color: rgba($menu-base-color, 0.9);
     padding: 10px 13px;
     zoom: 1.5;

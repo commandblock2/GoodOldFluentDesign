@@ -68,7 +68,7 @@
         {#if overlayMessage !== null}
             <div class="overlay-message" out:fade={{duration: 200}}
                  style="max-width: {slotsElement?.offsetWidth ?? 0}px">
-                <TextComponent fontSize={14} textComponent={overlayMessage.text}/>
+                <TextComponent fontSize={14} textComponent={overlayMessage.text} allowPreformatting={true} />
             </div>
         {/if}
         {#if showItemStackName && itemStackName !== null}
@@ -185,7 +185,7 @@
   .hotbar-elements {
     background-color: rgba($hotbar-base-color, 0.68);
     position: relative;
-    border-radius: 0px;
+    border-radius: 5px;
     overflow: hidden;
 
     .slider {
@@ -193,7 +193,7 @@
       height: 45px;
       width: 45px;
       position: absolute;
-      border-radius: 0px;
+      border-radius: 5px;
       /* transition: linear left 0.05s; TODO: Animation is possible but annoying */
     }
 
@@ -210,7 +210,7 @@
   .offhand-slot {
     height: 45px;
     width: 45px;
-    border-radius: 0px;
+    border-radius: 5px;
     background-color: rgba($hotbar-base-color, 0.68);
     position: absolute;
     bottom: 0;
@@ -224,7 +224,7 @@
     font-weight: 500;
     background-color: rgba($hotbar-base-color, .68);
     padding: 5px 8px;
-    border-radius: 0px;
+    border-radius: 5px;
     width: max-content;
   }
 

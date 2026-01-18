@@ -6,7 +6,11 @@
     import {getTextWidth} from "../../../integration/text_measurement";
     import {flip} from "svelte/animate";
     import {fly} from "svelte/transition";
-    import {convertToSpacedString, spaceSeparatedNames} from "../../../theme/theme_config";
+    import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
+
+    export let settings: { [name: string]: any };
+
+    const cSettings = settings as HudArrayListSettings;
 
     let enabledModules: Module[] = [];
 
@@ -15,23 +19,24 @@
         const visibleModules = modules.filter(m => m.enabled && !m.hidden);
 
         const modulesWithWidths = visibleModules.map(module => {
-                let formattedName = $spaceSeparatedNames ? convertToSpacedString(module.name) : module.name;
-                let fullName = module.tag == null ? formattedName : formattedName + " " + module.tag;
+            const formattedName = $spaceSeperatedNames ? convertToSpacedString(module.name) : module.name;
+            const fullName = module.tag == null || !cSettings.showTags
+                ? formattedName
+                : formattedName + " " + module.tag;
 
-                return {
-                    ...module,
-                    width: getTextWidth(fullName, "500 14px Inter")
-                };
-            }
-        );
+            return {
+                ...module,
+                width: getTextWidth(fullName, "500 14px Inter")
+            };
+        });
 
-        modulesWithWidths.sort((a, b) => b.width - a.width);
+        modulesWithWidths.sort((a, b) => cSettings.order === "Ascending" ? a.width - b.width : b.width - a.width);
 
         enabledModules = modulesWithWidths;
         await tick();
     }
 
-    spaceSeparatedNames.subscribe(async () => {
+    spaceSeperatedNames.subscribe(async () => {
         await updateEnabledModules();
     });
 
@@ -50,9 +55,14 @@
 
 <div class="arraylist">
     {#each enabledModules as {name, tag} (name)}
-        <div class="module" animate:flip={{ duration: 200 }} transition:fly={{ x: 50, duration: 200 }}>
-            {$spaceSeparatedNames ? convertToSpacedString(name) : name}
-            {#if tag}
+        <div
+                class="module"
+                style={cSettings.itemAlignment === "Left" ? "margin-right: auto;" : "margin-left: auto;"}
+                animate:flip={{ duration: 200 }}
+                transition:fly={{ x: 50, duration: 200 }}
+        >
+            {$spaceSeperatedNames ? convertToSpacedString(name) : name}
+            {#if tag && cSettings.showTags}
                 <span class="tag"> {tag}</span>
             {/if}
         </div>
@@ -66,12 +76,11 @@
     background-color: rgba($arraylist-base-color, 0.68);
     color: $arraylist-text-color;
     font-size: 14px;
-    border-radius: 0px;
+    border-radius: 4px 0 0 4px;
     padding: 5px 8px;
     border-left: solid 4px $accent-color;
     width: max-content;
     font-weight: 500;
-    margin-left: auto;
   }
 
   .tag {

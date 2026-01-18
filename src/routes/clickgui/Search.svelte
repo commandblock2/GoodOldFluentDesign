@@ -5,7 +5,7 @@
     import type {ClickGuiValueChangeEvent, KeyboardKeyEvent, ModuleToggleEvent} from "../../integration/events";
     import {highlightModuleName} from "./clickgui_store";
     import {onMount} from "svelte";
-    import {convertToSpacedString, spaceSeparatedNames} from "../../theme/theme_config";
+    import {convertToSpacedString, spaceSeperatedNames} from "../../theme/theme_config";
 
     export let modules: Module[];
 
@@ -167,11 +167,11 @@
                             bind:this={resultElements[index]}
                     >
                         <div class="module-name">
-                            {$spaceSeparatedNames ? convertToSpacedString(name) : name}
+                            {$spaceSeperatedNames ? convertToSpacedString(name) : name}
                         </div>
                         <div class="aliases">
                             {#if aliases.length > 0}
-                                (aka {aliases.map(name => $spaceSeparatedNames ? convertToSpacedString(name) : name).join(", ")})
+                                (aka {aliases.map(name => $spaceSeperatedNames ? convertToSpacedString(name) : name).join(", ")})
                             {/if}
                         </div>
                     </div>
@@ -193,13 +193,13 @@
     transform: translateX(-50%);
     background-color: rgba($clickgui-base-color, 0.9);
     width: 600px;
-    border-radius: 0px;
+    border-radius: 30px;
     overflow: hidden;
-    transition: ease border-radius 0;
+    transition: ease border-radius 0.2s;
     box-shadow: 0 0 10px rgba($clickgui-base-color, 0.5);
 
     &.has-results {
-      border-radius: 0px;
+      border-radius: 10px;
     }
 
     &:focus-within {
@@ -267,7 +267,7 @@
     padding: 15px 25px;
     background-color: transparent;
     border: none;
-    font-family: "Hack", monospace;
+    font-family: "Inter", sans-serif;
     font-size: 16px;
     color: $clickgui-text-color;
     width: 100%;

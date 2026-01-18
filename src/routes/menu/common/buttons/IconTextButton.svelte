@@ -24,7 +24,7 @@
       display: flex;
       border: none;
 
-      border-radius: 0px;
+      border-radius: 5px;
       align-items: center;
       overflow: hidden;
       background: linear-gradient(to left, rgba($menu-base-color, .36) 50%, $accent-color 50%);

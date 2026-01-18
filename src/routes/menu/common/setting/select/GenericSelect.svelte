@@ -55,7 +55,7 @@
 
     &.expanded {
       .header {
-        border-radius: 0px;
+        border-radius: 5px 5px 0 0;
       }
     }
   }
@@ -67,8 +67,8 @@
     column-gap: 20px;
     align-items: center;
     justify-content: space-between;
-    border-radius: 0px;
-    transition: ease border-radius 0;
+    border-radius: 5px;
+    transition: ease border-radius .2s;
 
     .title {
       color: $menu-text-color;
@@ -81,7 +81,7 @@
     position: absolute;
     z-index: 1000;
     width: 100%;
-    border-radius: 0px;
+    border-radius: 0 0 5px 5px;
     max-height: 250px;
     overflow: auto;
     background-color: rgba($menu-base-color, 0.9);
