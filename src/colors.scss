@@ -53,3 +53,6 @@ $reveal-color: rgba(255, 255, 255, 0.1);
 $reveal-click-color: rgba(255, 255, 255, 0.2);
 $reveal-border-color: rgba(255, 255, 255, 0.2);
 $reveal-size: 150px;
+
+$focus-reveal-primary: $accent-color;
+$focus-reveal-glow: rgba($accent-color, 0.3);

@@ -1,0 +1,7 @@
+@mixin focus-reveal {
+    &:focus,
+    &:focus-visible {
+        outline: none;
+        box-shadow: none;
+    }
+}

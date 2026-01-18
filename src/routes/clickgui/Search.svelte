@@ -18,6 +18,7 @@
         spaceSeperatedNames,
     } from "../../theme/theme_config";
     import { reveal } from "../../effects/reveal";
+    import { focusOverlayTarget } from "../../effects/focusOverlay";
 
     export let modules: Module[];
 
@@ -185,7 +186,17 @@
                         class="result"
                         class:enabled
                         use:reveal
+                        use:focusOverlayTarget={{ forceClass: "selected" }}
+                        tabindex="0"
+                        role="button"
+                        aria-pressed={enabled}
                         on:click={() => toggleModule(name, !enabled)}
+                        on:keydown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                toggleModule(name, !enabled);
+                            }
+                        }}
                         on:contextmenu|preventDefault={() =>
                             ($highlightModuleName = name)}
                         class:selected={selectedIndex === index}
@@ -218,6 +229,7 @@
 
 <style lang="scss">
     @use "../../colors.scss" as *;
+    @use "../../effects/focus" as *;
 
     .search {
         position: fixed;
@@ -254,7 +266,9 @@
             display: grid;
             grid-template-columns: max-content 1fr max-content;
             position: relative;
-            overflow: hidden;
+            overflow: visible; // Changed from hidden to allow focus glow
+
+            @include focus-reveal;
 
             &::before {
                 content: "";
@@ -313,6 +327,7 @@
 
             &.selected {
                 padding-left: 10px;
+                z-index: 100;
             }
 
             &:hover {

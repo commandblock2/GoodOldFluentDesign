@@ -20,6 +20,7 @@
     } from "../../theme/theme_config";
     import { scaleFactor } from "./clickgui_store";
     import { reveal } from "../../effects/reveal";
+    import { focusOverlayTarget } from "../../effects/focusOverlay";
 
     export let name: string;
     export let enabled: boolean;
@@ -111,6 +112,13 @@
         expanded = !expanded;
         await setItem(path, expanded.toString());
     }
+
+    function handleKeyDown(e: KeyboardEvent) {
+        if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            toggleModule();
+        }
+    }
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -125,8 +133,13 @@
     <div
         class="name"
         use:reveal
+        use:focusOverlayTarget={{ forceClass: "highlight" }}
+        tabindex="0"
+        role="button"
+        aria-pressed={enabled}
         on:contextmenu|preventDefault={toggleExpanded}
         on:click={toggleModule}
+        on:keydown={handleKeyDown}
         on:mouseenter={setDescription}
         on:mouseleave={() => descriptionStore.set(null)}
         bind:this={moduleNameElement}
@@ -151,6 +164,7 @@
 
 <style lang="scss">
     @use "../../colors" as *;
+    @use "../../effects/focus" as *;
     @use "./icon-settings-expand" as *;
 
     .module {
@@ -164,7 +178,7 @@
 
             color: $clickgui-text-dimmed-color;
             position: relative;
-            overflow: hidden;
+            overflow: visible; // Changed from hidden to allow focus glow
             text-align: center;
             font-size: 12px;
             font-weight: 500;
@@ -210,9 +224,10 @@
                 opacity: 1;
             }
 
+            @include focus-reveal;
+
             &.highlight {
-                outline: solid 2px $accent-color;
-                outline-offset: -2px;
+                @include focus-reveal;
             }
 
             &:hover {

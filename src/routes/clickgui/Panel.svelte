@@ -7,6 +7,7 @@
     import { fade } from "svelte/transition";
     import { quintOut } from "svelte/easing";
     import { reveal } from "../../effects/reveal";
+    import { focusOverlayTarget } from "../../effects/focusOverlay";
     import {
         gridSize,
         highlightModuleName,
@@ -213,11 +214,22 @@
     transition:fade|global={{ duration: 200, easing: quintOut }}
 >
     <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
     <div
         class="title"
         use:reveal
+        use:focusOverlayTarget
+        tabindex="0"
+        role="button"
+        aria-expanded={panelConfig.expanded}
         on:mousedown={onMouseDown}
         on:contextmenu|preventDefault={toggleExpanded}
+        on:keydown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                toggleExpanded();
+            }
+        }}
     >
         <img
             class="icon"
@@ -250,6 +262,7 @@
 
 <style lang="scss">
     @use "../../colors.scss" as *;
+    @use "../../effects/focus" as *;
 
     .panel {
         border-radius: 5px;
@@ -272,7 +285,9 @@
         padding: 10px 15px;
         cursor: grab;
         position: relative;
-        overflow: hidden;
+        overflow: visible; // Changed from hidden to allow focus glow
+
+        @include focus-reveal;
 
         &::before {
             content: "";
@@ -320,7 +335,7 @@
         scroll-behavior: smooth;
         max-height: 0;
         overflow-y: auto;
-        overflow-x: hidden;
+        overflow-x: visible; // Changed from hidden to allow focus shadows
         background-color: rgba($clickgui-base-color, 0.8);
 
         &.expanded {
