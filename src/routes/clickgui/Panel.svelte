@@ -285,10 +285,11 @@
                     transparent
                 ),
                 radial-gradient(
-                    circle 70px at var(--mouse-x) var(--mouse-y),
-                    rgba(255, 255, 255, 0),
-                    rgba(255, 255, 255, calc(var(--click-intensity, 0) * 0.2)),
-                    rgba(255, 255, 255, 0)
+                    circle var(--click-size, 0px) at
+                        var(--click-x, var(--mouse-x))
+                        var(--click-y, var(--mouse-y)),
+                    rgba(255, 255, 255, calc(var(--click-intensity, 0) * 0.3)),
+                    transparent
                 );
             opacity: 0;
             transition: opacity 0.2s;
