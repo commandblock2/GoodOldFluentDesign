@@ -6,6 +6,7 @@
     import type {ModuleToggleEvent} from "../../integration/events";
     import {fade} from "svelte/transition";
     import {quintOut} from "svelte/easing";
+    import {reveal} from "../../effects/reveal";
     import {
         gridSize,
         highlightModuleName,
@@ -94,7 +95,7 @@
         offsetX = e.clientX * (2 / $scaleFactor) - panelConfig.left;
         offsetY = e.clientY * (2 / $scaleFactor) - panelConfig.top;
         panelConfig.zIndex = ++$maxPanelZIndex;
-        
+
         $showGrid = $snappingEnabled && !expandButtonElement.contains(e.target as HTMLElement);
     }
 
@@ -199,6 +200,7 @@
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div
             class="title"
+            use:reveal
             on:mousedown={onMouseDown}
             on:contextmenu|preventDefault={toggleExpanded}
     >
@@ -250,6 +252,26 @@
     border-bottom: solid 2px $accent-color;
     padding: 10px 15px;
     cursor: grab;
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(
+                      circle $reveal-size at var(--mouse-x) var(--mouse-y),
+                      $reveal-color,
+                      transparent
+      );
+      opacity: 0;
+      transition: opacity 0.2s;
+      pointer-events: none;
+    }
+
+    &:hover::before {
+      opacity: 1;
+    }
 
     .category {
       font-size: 14px;

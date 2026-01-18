@@ -13,6 +13,7 @@
     import {setItem} from "../../integration/persistent_storage";
     import {convertToSpacedString, spaceSeperatedNames} from "../../theme/theme_config";
     import {scaleFactor} from "./clickgui_store";
+    import {reveal} from "../../effects/reveal";
 
     export let name: string;
     export let enabled: boolean;
@@ -112,6 +113,7 @@
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
             class="name"
+            use:reveal
             on:contextmenu|preventDefault={toggleExpanded}
             on:click={toggleModule}
             on:mouseenter={setDescription}
@@ -145,6 +147,26 @@
       ease color 0.2s;
 
       color: $clickgui-text-dimmed-color;
+      position: relative;
+      overflow: hidden;
+
+      &::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+                        circle $reveal-size at var(--mouse-x) var(--mouse-y),
+                        $reveal-color,
+                        transparent
+        );
+        opacity: 0;
+        transition: opacity 0.2s;
+        pointer-events: none;
+      }
+
+      &:hover::before {
+        opacity: 1;
+      }
       text-align: center;
       font-size: 12px;
       font-weight: 500;

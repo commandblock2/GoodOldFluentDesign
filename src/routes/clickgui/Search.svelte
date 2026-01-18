@@ -6,6 +6,7 @@
     import {highlightModuleName} from "./clickgui_store";
     import {onMount} from "svelte";
     import {convertToSpacedString, spaceSeperatedNames} from "../../theme/theme_config";
+    import {reveal} from "../../effects/reveal";
 
     export let modules: Module[];
 
@@ -161,6 +162,7 @@
                     <div
                             class="result"
                             class:enabled
+                            use:reveal
                             on:click={() => toggleModule(name, !enabled)}
                             on:contextmenu|preventDefault={() => $highlightModuleName = name}
                             class:selected={selectedIndex === index}
@@ -220,6 +222,26 @@
       cursor: pointer;
       display: grid;
       grid-template-columns: max-content 1fr max-content;
+      position: relative;
+      overflow: hidden;
+
+      &::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+                        circle $reveal-size at var(--mouse-x) var(--mouse-y),
+                        $reveal-color,
+                        transparent
+        );
+        opacity: 0;
+        transition: opacity 0.2s;
+        pointer-events: none;
+      }
+
+      &:hover::before {
+        opacity: 1;
+      }
 
       .module-name {
         color: $clickgui-text-dimmed-color;
