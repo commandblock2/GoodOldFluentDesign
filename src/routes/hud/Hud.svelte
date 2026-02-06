@@ -19,14 +19,14 @@
     import DraggableComponent from "./elements/DraggableComponent.svelte";
     import KeyBinds from "./elements/KeyBinds.svelte";
     import GenericPlayerInventory from "./elements/inventory/GenericPlayerInventory.svelte";
-    import {os} from "../clickgui/clickgui_store";
+    // import {os} from "../clickgui/clickgui_store";
 
     let zoom = 100;
     let metadata: Metadata;
     let components: HudComponent[] = [];
 
     onMount(async () => {
-        $os = (await getClientInfo()).os;
+        // $os = (await getClientInfo()).os;
 
         const gameWindow = await getGameWindow();
         zoom = gameWindow.scaleFactor * 50;

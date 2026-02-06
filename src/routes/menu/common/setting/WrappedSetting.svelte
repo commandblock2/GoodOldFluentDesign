@@ -2,7 +2,7 @@
     import type {BooleanSetting as TBooleanSetting, ModuleSetting,} from "../../../../integration/types";
     import {fade} from "svelte/transition";
     import SwitchSetting from "./SwitchSetting.svelte";
-    import GenericSetting from "../../../clickgui/setting/common/GenericSetting.svelte";
+    // import GenericSetting from "../../../clickgui/setting/common/GenericSetting.svelte";
     import {quintOut} from "svelte/easing";
     import {convertToSpacedString} from "../../../../theme/theme_config";
 
@@ -67,7 +67,7 @@
     {#if expanded && value.value.length > 0}
         <div class="nested-settings" transition:fade|global={{ duration: 200, easing: quintOut }}>
             {#each value.value as setting, i (setting.name)}
-                <GenericSetting {path} bind:setting={value.value[i]} on:change/>
+                <!-- <GenericSetting {path} bind:setting={value.value[i]} on:change/> -->
             {/each}
         </div>
     {/if}

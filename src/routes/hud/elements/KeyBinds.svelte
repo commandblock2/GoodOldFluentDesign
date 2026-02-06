@@ -5,7 +5,7 @@
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
     import type {Module} from "../../../integration/types";
     import {UNKNOWN_KEY} from "../../../util/keybind_utils";
-    import BindDisplay from "../../clickgui/setting/bind/BindDisplay.svelte";
+    // import BindDisplay from "../../clickgui/setting/bind/BindDisplay.svelte";
 
     let modules: Module[] = $state([]);
 
@@ -35,7 +35,7 @@
             <div class="row" class:enabled={m.enabled}>
                 <span class="module-name">{$spaceSeperatedNames ? convertToSpacedString(m.name) : m.name}</span>
                 <span class="key-bind" class:muted={!m.enabled}>
-                    [<BindDisplay boundKey={m.keyBind.boundKey} modifiers={m.keyBind.modifiers}/>]
+                    <!-- [<BindDisplay boundKey={m.keyBind.boundKey} modifiers={m.keyBind.modifiers}/>] -->
                 </span>
             </div>
         {:else}

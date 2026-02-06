@@ -1,11 +1,11 @@
 <script lang="ts">
-    import Router, {push} from "svelte-spa-router";
+    import Router, { push } from "svelte-spa-router";
     import Hud from "./routes/hud/Hud.svelte";
-    import {getVirtualScreen} from "./integration/rest";
-    import {cleanupListeners, listenAlways} from "./integration/ws";
-    import {onMount} from "svelte";
-    import {insertPersistentData} from "./integration/persistent_storage";
-    import {isStatic} from "./integration/host";
+    import { getVirtualScreen } from "./integration/rest";
+    import { cleanupListeners, listenAlways } from "./integration/ws";
+    import { onMount } from "svelte";
+    import { insertPersistentData } from "./integration/persistent_storage";
+    import { isStatic } from "./integration/host";
     import Inventory from "./routes/inventory/Inventory.svelte";
     import Title from "./routes/menu/title/Title.svelte";
     import Multiplayer from "./routes/menu/multiplayer/Multiplayer.svelte";
@@ -15,10 +15,10 @@
     import None from "./routes/none/None.svelte";
     import Disconnected from "./routes/menu/disconnected/Disconnected.svelte";
     import Browser from "./routes/browser/Browser.svelte";
-    import TabbedClickGui from "./routes/clickgui/TabbedClickGui.svelte";
+    import Clickgui from "./routes/clickgui/ClickGui.svelte";
 
     const routes = {
-        "/clickgui": TabbedClickGui,
+        "/clickgui": Clickgui,
         "/hud": Hud,
         "/inventory": Inventory,
         "/title": Title,
@@ -28,7 +28,7 @@
         "/proxymanager": ProxyManager,
         "/none": None,
         "/disconnected": Disconnected,
-        "/browser": Browser
+        "/browser": Browser,
     };
 
     async function changeRoute(name: string) {
@@ -50,7 +50,9 @@
         });
 
         listenAlways("virtualScreen", async (event: any) => {
-            console.log(`[Router] Virtual screen change to ${event.screenName}`);
+            console.log(
+                `[Router] Virtual screen change to ${event.screenName}`,
+            );
             const action = event.action;
 
             switch (action) {
@@ -69,5 +71,5 @@
 </script>
 
 <main>
-    <Router {routes}/>
+    <Router {routes} />
 </main>
