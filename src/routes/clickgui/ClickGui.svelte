@@ -1,15 +1,16 @@
 <script lang="ts">
     import type { GroupedModules, Module } from "../../integration/types";
     import { onMount } from "svelte";
-    import {
-        revealBorder,
-        revealContainer,
-        revealItem,
-        type RevealContainerOptions,
-        type RevealItemOptions,
+    import type {
+        RevealContainerOptions,
+        RevealItemOptions,
     } from "fluent-reveal-svelte";
     import { getModules } from "../../integration/rest";
     import { groupByCategory } from "../../integration/util";
+    import ClickGuiCategoryDetailView from "./views/ClickGuiCategoryDetailView.svelte";
+    import ClickGuiHomeView from "./views/ClickGuiHomeView.svelte";
+    import ClickGuiSearchView from "./views/ClickGuiSearchView.svelte";
+    import ClickGuiThemeDetailView from "./views/ClickGuiThemeDetailView.svelte";
 
     let categories = $state<GroupedModules>({});
     let modules = $state<Module[]>([]);
@@ -129,180 +130,35 @@
         {/if}
 
         {#if selectedCategory !== null}
-            <div class="category-page" use:revealContainer={subsectionRevealOptions}>
-                <div class="item btn-border" use:revealBorder>
-                    <button
-                        class="btn category-back-btn"
-                        type="button"
-                        onclick={closeDetailView}
-                        use:revealItem={moduleRevealItemOptions}
-                    >
-                        <span class="reveal-press-content">
-                            &lt; {selectedCategory}
-                        </span>
-                    </button>
-                </div>
-
-                {#if selectedCategoryModules.length === 0}
-                    <div class="empty">No modules in this category</div>
-                {:else}
-                    <ul class="item-list click-gui-list">
-                        {#each selectedCategoryModules as module}
-                            <li class="item module-item btn-border" use:revealBorder>
-                                <button
-                                    class="btn"
-                                    type="button"
-                                    use:revealItem={moduleRevealItemOptions}
-                                >
-                                    <span class="reveal-press-content">
-                                        {module.name}
-                                    </span>
-                                </button>
-                            </li>
-                        {/each}
-                    </ul>
-                {/if}
-            </div>
+            <ClickGuiCategoryDetailView
+                {selectedCategory}
+                {selectedCategoryModules}
+                {subsectionRevealOptions}
+                {moduleRevealItemOptions}
+                onCloseDetailView={closeDetailView}
+            />
         {:else if selectedThemeSettings}
-            <div class="category-page" use:revealContainer={subsectionRevealOptions}>
-                <div class="item btn-border" use:revealBorder>
-                    <button
-                        class="btn category-back-btn"
-                        type="button"
-                        onclick={closeDetailView}
-                        use:revealItem={moduleRevealItemOptions}
-                    >
-                        <span class="reveal-press-content">
-                            &lt; Theme Settings
-                        </span>
-                    </button>
-                </div>
-
-                <ul class="item-list click-gui-list">
-                    <li class="item btn-border" use:revealBorder>
-                        <button
-                            class="btn"
-                            type="button"
-                            use:revealItem={moduleRevealItemOptions}
-                        >
-                            <span class="reveal-press-content">
-                                Theme Settings
-                            </span>
-                        </button>
-                    </li>
-                </ul>
-            </div>
+            <ClickGuiThemeDetailView
+                {subsectionRevealOptions}
+                {moduleRevealItemOptions}
+                onCloseDetailView={closeDetailView}
+            />
         {:else if isSearching}
-            <div class="section">
-                <div class="section-title">Click GUI</div>
-
-                {#if filteredCategoryNames.length === 0}
-                    <div class="empty">No matching modules</div>
-                {:else}
-                    {#each filteredCategoryNames as categoryName}
-                        <div class="subsection">
-                            <div class="subsection-title">{categoryName}</div>
-                            <ul
-                                class="item-list click-gui-list"
-                                use:revealContainer={subsectionRevealOptions}
-                            >
-                                {#each filteredGrouped[categoryName] as module}
-                                    <li
-                                        class="item module-item btn-border"
-                                        use:revealBorder
-                                    >
-                                        <button
-                                            class="btn"
-                                            type="button"
-                                            use:revealItem={moduleRevealItemOptions}
-                                        >
-                                            <span class="reveal-press-content">
-                                                {module.name}
-                                            </span>
-                                        </button>
-                                    </li>
-                                {/each}
-                            </ul>
-                        </div>
-                    {/each}
-                {/if}
-            </div>
-
-            <div class="section">
-                <div class="section-title">Theme Settings</div>
-                <ul class="item-list" use:revealContainer={subsectionRevealOptions}>
-                    <li class="item btn-border" use:revealBorder>
-                        <button
-                            class="btn"
-                            type="button"
-                            onclick={openThemeSettings}
-                            use:revealItem={moduleRevealItemOptions}
-                        >
-                            <span class="reveal-press-content">
-                                Theme Settings
-                            </span>
-                        </button>
-                    </li>
-                </ul>
-            </div>
+            <ClickGuiSearchView
+                {filteredCategoryNames}
+                {filteredGrouped}
+                {subsectionRevealOptions}
+                {moduleRevealItemOptions}
+                onOpenThemeSettings={openThemeSettings}
+            />
         {:else}
-            <div class="non-search-group" use:revealContainer={subsectionRevealOptions}>
-                <div class="quick-settings">
-                    <ul class="item-list">
-                        <li class="item btn-border" use:revealBorder>
-                            <button
-                                class="btn"
-                                type="button"
-                                use:revealItem={moduleRevealItemOptions}
-                            >
-                                <span class="reveal-press-content">
-                                    Quick Settings
-                                </span>
-                            </button>
-                        </li>
-                    </ul>
-                </div>
-
-                <div class="click-theme-group">
-                    <div class="section">
-                        <div class="section-title">Click GUI</div>
-                        <ul class="item-list click-gui-list">
-                            {#each categoryNames as categoryName}
-                                <li class="item btn-border" use:revealBorder>
-                                    <button
-                                        class="btn"
-                                        type="button"
-                                        onclick={() => openCategory(categoryName)}
-                                        use:revealItem={moduleRevealItemOptions}
-                                    >
-                                        <span class="reveal-press-content">
-                                            {categoryName}
-                                        </span>
-                                    </button>
-                                </li>
-                            {/each}
-                        </ul>
-                    </div>
-
-                    <div class="section">
-                        <div class="section-title">Theme Settings</div>
-                        <ul class="item-list">
-                            <li class="item btn-border" use:revealBorder>
-                                <button
-                                    class="btn"
-                                    type="button"
-                                    onclick={openThemeSettings}
-                                    use:revealItem={moduleRevealItemOptions}
-                                >
-                                    <span class="reveal-press-content">
-                                        Theme Settings
-                                    </span>
-                                </button>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
+            <ClickGuiHomeView
+                {categoryNames}
+                {subsectionRevealOptions}
+                {moduleRevealItemOptions}
+                onOpenCategory={openCategory}
+                onOpenThemeSettings={openThemeSettings}
+            />
         {/if}
     </aside>
 </div>
@@ -310,39 +166,44 @@
 <style lang="scss">
     @use "../../colors.scss" as *;
 
-    .clickgui {
+    :global(.clickgui) {
+        --clickgui-backdrop-color: #{rgba($clickgui-base-color, 0.15)};
+        --clickgui-surface-color: #{rgba($clickgui-base-color, 0.7)};
+        --clickgui-surface-strong-color: #{rgba($clickgui-base-color, 0.85)};
+        --clickgui-shadow-color: #{rgba($clickgui-base-color, 0.5)};
+
         display: flex;
         height: 100%;
         width: 100%;
-        background-color: rgba($clickgui-base-color, 0.15);
+        background-color: var(--clickgui-backdrop-color);
     }
 
-    .sidebar {
+    :global(.clickgui > .sidebar) {
         display: flex;
         flex-direction: column;
         width: 280px;
-        background-color: rgba($clickgui-base-color, 0.7);
+        background-color: var(--clickgui-surface-color) !important;
         color: $clickgui-text-color;
         border-radius: 0;
         padding: 10px;
         gap: 12px;
-        box-shadow: 0 0 12px rgba($clickgui-base-color, 0.5);
+        box-shadow: 0 0 12px var(--clickgui-shadow-color);
     }
 
-    .search {
+    :global(.clickgui > .sidebar > .search) {
         position: sticky;
         top: 0;
         z-index: 2;
-        background-color: rgba($clickgui-base-color, 0.7);
+        background-color: var(--clickgui-surface-color) !important;
         padding-bottom: 8px;
     }
 
-    .search-input {
+    :global(.clickgui > .sidebar > .search > .search-input) {
         width: 100%;
         padding: 8px 10px;
         border-radius: 0;
         border: 1px solid rgba($clickgui-text-color, 0.2);
-        background-color: rgba($clickgui-base-color, 0.85);
+        background-color: var(--clickgui-surface-strong-color) !important;
         color: $clickgui-text-color;
         font-size: 13px;
         outline: none;
@@ -355,126 +216,5 @@
             border-color: $accent-color;
             box-shadow: 0 0 0 2px rgba($accent-color, 0.25);
         }
-    }
-
-    .section {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-    }
-
-    .section-title {
-        font-size: 12px;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: $clickgui-text-dimmed-color;
-    }
-
-    .subsection {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        padding-left: 4px;
-    }
-
-    .subsection-title {
-        font-size: 12px;
-        color: $clickgui-text-color;
-        opacity: 0.85;
-    }
-
-    .item-list.click-gui-list {
-        gap: 0;
-    }
-
-    .category-page {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    .click-gui-list > .item {
-        margin: 0;
-        border-radius: 0;
-    }
-
-    .click-gui-list > .item > .btn {
-        border-radius: 0;
-    }
-
-    .item-list {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-    }
-
-    .item {
-        position: relative;
-        overflow: hidden;
-
-        font-size: 13px;
-        padding: 6px 8px;
-        border-radius: 0;
-        cursor: pointer;
-        color: $clickgui-text-color;
-
-        &:hover {
-            background-color: rgba($clickgui-base-color, 0.85);
-        }
-    }
-
-    .item.btn-border {
-        padding: 0;
-
-        &:hover {
-            background-color: transparent;
-        }
-    }
-
-    .item.btn-border .btn {
-        position: relative;
-        overflow: hidden;
-        display: block;
-        width: 100%;
-        padding: 6px 8px;
-        border-radius: 0;
-        border: 0;
-        background: transparent;
-        color: inherit;
-        font: inherit;
-        text-align: left;
-        cursor: pointer;
-    }
-
-    .category-back-btn {
-        font-size: 20px;
-        font-weight: 500;
-        line-height: 1.2;
-    }
-
-    :global(.clickgui .item-list.reveal-container .reveal-item)::before {
-        background: radial-gradient(
-            circle 150px at var(--item-fx-x, -9999px) var(--item-fx-y, -9999px),
-            var(--reveal-hover-color),
-            transparent 100%
-        );
-    }
-
-    .module-item {
-        font-size: 12px;
-        color: $clickgui-text-dimmed-color;
-    }
-
-    .module-item .btn {
-        padding-left: 14px;
-    }
-
-    .empty {
-        font-size: 12px;
-        color: $clickgui-text-dimmed-color;
-        padding: 6px 4px;
     }
 </style>
