@@ -36,10 +36,6 @@
         },
         click: {
             color: "rgba(255,255,255,0.3)",
-            press: {
-                scale: 1,
-                transitionMs: 0,
-            },
             ripple: {
                 enabled: true,
                 durationMs: 1000,
@@ -328,6 +324,10 @@
 
     .item.btn-border {
         padding: 0;
+
+        &:hover {
+            background-color: transparent;
+        }
     }
 
     .item.btn-border .btn {
