@@ -1,4 +1,5 @@
 import "./app.scss";
+import "fluent-reveal-svelte/styles/reveal.css";
 import App from "./App.svelte";
 import {mount} from "svelte";
 

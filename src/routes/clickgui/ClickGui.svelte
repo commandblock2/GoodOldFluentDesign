@@ -1,6 +1,13 @@
 <script lang="ts">
     import type { GroupedModules, Module } from "../../integration/types";
     import { onMount } from "svelte";
+    import {
+        revealBorder,
+        revealContainer,
+        revealItem,
+        type RevealContainerOptions,
+        type RevealItemOptions,
+    } from "fluent-reveal-svelte";
     import { getModules } from "../../integration/rest";
     import { groupByCategory } from "../../integration/util";
 
@@ -9,6 +16,43 @@
     let searchQuery = $state("");
 
     const sortByName = (a: string, b: string) => a.localeCompare(b);
+
+    const subsectionRevealOptions: RevealContainerOptions = {
+        border: {
+            radius: 48,
+            color: "rgba(255,255,255,0.6)",
+            fadeStopPct: 100,
+            transitionMs: 120,
+        },
+        hover: {
+            color: "rgba(255,255,255,0.3)",
+        },
+        focus: {
+            enabled: true,
+            color: "rgba(255,255,255,0.62)",
+            widthPx: 1,
+            offsetPx: 2,
+            glowPx: 10,
+        },
+        click: {
+            color: "rgba(255,255,255,0.3)",
+            press: {
+                scale: 1,
+                transitionMs: 0,
+            },
+            ripple: {
+                enabled: true,
+                durationMs: 1000,
+                sizePx: 48,
+            },
+        },
+    };
+
+    const moduleRevealItemOptions: RevealItemOptions = {
+        border: true,
+        hover: true,
+        click: true,
+    };
 
     const normalizedQuery = $derived(searchQuery.trim().toLowerCase());
     const isSearching = $derived(normalizedQuery.length > 0);
@@ -68,10 +112,24 @@
                     {#each filteredCategoryNames as categoryName}
                         <div class="subsection">
                             <div class="subsection-title">{categoryName}</div>
-                            <ul class="item-list">
+                            <ul
+                                class="item-list click-gui-list"
+                                use:revealContainer={subsectionRevealOptions}
+                            >
                                 {#each filteredGrouped[categoryName] as module}
-                                    <li class="item module-item">
-                                        {module.name}
+                                    <li
+                                        class="item module-item btn-border"
+                                        use:revealBorder
+                                    >
+                                        <button
+                                            class="btn"
+                                            type="button"
+                                            use:revealItem={moduleRevealItemOptions}
+                                        >
+                                            <span class="reveal-press-content">
+                                                {module.name}
+                                            </span>
+                                        </button>
                                     </li>
                                 {/each}
                             </ul>
@@ -82,28 +140,73 @@
 
             <div class="section">
                 <div class="section-title">Theme Settings</div>
-                <ul class="item-list">
-                    <li class="item">Theme Settings</li>
+                <ul class="item-list" use:revealContainer={subsectionRevealOptions}>
+                    <li class="item btn-border" use:revealBorder>
+                        <button
+                            class="btn"
+                            type="button"
+                            use:revealItem={moduleRevealItemOptions}
+                        >
+                            <span class="reveal-press-content">
+                                Theme Settings
+                            </span>
+                        </button>
+                    </li>
                 </ul>
             </div>
         {:else}
             <div class="quick-settings">
-                <div class="item">Quick Settings</div>
+                <ul class="item-list" use:revealContainer={subsectionRevealOptions}>
+                    <li class="item btn-border" use:revealBorder>
+                        <button
+                            class="btn"
+                            type="button"
+                            use:revealItem={moduleRevealItemOptions}
+                        >
+                            <span class="reveal-press-content">
+                                Quick Settings
+                            </span>
+                        </button>
+                    </li>
+                </ul>
             </div>
 
             <div class="section">
                 <div class="section-title">Click GUI</div>
-                <ul class="item-list">
+                <ul
+                    class="item-list click-gui-list"
+                    use:revealContainer={subsectionRevealOptions}
+                >
                     {#each categoryNames as categoryName}
-                        <li class="item">{categoryName}</li>
+                        <li class="item btn-border" use:revealBorder>
+                            <button
+                                class="btn"
+                                type="button"
+                                use:revealItem={moduleRevealItemOptions}
+                            >
+                                <span class="reveal-press-content">
+                                    {categoryName}
+                                </span>
+                            </button>
+                        </li>
                     {/each}
                 </ul>
             </div>
 
             <div class="section">
                 <div class="section-title">Theme Settings</div>
-                <ul class="item-list">
-                    <li class="item">Theme Settings</li>
+                <ul class="item-list" use:revealContainer={subsectionRevealOptions}>
+                    <li class="item btn-border" use:revealBorder>
+                        <button
+                            class="btn"
+                            type="button"
+                            use:revealItem={moduleRevealItemOptions}
+                        >
+                            <span class="reveal-press-content">
+                                Theme Settings
+                            </span>
+                        </button>
+                    </li>
                 </ul>
             </div>
         {/if}
@@ -126,7 +229,7 @@
         width: 280px;
         background-color: rgba($clickgui-base-color, 0.7);
         color: $clickgui-text-color;
-        border-radius: 6px;
+        border-radius: 0;
         padding: 10px;
         gap: 12px;
         box-shadow: 0 0 12px rgba($clickgui-base-color, 0.5);
@@ -143,7 +246,7 @@
     .search-input {
         width: 100%;
         padding: 8px 10px;
-        border-radius: 6px;
+        border-radius: 0;
         border: 1px solid rgba($clickgui-text-color, 0.2);
         background-color: rgba($clickgui-base-color, 0.85);
         color: $clickgui-text-color;
@@ -186,6 +289,19 @@
         opacity: 0.85;
     }
 
+    .item-list.click-gui-list {
+        gap: 0;
+    }
+
+    .click-gui-list > .item {
+        margin: 0;
+        border-radius: 0;
+    }
+
+    .click-gui-list > .item > .btn {
+        border-radius: 0;
+    }
+
     .item-list {
         list-style: none;
         margin: 0;
@@ -196,9 +312,12 @@
     }
 
     .item {
+        position: relative;
+        overflow: hidden;
+
         font-size: 13px;
         padding: 6px 8px;
-        border-radius: 6px;
+        border-radius: 0;
         cursor: pointer;
         color: $clickgui-text-color;
 
@@ -207,10 +326,40 @@
         }
     }
 
+    .item.btn-border {
+        padding: 0;
+    }
+
+    .item.btn-border .btn {
+        position: relative;
+        overflow: hidden;
+        display: block;
+        width: 100%;
+        padding: 6px 8px;
+        border-radius: 0;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+    }
+
+    :global(.clickgui .item-list.reveal-container .reveal-item)::before {
+        background: radial-gradient(
+            circle 150px at var(--item-fx-x, -9999px) var(--item-fx-y, -9999px),
+            var(--reveal-hover-color),
+            transparent 100%
+        );
+    }
+
     .module-item {
-        padding-left: 14px;
         font-size: 12px;
         color: $clickgui-text-dimmed-color;
+    }
+
+    .module-item .btn {
+        padding-left: 14px;
     }
 
     .empty {
