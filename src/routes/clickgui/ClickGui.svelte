@@ -14,6 +14,8 @@
     let categories = $state<GroupedModules>({});
     let modules = $state<Module[]>([]);
     let searchQuery = $state("");
+    let selectedCategory = $state<string | null>(null);
+    let selectedThemeSettings = $state(false);
 
     const sortByName = (a: string, b: string) => a.localeCompare(b);
 
@@ -66,6 +68,16 @@
     const filteredCategoryNames = $derived(
         Object.keys(filteredGrouped).sort(sortByName),
     );
+    const selectedCategoryModules = $derived(
+        selectedCategory === null
+            ? []
+            : [...(categories[selectedCategory] ?? [])].sort((a, b) =>
+                  sortByName(a.name, b.name),
+              ),
+    );
+    const isDetailView = $derived(
+        selectedCategory !== null || selectedThemeSettings,
+    );
 
     onMount(async () => {
         modules = await getModules();
@@ -85,20 +97,102 @@
 
         return haystack.includes(query);
     }
+
+    function openCategory(categoryName: string) {
+        selectedCategory = categoryName;
+        selectedThemeSettings = false;
+    }
+
+    function openThemeSettings() {
+        selectedCategory = null;
+        selectedThemeSettings = true;
+        searchQuery = "";
+    }
+
+    function closeDetailView() {
+        selectedCategory = null;
+        selectedThemeSettings = false;
+    }
 </script>
 
 <div class="clickgui">
     <aside class="sidebar">
-        <div class="search">
-            <input
-                class="search-input"
-                type="text"
-                placeholder="Search"
-                bind:value={searchQuery}
-            />
-        </div>
+        {#if !isDetailView}
+            <div class="search">
+                <input
+                    class="search-input"
+                    type="text"
+                    placeholder="Search"
+                    bind:value={searchQuery}
+                />
+            </div>
+        {/if}
 
-        {#if isSearching}
+        {#if selectedCategory !== null}
+            <div class="category-page" use:revealContainer={subsectionRevealOptions}>
+                <div class="item btn-border" use:revealBorder>
+                    <button
+                        class="btn category-back-btn"
+                        type="button"
+                        onclick={closeDetailView}
+                        use:revealItem={moduleRevealItemOptions}
+                    >
+                        <span class="reveal-press-content">
+                            &lt; {selectedCategory}
+                        </span>
+                    </button>
+                </div>
+
+                {#if selectedCategoryModules.length === 0}
+                    <div class="empty">No modules in this category</div>
+                {:else}
+                    <ul class="item-list click-gui-list">
+                        {#each selectedCategoryModules as module}
+                            <li class="item module-item btn-border" use:revealBorder>
+                                <button
+                                    class="btn"
+                                    type="button"
+                                    use:revealItem={moduleRevealItemOptions}
+                                >
+                                    <span class="reveal-press-content">
+                                        {module.name}
+                                    </span>
+                                </button>
+                            </li>
+                        {/each}
+                    </ul>
+                {/if}
+            </div>
+        {:else if selectedThemeSettings}
+            <div class="category-page" use:revealContainer={subsectionRevealOptions}>
+                <div class="item btn-border" use:revealBorder>
+                    <button
+                        class="btn category-back-btn"
+                        type="button"
+                        onclick={closeDetailView}
+                        use:revealItem={moduleRevealItemOptions}
+                    >
+                        <span class="reveal-press-content">
+                            &lt; Theme Settings
+                        </span>
+                    </button>
+                </div>
+
+                <ul class="item-list click-gui-list">
+                    <li class="item btn-border" use:revealBorder>
+                        <button
+                            class="btn"
+                            type="button"
+                            use:revealItem={moduleRevealItemOptions}
+                        >
+                            <span class="reveal-press-content">
+                                Theme Settings
+                            </span>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        {:else if isSearching}
             <div class="section">
                 <div class="section-title">Click GUI</div>
 
@@ -141,6 +235,7 @@
                         <button
                             class="btn"
                             type="button"
+                            onclick={openThemeSettings}
                             use:revealItem={moduleRevealItemOptions}
                         >
                             <span class="reveal-press-content">
@@ -177,6 +272,7 @@
                                     <button
                                         class="btn"
                                         type="button"
+                                        onclick={() => openCategory(categoryName)}
                                         use:revealItem={moduleRevealItemOptions}
                                     >
                                         <span class="reveal-press-content">
@@ -195,6 +291,7 @@
                                 <button
                                     class="btn"
                                     type="button"
+                                    onclick={openThemeSettings}
                                     use:revealItem={moduleRevealItemOptions}
                                 >
                                     <span class="reveal-press-content">
@@ -206,7 +303,6 @@
                     </div>
                 </div>
             </div>
-
         {/if}
     </aside>
 </div>
@@ -291,6 +387,12 @@
         gap: 0;
     }
 
+    .category-page {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
     .click-gui-list > .item {
         margin: 0;
         border-radius: 0;
@@ -345,6 +447,12 @@
         font: inherit;
         text-align: left;
         cursor: pointer;
+    }
+
+    .category-back-btn {
+        font-size: 20px;
+        font-weight: 500;
+        line-height: 1.2;
     }
 
     :global(.clickgui .item-list.reveal-container .reveal-item)::before {
