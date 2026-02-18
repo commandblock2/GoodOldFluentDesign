@@ -41,6 +41,9 @@
     let activeConfigError = $state<string | null>(null);
     let activeConfigLoading = $state(false);
     let moduleSettingsRequestId = 0;
+    // TODO: wire this from theme settings.
+    let settingsSplitCount = $state(1);
+    let settingHeights = $state<Record<number, number>>({});
 
     const sortByName = (a: string, b: string) => a.localeCompare(b);
 
@@ -136,6 +139,35 @@
                 : "Click GUI",
     );
     const activeModuleSettings = $derived(activeConfigurable?.value ?? []);
+    const settingsColumnCount = $derived(Math.max(1, settingsSplitCount + 1));
+    const settingsColumns = $derived(
+        (() => {
+            const columns = Array.from(
+                { length: settingsColumnCount },
+                () => [] as { setting: ModuleSetting; settingIndex: number }[],
+            );
+            const columnHeights = Array.from(
+                { length: settingsColumnCount },
+                () => 0,
+            );
+
+            activeModuleSettings.forEach((setting, settingIndex) => {
+                let targetColumn = 0;
+
+                for (let i = 1; i < settingsColumnCount; i++) {
+                    if (columnHeights[i] < columnHeights[targetColumn]) {
+                        targetColumn = i;
+                    }
+                }
+
+                columns[targetColumn].push({ setting, settingIndex });
+                columnHeights[targetColumn] +=
+                    settingHeights[settingIndex] ?? estimateSettingHeight(setting);
+            });
+
+            return columns;
+        })(),
+    );
 
     onMount(async () => {
         modules = await getModules();
@@ -314,6 +346,71 @@
             "Failed to update text setting.",
         );
     }
+
+    function estimateSettingHeight(setting: ModuleSetting) {
+        if (isBooleanSetting(setting)) {
+            return 64;
+        }
+
+        if (isTextSetting(setting)) {
+            return 88;
+        }
+
+        const valueLength = JSON.stringify(setting.value).length;
+        return 90 + Math.min(240, Math.ceil(valueLength / 42) * 18);
+    }
+
+    function trackSettingHeight(node: HTMLElement, settingIndex: number) {
+        let activeIndex = settingIndex;
+        let resizeObserver: ResizeObserver | null = null;
+
+        const writeHeight = () => {
+            const nextHeight = Math.ceil(node.getBoundingClientRect().height);
+
+            if (settingHeights[activeIndex] === nextHeight) {
+                return;
+            }
+
+            settingHeights = {
+                ...settingHeights,
+                [activeIndex]: nextHeight,
+            };
+        };
+
+        const clearHeight = (index: number) => {
+            if (settingHeights[index] === undefined) {
+                return;
+            }
+
+            const nextHeights = { ...settingHeights };
+            delete nextHeights[index];
+            settingHeights = nextHeights;
+        };
+
+        if (typeof ResizeObserver !== "undefined") {
+            resizeObserver = new ResizeObserver(writeHeight);
+            resizeObserver.observe(node);
+        }
+
+        requestAnimationFrame(writeHeight);
+
+        return {
+            update(nextIndex: number) {
+                if (nextIndex === activeIndex) {
+                    writeHeight();
+                    return;
+                }
+
+                clearHeight(activeIndex);
+                activeIndex = nextIndex;
+                writeHeight();
+            },
+            destroy() {
+                resizeObserver?.disconnect();
+                clearHeight(activeIndex);
+            },
+        };
+    }
 </script>
 
 <div class="clickgui">
@@ -376,36 +473,49 @@
         </div>
 
         {#if activeConfigPage.type === "module" && activeConfigurable !== null}
-            <div class="settings-list">
-                {#each activeModuleSettings as setting, settingIndex (settingIndex)}
-                    <div class="setting-entry">
-                        <div class="setting-header">
-                            <strong>{setting.name}</strong>
-                            <span>{setting.valueType}</span>
-                        </div>
+            <div class="settings-split-layout">
+                {#each settingsColumns as column, columnIndex (columnIndex)}
+                    <div class="settings-column">
+                        {#each column as item (item.settingIndex)}
+                            <div
+                                class="setting-entry"
+                                use:trackSettingHeight={item.settingIndex}
+                            >
+                                <div class="setting-header">
+                                    <strong>{item.setting.name}</strong>
+                                    <span>{item.setting.valueType}</span>
+                                </div>
 
-                        {#if isBooleanSetting(setting)}
-                            <BooleanSettingControl
-                                {setting}
-                                onChange={(checked) =>
-                                    onBooleanSettingChange(
-                                        settingIndex,
-                                        checked,
-                                    )}
-                            />
-                        {:else if isTextSetting(setting)}
-                            <TextSettingControl
-                                {setting}
-                                onChange={(nextValue) =>
-                                    onTextSettingChange(
-                                        settingIndex,
-                                        nextValue,
-                                    )}
-                            />
-                        {:else}
-                            <pre>{JSON.stringify(setting.value, null, 2)}</pre>
-                        {/if}
+                                {#if isBooleanSetting(item.setting)}
+                                    <BooleanSettingControl
+                                        setting={item.setting}
+                                        onChange={(checked) =>
+                                            onBooleanSettingChange(
+                                                item.settingIndex,
+                                                checked,
+                                            )}
+                                    />
+                                {:else if isTextSetting(item.setting)}
+                                    <TextSettingControl
+                                        setting={item.setting}
+                                        onChange={(nextValue) =>
+                                            onTextSettingChange(
+                                                item.settingIndex,
+                                                nextValue,
+                                            )}
+                                    />
+                                {:else}
+                                    <pre>
+                                        {JSON.stringify(item.setting.value, null, 2)}
+                                    </pre>
+                                {/if}
+                            </div>
+                        {/each}
                     </div>
+
+                    {#if columnIndex < settingsColumns.length - 1}
+                        <div class="settings-split" aria-hidden="true"></div>
+                    {/if}
                 {/each}
             </div>
         {:else}
@@ -500,6 +610,26 @@
         color: $clickgui-text-color;
         font-size: 13px;
         outline: none;
+    }
+
+    :global(.clickgui > .main-content .settings-split-layout) {
+        display: flex;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    :global(.clickgui > .main-content .settings-column) {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    :global(.clickgui > .main-content .settings-split) {
+        width: 1px;
+        flex-shrink: 0;
+        background-color: rgba($clickgui-text-color, 0.15);
     }
 
     :global(.clickgui > .main-content .settings-list) {
