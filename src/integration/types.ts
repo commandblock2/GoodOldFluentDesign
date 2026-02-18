@@ -67,11 +67,11 @@ export interface FileSelectResult {
 }
 
 export interface Setting<V> {
-    valueType: string;
+    valueType: string | undefined;
     name: string;
     value: V;
-    description: string;
-    key: string;
+    description: string | undefined;
+    key: string | undefined;
 }
 
 export interface FileSetting extends Setting<File> {
