@@ -1,20 +1,29 @@
 <script lang="ts">
     import type {
+        BooleanSetting,
         ConfigurableSetting,
         GroupedModules,
         Module,
+        ModuleSetting,
+        TextSetting,
     } from "../../integration/types";
     import { onMount } from "svelte";
     import type {
         RevealContainerOptions,
         RevealItemOptions,
     } from "fluent-reveal-svelte";
-    import { getModuleSettings, getModules } from "../../integration/rest";
+    import {
+        getModuleSettings,
+        getModules,
+        setModuleSettings,
+    } from "../../integration/rest";
     import { groupByCategory } from "../../integration/util";
     import ClickGuiCategoryDetailView from "./views/ClickGuiCategoryDetailView.svelte";
     import ClickGuiHomeView from "./views/ClickGuiHomeView.svelte";
     import ClickGuiSearchView from "./views/ClickGuiSearchView.svelte";
     import ClickGuiThemeDetailView from "./views/ClickGuiThemeDetailView.svelte";
+    import BooleanSettingControl from "./setting/BooleanSettingControl.svelte";
+    import TextSettingControl from "./setting/TextSettingControl.svelte";
 
     let categories = $state<GroupedModules>({});
     let modules = $state<Module[]>([]);
@@ -117,6 +126,16 @@
             2,
         ),
     );
+    const activeConfigTitle = $derived(
+        activeConfigPage.type === "module" && activeConfigPage.moduleName !== null
+            ? activeConfigPage.moduleName
+            : activeConfigPage.type === "quick-settings"
+              ? "Quick Settings"
+              : activeConfigPage.type === "theme-settings"
+                ? "Theme Settings"
+                : "Click GUI",
+    );
+    const activeModuleSettings = $derived(activeConfigurable?.value ?? []);
 
     onMount(async () => {
         modules = await getModules();
@@ -204,6 +223,97 @@
             activeConfigLoading = false;
         }
     }
+
+    function isBooleanSetting(setting: ModuleSetting): setting is BooleanSetting {
+        return (
+            setting.valueType === "BOOLEAN" &&
+            typeof (setting as BooleanSetting).value === "boolean"
+        );
+    }
+
+    function isTextSetting(setting: ModuleSetting): setting is TextSetting {
+        return (
+            setting.valueType === "TEXT" &&
+            typeof (setting as TextSetting).value === "string"
+        );
+    }
+
+    async function updateActiveModuleSettings(
+        mapper: (setting: ModuleSetting, index: number) => ModuleSetting,
+        errorMessage: string,
+    ) {
+        if (
+            activeConfigPage.type !== "module" ||
+            activeConfigPage.moduleName === null ||
+            activeConfigurable === null
+        ) {
+            return;
+        }
+
+        const moduleName = activeConfigPage.moduleName;
+        const previousConfigurable = activeConfigurable;
+        const nextConfigurable = {
+            ...previousConfigurable,
+            value: previousConfigurable.value.map((setting, index) =>
+                mapper(setting, index),
+            ),
+        };
+
+        activeConfigurable = nextConfigurable;
+        activeConfigError = null;
+
+        try {
+            await setModuleSettings(moduleName, nextConfigurable);
+        } catch (error) {
+            if (
+                activeConfigPage.type !== "module" ||
+                activeConfigPage.moduleName !== moduleName
+            ) {
+                return;
+            }
+
+            activeConfigurable = previousConfigurable;
+            activeConfigError =
+                error instanceof Error
+                    ? error.message
+                    : errorMessage;
+        }
+    }
+
+    async function onBooleanSettingChange(
+        settingIndex: number,
+        checked: boolean,
+    ) {
+        await updateActiveModuleSettings(
+            (setting, index) => {
+                if (index !== settingIndex || !isBooleanSetting(setting)) {
+                    return setting;
+                }
+
+                return {
+                    ...setting,
+                    value: checked,
+                };
+            },
+            "Failed to update boolean setting.",
+        );
+    }
+
+    async function onTextSettingChange(settingIndex: number, nextValue: string) {
+        await updateActiveModuleSettings(
+            (setting, index) => {
+                if (index !== settingIndex || !isTextSetting(setting)) {
+                    return setting;
+                }
+
+                return {
+                    ...setting,
+                    value: nextValue,
+                };
+            },
+            "Failed to update text setting.",
+        );
+    }
 </script>
 
 <div class="clickgui">
@@ -256,7 +366,51 @@
     </aside>
 
     <section class="main-content">
-        <pre>{activeConfigPayloadJson}</pre>
+        <div class="main-content-header">
+            <h2 class="main-content-title">{activeConfigTitle}</h2>
+            <input
+                class="settings-search-input"
+                type="text"
+                placeholder="Search settings..."
+            />
+        </div>
+
+        {#if activeConfigPage.type === "module" && activeConfigurable !== null}
+            <div class="settings-list">
+                {#each activeModuleSettings as setting, settingIndex (settingIndex)}
+                    <div class="setting-entry">
+                        <div class="setting-header">
+                            <strong>{setting.name}</strong>
+                            <span>{setting.valueType}</span>
+                        </div>
+
+                        {#if isBooleanSetting(setting)}
+                            <BooleanSettingControl
+                                {setting}
+                                onChange={(checked) =>
+                                    onBooleanSettingChange(
+                                        settingIndex,
+                                        checked,
+                                    )}
+                            />
+                        {:else if isTextSetting(setting)}
+                            <TextSettingControl
+                                {setting}
+                                onChange={(nextValue) =>
+                                    onTextSettingChange(
+                                        settingIndex,
+                                        nextValue,
+                                    )}
+                            />
+                        {:else}
+                            <pre>{JSON.stringify(setting.value, null, 2)}</pre>
+                        {/if}
+                    </div>
+                {/each}
+            </div>
+        {:else}
+            <pre>{activeConfigPayloadJson}</pre>
+        {/if}
     </section>
 </div>
 
@@ -322,5 +476,48 @@
         padding: 10px;
         overflow: auto;
         color: $clickgui-text-color;
+    }
+
+    :global(.clickgui > .main-content .main-content-header) {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 10px;
+    }
+
+    :global(.clickgui > .main-content .main-content-title) {
+        font-size: 20px;
+        font-weight: 600;
+        line-height: 1.1;
+    }
+
+    :global(.clickgui > .main-content .settings-search-input) {
+        width: 100%;
+        padding: 8px 10px;
+        border-radius: 0;
+        border: 1px solid rgba($clickgui-text-color, 0.2);
+        background-color: var(--clickgui-surface-strong-color) !important;
+        color: $clickgui-text-color;
+        font-size: 13px;
+        outline: none;
+    }
+
+    :global(.clickgui > .main-content .settings-list) {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    :global(.clickgui > .main-content .setting-entry) {
+        border: 1px solid rgba($clickgui-text-color, 0.12);
+        padding: 10px;
+    }
+
+    :global(.clickgui > .main-content .setting-header) {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 8px;
     }
 </style>
