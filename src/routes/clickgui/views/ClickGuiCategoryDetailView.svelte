@@ -13,6 +13,7 @@
     export let subsectionRevealOptions: RevealContainerOptions;
     export let moduleRevealItemOptions: RevealItemOptions;
     export let onCloseDetailView: () => void = () => {};
+    export let onOpenModuleConfig: (module: Module) => void = () => {};
 </script>
 
 <div class="category-page" use:revealContainer={subsectionRevealOptions}>
@@ -38,6 +39,7 @@
                     <button
                         class="btn"
                         type="button"
+                        onclick={() => onOpenModuleConfig(module)}
                         use:revealItem={moduleRevealItemOptions}
                     >
                         <span class="reveal-press-content">

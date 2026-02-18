@@ -11,6 +11,7 @@
     export let subsectionRevealOptions: RevealContainerOptions;
     export let moduleRevealItemOptions: RevealItemOptions;
     export let onOpenCategory: (categoryName: string) => void = () => {};
+    export let onOpenQuickSettings: () => void = () => {};
     export let onOpenThemeSettings: () => void = () => {};
 </script>
 
@@ -21,6 +22,7 @@
                 <button
                     class="btn"
                     type="button"
+                    onclick={onOpenQuickSettings}
                     use:revealItem={moduleRevealItemOptions}
                 >
                     <span class="reveal-press-content">

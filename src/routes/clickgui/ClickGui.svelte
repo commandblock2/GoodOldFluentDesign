@@ -1,11 +1,15 @@
 <script lang="ts">
-    import type { GroupedModules, Module } from "../../integration/types";
+    import type {
+        ConfigurableSetting,
+        GroupedModules,
+        Module,
+    } from "../../integration/types";
     import { onMount } from "svelte";
     import type {
         RevealContainerOptions,
         RevealItemOptions,
     } from "fluent-reveal-svelte";
-    import { getModules } from "../../integration/rest";
+    import { getModuleSettings, getModules } from "../../integration/rest";
     import { groupByCategory } from "../../integration/util";
     import ClickGuiCategoryDetailView from "./views/ClickGuiCategoryDetailView.svelte";
     import ClickGuiHomeView from "./views/ClickGuiHomeView.svelte";
@@ -17,6 +21,17 @@
     let searchQuery = $state("");
     let selectedCategory = $state<string | null>(null);
     let selectedThemeSettings = $state(false);
+    let activeConfigPage = $state<{
+        type: "clickgui" | "quick-settings" | "theme-settings" | "module";
+        moduleName: string | null;
+    }>({
+        type: "clickgui",
+        moduleName: null,
+    });
+    let activeConfigurable = $state<ConfigurableSetting | null>(null);
+    let activeConfigError = $state<string | null>(null);
+    let activeConfigLoading = $state(false);
+    let moduleSettingsRequestId = 0;
 
     const sortByName = (a: string, b: string) => a.localeCompare(b);
 
@@ -79,6 +94,29 @@
     const isDetailView = $derived(
         selectedCategory !== null || selectedThemeSettings,
     );
+    const activeConfigPayloadJson = $derived(
+        JSON.stringify(
+            activeConfigError !== null
+                ? {
+                      status: "error",
+                      page: activeConfigPage.type,
+                      moduleName: activeConfigPage.moduleName,
+                      message: activeConfigError,
+                  }
+                : activeConfigLoading
+                  ? {
+                        status: "loading",
+                        page: activeConfigPage.type,
+                        moduleName: activeConfigPage.moduleName,
+                    }
+                  : activeConfigurable ?? {
+                        page: activeConfigPage.type,
+                        moduleName: activeConfigPage.moduleName,
+                    },
+            null,
+            2,
+        ),
+    );
 
     onMount(async () => {
         modules = await getModules();
@@ -104,15 +142,67 @@
         selectedThemeSettings = false;
     }
 
+    function openQuickSettings() {
+        selectedCategory = null;
+        selectedThemeSettings = false;
+        activeConfigPage = {
+            type: "quick-settings",
+            moduleName: null,
+        };
+        activeConfigurable = null;
+        activeConfigError = null;
+        activeConfigLoading = false;
+    }
+
     function openThemeSettings() {
         selectedCategory = null;
         selectedThemeSettings = true;
         searchQuery = "";
+        activeConfigPage = {
+            type: "theme-settings",
+            moduleName: null,
+        };
+        activeConfigurable = null;
+        activeConfigError = null;
+        activeConfigLoading = false;
     }
 
     function closeDetailView() {
         selectedCategory = null;
         selectedThemeSettings = false;
+    }
+
+    async function openModuleConfig(module: Module) {
+        const requestId = ++moduleSettingsRequestId;
+
+        activeConfigPage = {
+            type: "module",
+            moduleName: module.name,
+        };
+        activeConfigurable = null;
+        activeConfigError = null;
+        activeConfigLoading = true;
+
+        try {
+            const configurable = await getModuleSettings(module.name);
+
+            if (requestId !== moduleSettingsRequestId) {
+                return;
+            }
+
+            activeConfigurable = configurable;
+            activeConfigLoading = false;
+        } catch (error) {
+            if (requestId !== moduleSettingsRequestId) {
+                return;
+            }
+
+            activeConfigError =
+                error instanceof Error
+                    ? error.message
+                    : "Failed to load module settings.";
+            activeConfigLoading = false;
+        }
     }
 </script>
 
@@ -136,6 +226,7 @@
                 {subsectionRevealOptions}
                 {moduleRevealItemOptions}
                 onCloseDetailView={closeDetailView}
+                onOpenModuleConfig={openModuleConfig}
             />
         {:else if selectedThemeSettings}
             <ClickGuiThemeDetailView
@@ -150,6 +241,7 @@
                 {subsectionRevealOptions}
                 {moduleRevealItemOptions}
                 onOpenThemeSettings={openThemeSettings}
+                onOpenModuleConfig={openModuleConfig}
             />
         {:else}
             <ClickGuiHomeView
@@ -158,9 +250,14 @@
                 {moduleRevealItemOptions}
                 onOpenCategory={openCategory}
                 onOpenThemeSettings={openThemeSettings}
+                onOpenQuickSettings={openQuickSettings}
             />
         {/if}
     </aside>
+
+    <section class="main-content">
+        <pre>{activeConfigPayloadJson}</pre>
+    </section>
 </div>
 
 <style lang="scss">
@@ -181,6 +278,7 @@
     :global(.clickgui > .sidebar) {
         display: flex;
         flex-direction: column;
+        flex-shrink: 0;
         width: 280px;
         background-color: var(--clickgui-surface-color) !important;
         color: $clickgui-text-color;
@@ -216,5 +314,13 @@
             border-color: $accent-color;
             box-shadow: 0 0 0 2px rgba($accent-color, 0.25);
         }
+    }
+
+    :global(.clickgui > .main-content) {
+        flex: 1;
+        min-width: 0;
+        padding: 10px;
+        overflow: auto;
+        color: $clickgui-text-color;
     }
 </style>

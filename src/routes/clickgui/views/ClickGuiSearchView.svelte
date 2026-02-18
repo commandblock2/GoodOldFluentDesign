@@ -12,6 +12,7 @@
     export let filteredGrouped: GroupedModules = {};
     export let subsectionRevealOptions: RevealContainerOptions;
     export let moduleRevealItemOptions: RevealItemOptions;
+    export let onOpenModuleConfig: (module: Module) => void = () => {};
     export let onOpenThemeSettings: () => void = () => {};
 
     function modulesForCategory(categoryName: string): Module[] {
@@ -37,6 +38,7 @@
                             <button
                                 class="btn"
                                 type="button"
+                                onclick={() => onOpenModuleConfig(module)}
                                 use:revealItem={moduleRevealItemOptions}
                             >
                                 <span class="reveal-press-content">
