@@ -129,3 +129,9 @@ To publish the theme to the LiquidBounce Marketplace, complete the following ste
     ```
 
 Once configured, the workflow will automatically build and publish the theme when triggered.
+
+## ClickGUI UX Design
+
+ClickGUI interaction goals and decision notes are documented in:
+
+- `docs/clickgui-ux.md`
