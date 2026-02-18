@@ -534,8 +534,10 @@
         --clickgui-shadow-color: #{rgba($clickgui-base-color, 0.5)};
 
         display: flex;
-        height: 100%;
+        height: 100vh;
         width: 100%;
+        max-height: 100vh;
+        overflow: hidden;
         background-color: var(--clickgui-backdrop-color);
     }
 
@@ -543,6 +545,8 @@
         display: flex;
         flex-direction: column;
         flex-shrink: 0;
+        height: 100%;
+        min-height: 0;
         width: 280px;
         background-color: var(--clickgui-surface-color) !important;
         color: $clickgui-text-color;
@@ -550,6 +554,8 @@
         padding: 10px;
         gap: 12px;
         box-shadow: 0 0 12px var(--clickgui-shadow-color);
+        overflow-x: hidden;
+        overflow-y: auto;
     }
 
     :global(.clickgui > .sidebar > .search) {
@@ -583,8 +589,11 @@
     :global(.clickgui > .main-content) {
         flex: 1;
         min-width: 0;
+        height: 100%;
+        min-height: 0;
         padding: 10px;
-        overflow: auto;
+        overflow-x: hidden;
+        overflow-y: auto;
         color: $clickgui-text-color;
     }
 

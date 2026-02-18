@@ -43,17 +43,3 @@ body {
     user-select: none;
     overflow: hidden;
 }
-
-
-::-webkit-scrollbar-track {
-    background-color: transparent;
-}
-
-::-webkit-scrollbar {
-    width: 10px;
-}
-
-::-webkit-scrollbar-thumb {
-    background-color: $accent-color;
-    border-radius: 10px;
-}

@@ -133,9 +133,5 @@
       display: flex;
       flex-direction: column;
       overflow: auto;
-
-      &::-webkit-scrollbar {
-        width: 0;
-      }
     }
 </style>
