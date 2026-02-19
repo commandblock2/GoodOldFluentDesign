@@ -66,8 +66,8 @@
     }
 
     .toggle-btn.setting-input-control--enabled > .reveal-press-content {
-        border-color: $accent-color;
-        background-color: $accent-color;
+        border-color: $accent-color !important;
+        background-color: $accent-color !important;
     }
 
     .toggle-btn.setting-input-control--enabled .toggle-state {

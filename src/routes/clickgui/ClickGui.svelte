@@ -1,10 +1,12 @@
 <script lang="ts">
     import type {
         BooleanSetting,
+        ChooseSetting,
         ConfigurableSetting,
         GroupedModules,
         Module,
         ModuleSetting,
+        MultiChooseSetting,
         TextSetting,
     } from "../../integration/types";
     import { onMount } from "svelte";
@@ -24,6 +26,8 @@
     import ClickGuiSearchView from "./views/ClickGuiSearchView.svelte";
     import ClickGuiThemeDetailView from "./views/ClickGuiThemeDetailView.svelte";
     import BooleanSettingControl from "./setting/BooleanSettingControl.svelte";
+    import ChooseSettingControl from "./setting/ChooseSettingControl.svelte";
+    import MultiChooseSettingControl from "./setting/MultiChooseSettingControl.svelte";
     import TextSettingControl from "./setting/TextSettingControl.svelte";
 
     let categories = $state<GroupedModules>({});
@@ -276,6 +280,25 @@
         );
     }
 
+    function isChooseSetting(setting: ModuleSetting): setting is ChooseSetting {
+        return (
+            setting.valueType === "CHOOSE" &&
+            typeof (setting as ChooseSetting).value === "string" &&
+            Array.isArray((setting as ChooseSetting).choices)
+        );
+    }
+
+    function isMultiChooseSetting(
+        setting: ModuleSetting,
+    ): setting is MultiChooseSetting {
+        return (
+            (setting.valueType === "MULTI_CHOOSE" ||
+                setting.valueType === "MUTLI_CHOOSE") &&
+            Array.isArray((setting as MultiChooseSetting).value) &&
+            Array.isArray((setting as MultiChooseSetting).choices)
+        );
+    }
+
     async function updateActiveModuleSettings(
         mapper: (setting: ModuleSetting, index: number) => ModuleSetting,
         errorMessage: string,
@@ -353,6 +376,48 @@
         );
     }
 
+    async function onChooseSettingChange(
+        settingIndex: number,
+        nextChoice: string,
+    ) {
+        await updateActiveModuleSettings(
+            (setting, index) => {
+                if (index !== settingIndex || !isChooseSetting(setting)) {
+                    return setting;
+                }
+
+                if (setting.value === nextChoice) {
+                    return setting;
+                }
+
+                return {
+                    ...setting,
+                    value: nextChoice,
+                };
+            },
+            "Failed to update choose setting.",
+        );
+    }
+
+    async function onMultiChooseSettingChange(
+        settingIndex: number,
+        nextChoices: string[],
+    ) {
+        await updateActiveModuleSettings(
+            (setting, index) => {
+                if (index !== settingIndex || !isMultiChooseSetting(setting)) {
+                    return setting;
+                }
+
+                return {
+                    ...setting,
+                    value: nextChoices,
+                };
+            },
+            "Failed to update multi choose setting.",
+        );
+    }
+
     function estimateSettingHeight(setting: ModuleSetting) {
         if (isBooleanSetting(setting)) {
             return 64;
@@ -360,6 +425,14 @@
 
         if (isTextSetting(setting)) {
             return 88;
+        }
+
+        if (isChooseSetting(setting)) {
+            return 126;
+        }
+
+        if (isMultiChooseSetting(setting)) {
+            return 136 + Math.ceil(setting.choices.length / 4) * 28;
         }
 
         const valueLength = JSON.stringify(setting.value).length;
@@ -598,12 +671,40 @@
                                                     nextValue,
                                                 )}
                                         />
+                                    {:else if isChooseSetting(item.setting)}
+                                        <span class="setting-selection-summary">
+                                            one of {item.setting.choices.length}
+                                        </span>
+                                    {:else if isMultiChooseSetting(item.setting)}
+                                        <span class="setting-selection-summary">
+                                            {item.setting.value.length} of {item.setting.choices.length}
+                                        </span>
                                     {:else}
                                         <span>{item.setting.valueType}</span>
                                     {/if}
                                 </div>
 
-                                {#if !isBooleanSetting(item.setting) && !isTextSetting(item.setting)}
+                                {#if isChooseSetting(item.setting)}
+                                    <ChooseSettingControl
+                                        setting={item.setting}
+                                        revealItemOptions={moduleRevealItemOptions}
+                                        onChange={(nextChoice) =>
+                                            onChooseSettingChange(
+                                                item.settingIndex,
+                                                nextChoice,
+                                            )}
+                                    />
+                                {:else if isMultiChooseSetting(item.setting)}
+                                    <MultiChooseSettingControl
+                                        setting={item.setting}
+                                        revealItemOptions={moduleRevealItemOptions}
+                                        onChange={(nextChoices) =>
+                                            onMultiChooseSettingChange(
+                                                item.settingIndex,
+                                                nextChoices,
+                                            )}
+                                    />
+                                {:else if !isBooleanSetting(item.setting) && !isTextSetting(item.setting)}
                                     <pre>
                                         {JSON.stringify(item.setting.value, null, 2)}
                                     </pre>
@@ -763,6 +864,15 @@
         margin-bottom: 0;
     }
 
+    :global(.clickgui > .main-content .setting-selection-summary) {
+        font-size: 11px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: rgba($clickgui-text-dimmed-color, 0.86);
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
     :global(.clickgui > .main-content .setting-input-shell) {
         display: inline-flex;
     }
@@ -795,16 +905,6 @@
             background-color 120ms ease,
             border-color 120ms ease,
             box-shadow 120ms ease;
-    }
-
-    :global(.clickgui > .main-content .setting-input-control.setting-input-control--enabled.reveal-focus-visible > .reveal-press-content) {
-        border-color: $accent-color;
-        box-shadow: 0 0 0 2px $accent-color;
-    }
-
-    :global(.clickgui > .main-content .setting-input-control.setting-input-control--enabled:focus-within > .reveal-press-content) {
-        border-color: $accent-color;
-        box-shadow: 0 0 0 2px $accent-color;
     }
 
     :global(.clickgui > .main-content .setting-input-control--block) {
