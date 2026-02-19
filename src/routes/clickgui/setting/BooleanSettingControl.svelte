@@ -29,10 +29,10 @@
     }
 </script>
 
-<div class="toggle-shell" use:revealBorder>
+<div class="setting-input-shell" use:revealBorder>
     <button
-        class="toggle-btn"
-        class:enabled={setting.value}
+        class="setting-input-control toggle-btn"
+        class:setting-input-control--enabled={setting.value}
         type="button"
         role="switch"
         aria-checked={setting.value}
@@ -52,29 +52,9 @@
 <style lang="scss">
     @use "../../../colors.scss" as *;
 
-    .toggle-shell {
-        display: inline-flex;
-    }
-
     .toggle-btn {
-        padding: 0;
-        border: 0;
-        background: transparent;
         cursor: pointer;
-    }
-
-    .toggle-btn > .reveal-press-content {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 66px;
-        height: 24px;
-        padding: 0 10px;
-        border: 1px solid rgba($clickgui-text-color, 0.32);
-        background-color: rgba($clickgui-text-color, 0.14);
-        transition:
-            background-color 120ms ease,
-            border-color 120ms ease;
+        --reveal-focus-color: #{rgba($accent-color, 0.9)};
     }
 
     .toggle-state {
@@ -85,17 +65,24 @@
         transition: color 120ms ease;
     }
 
-    .toggle-btn.enabled > .reveal-press-content {
+    .toggle-btn.setting-input-control--enabled > .reveal-press-content {
         border-color: rgba($accent-color, 0.95);
         background-color: rgba($accent-color, 0.2);
     }
 
-    .toggle-btn.enabled .toggle-state {
+    .toggle-btn.setting-input-control--enabled .toggle-state {
         color: $clickgui-text-color;
     }
 
-    .toggle-btn:focus-visible {
-        outline: 2px solid rgba($accent-color, 0.45);
-        outline-offset: 2px;
+    .toggle-btn:not(.setting-input-control--enabled) > .reveal-press-content {
+        border-color: rgba($clickgui-text-color, 0.32);
+        background-color: rgba($clickgui-text-color, 0.14);
+        box-shadow: none;
+    }
+
+    .toggle-btn:not(.setting-input-control--enabled):focus-within > .reveal-press-content {
+        border-color: rgba($clickgui-text-color, 0.32);
+        background-color: rgba($clickgui-text-color, 0.14);
+        box-shadow: none;
     }
 </style>

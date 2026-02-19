@@ -80,6 +80,11 @@
         hover: true,
         click: true,
     };
+    const textInputRevealItemOptions: RevealItemOptions = {
+        border: true,
+        hover: false,
+        click: false,
+    };
 
     const normalizedQuery = $derived(searchQuery.trim().toLowerCase());
     const isSearching = $derived(normalizedQuery.length > 0);
@@ -567,7 +572,7 @@
                         {#each column as item (item.settingIndex)}
                             <div
                                 class="setting-entry"
-                                class:boolean-setting-entry={isBooleanSetting(item.setting)}
+                                class:inline-control-setting-entry={isBooleanSetting(item.setting) || isTextSetting(item.setting)}
                                 use:trackSettingHeight={item.settingIndex}
                             >
                                 <div class="setting-header">
@@ -583,21 +588,22 @@
                                                     checked,
                                                 )}
                                         />
+                                    {:else if isTextSetting(item.setting)}
+                                        <TextSettingControl
+                                            setting={item.setting}
+                                            revealItemOptions={textInputRevealItemOptions}
+                                            onChange={(nextValue) =>
+                                                onTextSettingChange(
+                                                    item.settingIndex,
+                                                    nextValue,
+                                                )}
+                                        />
                                     {:else}
                                         <span>{item.setting.valueType}</span>
                                     {/if}
                                 </div>
 
-                                {#if isTextSetting(item.setting)}
-                                    <TextSettingControl
-                                        setting={item.setting}
-                                        onChange={(nextValue) =>
-                                            onTextSettingChange(
-                                                item.settingIndex,
-                                                nextValue,
-                                            )}
-                                    />
-                                {:else if !isBooleanSetting(item.setting)}
+                                {#if !isBooleanSetting(item.setting) && !isTextSetting(item.setting)}
                                     <pre>
                                         {JSON.stringify(item.setting.value, null, 2)}
                                     </pre>
@@ -753,8 +759,81 @@
         margin-bottom: 8px;
     }
 
-    :global(.clickgui > .main-content .setting-entry.boolean-setting-entry .setting-header) {
+    :global(.clickgui > .main-content .setting-entry.inline-control-setting-entry .setting-header) {
         margin-bottom: 0;
+    }
+
+    :global(.clickgui > .main-content .setting-input-shell) {
+        display: inline-flex;
+    }
+
+    :global(.clickgui > .main-content .setting-input-shell--block) {
+        display: flex;
+        width: 100%;
+    }
+
+    :global(.clickgui > .main-content .setting-input-control) {
+        display: inline-flex;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        min-width: 0;
+    }
+
+    :global(.clickgui > .main-content .setting-input-control > .reveal-press-content) {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 66px;
+        height: 24px;
+        padding: 0 10px;
+        border: 1px solid rgba($clickgui-text-color, 0.32);
+        background-color: rgba($clickgui-text-color, 0.14);
+        box-shadow: 0 0 0 0 rgba($accent-color, 0);
+        transition:
+            background-color 120ms ease,
+            border-color 120ms ease,
+            box-shadow 120ms ease;
+    }
+
+    :global(.clickgui > .main-content .setting-input-control.setting-input-control--enabled.reveal-focus-visible > .reveal-press-content) {
+        border-color: rgba($accent-color, 0.8);
+        box-shadow: 0 0 0 2px rgba($accent-color, 0.28);
+    }
+
+    :global(.clickgui > .main-content .setting-input-control.setting-input-control--enabled:focus-within > .reveal-press-content) {
+        border-color: rgba($accent-color, 0.95);
+        box-shadow: 0 0 0 2px rgba($accent-color, 0.32);
+    }
+
+    :global(.clickgui > .main-content .setting-input-control--block) {
+        width: 100%;
+    }
+
+    :global(.clickgui > .main-content .setting-input-control--block > .reveal-press-content) {
+        width: 100%;
+        justify-content: flex-start;
+        padding: 0;
+    }
+
+    :global(.clickgui > .main-content .setting-input-text) {
+        width: 100%;
+        min-width: 0;
+        height: 24px;
+        padding: 0 10px;
+        border: 0;
+        outline: none;
+        background: transparent;
+        color: $clickgui-text-color;
+        caret-color: currentColor;
+        font-family: inherit;
+        font-size: 12px;
+        line-height: 1;
+    }
+
+    :global(.clickgui > .main-content .setting-input-text::placeholder) {
+        color: rgba($clickgui-text-dimmed-color, 0.9);
     }
 
     :global(.clickgui .scroll-surface) {
