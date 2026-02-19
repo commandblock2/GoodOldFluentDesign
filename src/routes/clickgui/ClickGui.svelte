@@ -73,6 +73,8 @@
                 sizePx: 48,
             },
         },
+        // Scrollable settings surfaces need live rect recalculation to avoid stale border offsets.
+        cacheRects: false,
     };
 
     const moduleRevealItemOptions: RevealItemOptions = {
@@ -418,6 +420,7 @@
 
         let lastPointerX = 0;
         let lastPointerY = 0;
+        let hasPointerPosition = false;
         let rafId = 0;
 
         const hasVerticalOverflow = () => node.scrollHeight > node.clientHeight + 1;
@@ -460,15 +463,51 @@
         const onPointerMove = (event: PointerEvent) => {
             lastPointerX = event.clientX;
             lastPointerY = event.clientY;
+            hasPointerPosition = true;
             scheduleApplyState();
         };
 
         const onPointerLeave = () => {
+            hasPointerPosition = false;
             node.classList.remove("scrollbar-strong");
+        };
+
+        const syncRevealPointerOnScroll = () => {
+            if (!hasPointerPosition || typeof PointerEvent === "undefined") {
+                return;
+            }
+
+            const rect = node.getBoundingClientRect();
+            const insideSurface =
+                lastPointerX >= rect.left &&
+                lastPointerX <= rect.right &&
+                lastPointerY >= rect.top &&
+                lastPointerY <= rect.bottom;
+
+            if (!insideSurface) {
+                return;
+            }
+
+            const target = document.elementFromPoint(lastPointerX, lastPointerY);
+            if (!(target instanceof Element) || !node.contains(target)) {
+                return;
+            }
+
+            target.dispatchEvent(
+                new PointerEvent("pointermove", {
+                    bubbles: true,
+                    composed: true,
+                    clientX: lastPointerX,
+                    clientY: lastPointerY,
+                    pointerType: "mouse",
+                    buttons: 0,
+                }),
+            );
         };
 
         const onScroll = () => {
             scheduleApplyState();
+            syncRevealPointerOnScroll();
         };
 
         const resizeObserver = new ResizeObserver(() => {
