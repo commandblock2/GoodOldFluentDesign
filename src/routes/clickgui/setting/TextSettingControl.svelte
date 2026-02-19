@@ -30,7 +30,7 @@
     @use "../../../colors.scss" as *;
 
     .text-setting-control {
-        --reveal-focus-color: #{rgba($accent-color, 0.9)};
+        --reveal-focus-color: #{$accent-color};
     }
 
     .text-setting-shell .text-setting-control > .reveal-press-content {

@@ -681,7 +681,7 @@
 
         &:focus {
             border-color: $accent-color;
-            box-shadow: 0 0 0 2px rgba($accent-color, 0.25);
+            box-shadow: 0 0 0 2px $accent-color;
         }
     }
 
@@ -790,7 +790,7 @@
         padding: 0 10px;
         border: 1px solid rgba($clickgui-text-color, 0.32);
         background-color: rgba($clickgui-text-color, 0.14);
-        box-shadow: 0 0 0 0 rgba($accent-color, 0);
+        box-shadow: 0 0 0 0 $accent-color;
         transition:
             background-color 120ms ease,
             border-color 120ms ease,
@@ -798,13 +798,13 @@
     }
 
     :global(.clickgui > .main-content .setting-input-control.setting-input-control--enabled.reveal-focus-visible > .reveal-press-content) {
-        border-color: rgba($accent-color, 0.8);
-        box-shadow: 0 0 0 2px rgba($accent-color, 0.28);
+        border-color: $accent-color;
+        box-shadow: 0 0 0 2px $accent-color;
     }
 
     :global(.clickgui > .main-content .setting-input-control.setting-input-control--enabled:focus-within > .reveal-press-content) {
-        border-color: rgba($accent-color, 0.95);
-        box-shadow: 0 0 0 2px rgba($accent-color, 0.32);
+        border-color: $accent-color;
+        box-shadow: 0 0 0 2px $accent-color;
     }
 
     :global(.clickgui > .main-content .setting-input-control--block) {

@@ -54,7 +54,7 @@
 
     .toggle-btn {
         cursor: pointer;
-        --reveal-focus-color: #{rgba($accent-color, 0.9)};
+        --reveal-focus-color: #{$accent-color};
     }
 
     .toggle-state {
@@ -66,8 +66,8 @@
     }
 
     .toggle-btn.setting-input-control--enabled > .reveal-press-content {
-        border-color: rgba($accent-color, 0.95);
-        background-color: rgba($accent-color, 0.2);
+        border-color: $accent-color;
+        background-color: $accent-color;
     }
 
     .toggle-btn.setting-input-control--enabled .toggle-state {
