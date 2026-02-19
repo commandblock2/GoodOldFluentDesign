@@ -411,10 +411,93 @@
             },
         };
     }
+
+    function scrollbarHoverSurface(node: HTMLElement) {
+        const scrollbarAreaWidth = 14;
+
+        let lastPointerX = 0;
+        let lastPointerY = 0;
+        let rafId = 0;
+
+        const hasVerticalOverflow = () => node.scrollHeight > node.clientHeight + 1;
+
+        const applyState = () => {
+            rafId = 0;
+
+            if (!hasVerticalOverflow()) {
+                node.classList.remove("scrollbar-strong");
+                return;
+            }
+
+            const rect = node.getBoundingClientRect();
+            const insideSurface =
+                lastPointerX >= rect.left &&
+                lastPointerX <= rect.right &&
+                lastPointerY >= rect.top &&
+                lastPointerY <= rect.bottom;
+
+            if (!insideSurface) {
+                node.classList.remove("scrollbar-strong");
+                return;
+            }
+
+            const isInScrollbarArea =
+                lastPointerX >= rect.right - scrollbarAreaWidth &&
+                lastPointerX <= rect.right;
+
+            node.classList.toggle("scrollbar-strong", isInScrollbarArea);
+        };
+
+        const scheduleApplyState = () => {
+            if (rafId !== 0) {
+                return;
+            }
+
+            rafId = requestAnimationFrame(applyState);
+        };
+
+        const onPointerMove = (event: PointerEvent) => {
+            lastPointerX = event.clientX;
+            lastPointerY = event.clientY;
+            scheduleApplyState();
+        };
+
+        const onPointerLeave = () => {
+            node.classList.remove("scrollbar-strong");
+        };
+
+        const onScroll = () => {
+            scheduleApplyState();
+        };
+
+        const resizeObserver = new ResizeObserver(() => {
+            scheduleApplyState();
+        });
+        resizeObserver.observe(node);
+
+        node.addEventListener("pointermove", onPointerMove);
+        node.addEventListener("pointerleave", onPointerLeave);
+        node.addEventListener("scroll", onScroll);
+
+        return {
+            destroy() {
+                resizeObserver.disconnect();
+                node.removeEventListener("pointermove", onPointerMove);
+                node.removeEventListener("pointerleave", onPointerLeave);
+                node.removeEventListener("scroll", onScroll);
+
+                if (rafId !== 0) {
+                    cancelAnimationFrame(rafId);
+                }
+
+                node.classList.remove("scrollbar-strong");
+            },
+        };
+    }
 </script>
 
 <div class="clickgui">
-    <aside class="sidebar">
+    <aside class="sidebar scroll-surface" use:scrollbarHoverSurface>
         {#if !isDetailView}
             <div class="search">
                 <input
@@ -462,7 +545,7 @@
         {/if}
     </aside>
 
-    <section class="main-content">
+    <section class="main-content scroll-surface" use:scrollbarHoverSurface>
         <div class="main-content-header">
             <h2 class="main-content-title">{activeConfigTitle}</h2>
             <input
@@ -658,5 +741,57 @@
         justify-content: space-between;
         gap: 8px;
         margin-bottom: 8px;
+    }
+
+    :global(.clickgui .scroll-surface) {
+        scrollbar-gutter: stable;
+        scrollbar-width: thin;
+        scrollbar-color: transparent transparent;
+    }
+
+    :global(.clickgui .scroll-surface:hover) {
+        scrollbar-color: rgba($clickgui-text-color, 0.36) transparent;
+    }
+
+    :global(.clickgui .scroll-surface.scrollbar-strong:hover) {
+        scrollbar-color: rgba($clickgui-text-color, 0.56) transparent;
+    }
+
+    @supports selector(::-webkit-scrollbar) {
+        :global(.clickgui .scroll-surface::-webkit-scrollbar) {
+            width: 12px;
+            height: 12px;
+            background: transparent;
+        }
+
+        :global(.clickgui .scroll-surface::-webkit-scrollbar-track) {
+            background: transparent;
+        }
+
+        :global(.clickgui .scroll-surface::-webkit-scrollbar-thumb) {
+            background-color: transparent;
+            border: 5px solid transparent;
+            border-radius: 999px;
+            background-clip: content-box;
+            transition:
+                background-color 120ms ease,
+                border-width 120ms ease;
+        }
+
+        :global(.clickgui .scroll-surface:hover::-webkit-scrollbar-thumb) {
+            background-color: rgba($clickgui-text-color, 0.36);
+            border-width: 4px;
+        }
+
+        :global(.clickgui .scroll-surface.scrollbar-strong:hover::-webkit-scrollbar-thumb) {
+            background-color: rgba($clickgui-text-color, 0.56);
+            border-width: 1px;
+        }
+
+        :global(
+            .clickgui .scroll-surface.scrollbar-strong:hover::-webkit-scrollbar-thumb:hover
+        ) {
+            background-color: rgba($clickgui-text-color, 0.64);
+        }
     }
 </style>
