@@ -12,6 +12,7 @@
         RevealContainerOptions,
         RevealItemOptions,
     } from "fluent-reveal-svelte";
+    import { revealContainer } from "fluent-reveal-svelte";
     import {
         getModuleSettings,
         getModules,
@@ -545,7 +546,11 @@
         {/if}
     </aside>
 
-    <section class="main-content scroll-surface" use:scrollbarHoverSurface>
+    <section
+        class="main-content scroll-surface"
+        use:scrollbarHoverSurface
+        use:revealContainer={subsectionRevealOptions}
+    >
         <div class="main-content-header">
             <h2 class="main-content-title">{activeConfigTitle}</h2>
             <input
@@ -562,23 +567,28 @@
                         {#each column as item (item.settingIndex)}
                             <div
                                 class="setting-entry"
+                                class:boolean-setting-entry={isBooleanSetting(item.setting)}
                                 use:trackSettingHeight={item.settingIndex}
                             >
                                 <div class="setting-header">
                                     <strong>{item.setting.name}</strong>
-                                    <span>{item.setting.valueType}</span>
+
+                                    {#if isBooleanSetting(item.setting)}
+                                        <BooleanSettingControl
+                                            setting={item.setting}
+                                            revealItemOptions={moduleRevealItemOptions}
+                                            onChange={(checked) =>
+                                                onBooleanSettingChange(
+                                                    item.settingIndex,
+                                                    checked,
+                                                )}
+                                        />
+                                    {:else}
+                                        <span>{item.setting.valueType}</span>
+                                    {/if}
                                 </div>
 
-                                {#if isBooleanSetting(item.setting)}
-                                    <BooleanSettingControl
-                                        setting={item.setting}
-                                        onChange={(checked) =>
-                                            onBooleanSettingChange(
-                                                item.settingIndex,
-                                                checked,
-                                            )}
-                                    />
-                                {:else if isTextSetting(item.setting)}
+                                {#if isTextSetting(item.setting)}
                                     <TextSettingControl
                                         setting={item.setting}
                                         onChange={(nextValue) =>
@@ -587,7 +597,7 @@
                                                 nextValue,
                                             )}
                                     />
-                                {:else}
+                                {:else if !isBooleanSetting(item.setting)}
                                     <pre>
                                         {JSON.stringify(item.setting.value, null, 2)}
                                     </pre>
@@ -741,6 +751,10 @@
         justify-content: space-between;
         gap: 8px;
         margin-bottom: 8px;
+    }
+
+    :global(.clickgui > .main-content .setting-entry.boolean-setting-entry .setting-header) {
+        margin-bottom: 0;
     }
 
     :global(.clickgui .scroll-surface) {
