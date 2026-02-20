@@ -93,9 +93,9 @@
         transition: color 120ms ease;
     }
 
-    .setting-choice-btn.setting-choice-btn--active > .reveal-press-content {
-        border-color: $accent-color !important;
-        background-color: $accent-color !important;
+    .setting-input-control.setting-choice-btn.setting-choice-btn--active > .reveal-press-content {
+        border-color: $accent-color;
+        background-color: $accent-color;
     }
 
     .setting-choice-btn.setting-choice-btn--active .setting-choice-label {

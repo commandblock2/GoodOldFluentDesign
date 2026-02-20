@@ -748,7 +748,7 @@
         height: 100%;
         min-height: 0;
         width: 280px;
-        background-color: var(--clickgui-surface-color) !important;
+        background-color: var(--clickgui-surface-color);
         color: $clickgui-text-color;
         border-radius: 0;
         padding: 10px;
@@ -762,7 +762,7 @@
         position: sticky;
         top: 0;
         z-index: 2;
-        background-color: var(--clickgui-surface-color) !important;
+        background-color: var(--clickgui-surface-color);
         padding-bottom: 8px;
     }
 
@@ -771,7 +771,7 @@
         padding: 8px 10px;
         border-radius: 0;
         border: 1px solid rgba($clickgui-text-color, 0.2);
-        background-color: var(--clickgui-surface-strong-color) !important;
+        background-color: var(--clickgui-surface-strong-color);
         color: $clickgui-text-color;
         font-size: 13px;
         outline: none;
@@ -815,7 +815,7 @@
         padding: 8px 10px;
         border-radius: 0;
         border: 1px solid rgba($clickgui-text-color, 0.2);
-        background-color: var(--clickgui-surface-strong-color) !important;
+        background-color: var(--clickgui-surface-strong-color);
         color: $clickgui-text-color;
         font-size: 13px;
         outline: none;
@@ -899,7 +899,6 @@
         height: 24px;
         padding: 0 10px;
         border: 1px solid rgba($clickgui-text-color, 0.32);
-        background-color: rgba($clickgui-text-color, 0.14);
         box-shadow: 0 0 0 0 $accent-color;
         transition:
             background-color 120ms ease,

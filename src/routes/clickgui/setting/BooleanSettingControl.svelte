@@ -65,9 +65,9 @@
         transition: color 120ms ease;
     }
 
-    .toggle-btn.setting-input-control--enabled > .reveal-press-content {
-        border-color: $accent-color !important;
-        background-color: $accent-color !important;
+    .setting-input-control.toggle-btn.setting-input-control--enabled > .reveal-press-content {
+        border-color: $accent-color;
+        background-color: $accent-color;
     }
 
     .toggle-btn.setting-input-control--enabled .toggle-state {

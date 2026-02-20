@@ -37,5 +37,6 @@
         width: clamp(150px, 34vw, 260px);
         justify-content: flex-start;
         padding: 0;
+        background-color: rgba($clickgui-text-color, 0.14);
     }
 </style>
