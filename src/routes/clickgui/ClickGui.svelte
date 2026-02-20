@@ -889,15 +889,6 @@
         background: transparent;
         color: inherit;
         min-width: 0;
-
-        --setting-control-border-color: #{rgba($clickgui-text-color, 0.32)};
-        --setting-control-background-color: #{rgba($clickgui-text-color, 0.14)};
-        --setting-control-box-shadow: 0 0 0 0 #{$accent-color};
-        --setting-control-min-width: 66px;
-        --setting-control-height: 24px;
-        --setting-control-padding-inline: 10px;
-        --setting-control-content-width: auto;
-        --setting-control-justify-content: center;
     }
 
     :global(
@@ -905,14 +896,22 @@
     ) {
         display: inline-flex;
         align-items: center;
-        justify-content: var(--setting-control-justify-content);
-        width: var(--setting-control-content-width);
-        min-width: var(--setting-control-min-width);
-        height: var(--setting-control-height);
-        padding: 0 var(--setting-control-padding-inline);
-        border: 1px solid var(--setting-control-border-color);
-        background-color: var(--setting-control-background-color);
-        box-shadow: var(--setting-control-box-shadow);
+        justify-content: var(--setting-control-justify-content, center);
+        width: var(--setting-control-content-width, auto);
+        min-width: var(--setting-control-min-width, 66px);
+        height: var(--setting-control-height, 24px);
+        padding: 0 var(--setting-control-padding-inline, 10px);
+        border: 1px solid
+            var(
+                --setting-control-border-color,
+                #{rgba($clickgui-text-color, 0.32)}
+            );
+        border-radius: var(--setting-control-border-radius, 0);
+        background-color: var(
+            --setting-control-background-color,
+            #{rgba($clickgui-text-color, 0.14)}
+        );
+        box-shadow: var(--setting-control-box-shadow, 0 0 0 0 #{$accent-color});
         transition:
             background-color 120ms ease,
             border-color 120ms ease,

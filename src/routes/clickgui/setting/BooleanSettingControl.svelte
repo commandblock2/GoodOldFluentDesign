@@ -55,8 +55,10 @@
     .toggle-btn {
         cursor: pointer;
         --reveal-focus-color: #{$accent-color};
-        --setting-control-border-color: #{rgba($clickgui-text-color, 0.32)};
-        --setting-control-background-color: #{rgba($clickgui-text-color, 0.14)};
+        --setting-control-border-color: #{rgba($clickgui-text-color, 0.36)};
+        --setting-control-background-color: #{rgba($clickgui-text-color, 0.18)};
+        --setting-control-border-radius: 999px;
+        --setting-control-padding-inline: 12px;
     }
 
     .toggle-state {

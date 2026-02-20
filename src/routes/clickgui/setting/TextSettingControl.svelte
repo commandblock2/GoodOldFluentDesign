@@ -34,6 +34,30 @@
         --setting-control-content-width: clamp(150px, 34vw, 260px);
         --setting-control-justify-content: flex-start;
         --setting-control-padding-inline: 0;
-        --setting-control-background-color: #{rgba($clickgui-text-color, 0.14)};
+        --setting-control-border-color: #{rgba($clickgui-text-color, 0.4)};
+        --setting-control-background-color: #{rgba($clickgui-text-color, 0.08)};
+        --setting-control-border-radius: 2px;
+        --setting-control-box-shadow:
+            inset 0 0 0 1px #{rgba($clickgui-text-color, 0.08)};
+    }
+
+    .text-setting-control > .reveal-press-content {
+        position: relative;
+    }
+
+    .text-setting-control > .reveal-press-content::before {
+        content: "";
+        position: absolute;
+        left: 9px;
+        top: 50%;
+        width: 1px;
+        height: 12px;
+        transform: translateY(-50%);
+        background-color: #{rgba($clickgui-text-color, 0.28)};
+        pointer-events: none;
+    }
+
+    .text-setting-control .setting-input-text {
+        padding-left: 14px;
     }
 </style>
