@@ -1,13 +1,9 @@
 <script lang="ts">
     import type {
-        BooleanSetting,
-        ChooseSetting,
         ConfigurableSetting,
         GroupedModules,
         Module,
         ModuleSetting,
-        MultiChooseSetting,
-        TextSetting,
     } from "../../integration/types";
     import { onMount } from "svelte";
     import type {
@@ -25,10 +21,14 @@
     import ClickGuiHomeView from "./views/ClickGuiHomeView.svelte";
     import ClickGuiSearchView from "./views/ClickGuiSearchView.svelte";
     import ClickGuiThemeDetailView from "./views/ClickGuiThemeDetailView.svelte";
-    import BooleanSettingControl from "./setting/BooleanSettingControl.svelte";
-    import ChooseSettingControl from "./setting/ChooseSettingControl.svelte";
-    import MultiChooseSettingControl from "./setting/MultiChooseSettingControl.svelte";
-    import TextSettingControl from "./setting/TextSettingControl.svelte";
+    import SettingEntry from "./setting/SettingEntry.svelte";
+    import {
+        isBooleanSetting,
+        isChooseSetting,
+        isMultiChooseSetting,
+        isNestedSettingContainer,
+        isTextSetting,
+    } from "./setting/settingTypeGuards";
 
     let categories = $state<GroupedModules>({});
     let modules = $state<Module[]>([]);
@@ -266,41 +266,61 @@
         }
     }
 
-    function isBooleanSetting(setting: ModuleSetting): setting is BooleanSetting {
-        return (
-            setting.valueType === "BOOLEAN" &&
-            typeof (setting as BooleanSetting).value === "boolean"
-        );
-    }
+    type SettingMapper = (setting: ModuleSetting) => ModuleSetting;
 
-    function isTextSetting(setting: ModuleSetting): setting is TextSetting {
-        return (
-            setting.valueType === "TEXT" &&
-            typeof (setting as TextSetting).value === "string"
-        );
-    }
+    function mapSettingTree(
+        settings: ModuleSetting[],
+        path: number[],
+        mapper: SettingMapper,
+    ): ModuleSetting[] {
+        if (path.length === 0) {
+            return settings;
+        }
 
-    function isChooseSetting(setting: ModuleSetting): setting is ChooseSetting {
-        return (
-            setting.valueType === "CHOOSE" &&
-            typeof (setting as ChooseSetting).value === "string" &&
-            Array.isArray((setting as ChooseSetting).choices)
-        );
-    }
+        const [targetIndex, ...restPath] = path;
+        const targetSetting = settings[targetIndex];
 
-    function isMultiChooseSetting(
-        setting: ModuleSetting,
-    ): setting is MultiChooseSetting {
-        return (
-            (setting.valueType === "MULTI_CHOOSE" ||
-                setting.valueType === "MUTLI_CHOOSE") &&
-            Array.isArray((setting as MultiChooseSetting).value) &&
-            Array.isArray((setting as MultiChooseSetting).choices)
+        if (targetSetting === undefined) {
+            return settings;
+        }
+
+        if (restPath.length === 0) {
+            const nextTargetSetting = mapper(targetSetting);
+
+            if (nextTargetSetting === targetSetting) {
+                return settings;
+            }
+
+            const nextSettings = [...settings];
+            nextSettings[targetIndex] = nextTargetSetting;
+            return nextSettings;
+        }
+
+        if (!isNestedSettingContainer(targetSetting)) {
+            return settings;
+        }
+
+        const nextNestedSettings = mapSettingTree(
+            targetSetting.value,
+            restPath,
+            mapper,
         );
+
+        if (nextNestedSettings === targetSetting.value) {
+            return settings;
+        }
+
+        const nextSettings = [...settings];
+        nextSettings[targetIndex] = {
+            ...targetSetting,
+            value: nextNestedSettings,
+        };
+        return nextSettings;
     }
 
     async function updateActiveModuleSettings(
-        mapper: (setting: ModuleSetting, index: number) => ModuleSetting,
+        settingPath: number[],
+        mapper: SettingMapper,
         errorMessage: string,
     ) {
         if (
@@ -315,10 +335,16 @@
         const previousConfigurable = activeConfigurable;
         const nextConfigurable = {
             ...previousConfigurable,
-            value: previousConfigurable.value.map((setting, index) =>
-                mapper(setting, index),
+            value: mapSettingTree(
+                previousConfigurable.value,
+                settingPath,
+                mapper,
             ),
         };
+
+        if (nextConfigurable.value === previousConfigurable.value) {
+            return;
+        }
 
         activeConfigurable = nextConfigurable;
         activeConfigError = null;
@@ -342,12 +368,13 @@
     }
 
     async function onBooleanSettingChange(
-        settingIndex: number,
+        settingPath: number[],
         checked: boolean,
     ) {
         await updateActiveModuleSettings(
-            (setting, index) => {
-                if (index !== settingIndex || !isBooleanSetting(setting)) {
+            settingPath,
+            (setting) => {
+                if (!isBooleanSetting(setting) || setting.value === checked) {
                     return setting;
                 }
 
@@ -360,10 +387,14 @@
         );
     }
 
-    async function onTextSettingChange(settingIndex: number, nextValue: string) {
+    async function onTextSettingChange(
+        settingPath: number[],
+        nextValue: string,
+    ) {
         await updateActiveModuleSettings(
-            (setting, index) => {
-                if (index !== settingIndex || !isTextSetting(setting)) {
+            settingPath,
+            (setting) => {
+                if (!isTextSetting(setting) || setting.value === nextValue) {
                     return setting;
                 }
 
@@ -377,12 +408,13 @@
     }
 
     async function onChooseSettingChange(
-        settingIndex: number,
+        settingPath: number[],
         nextChoice: string,
     ) {
         await updateActiveModuleSettings(
-            (setting, index) => {
-                if (index !== settingIndex || !isChooseSetting(setting)) {
+            settingPath,
+            (setting) => {
+                if (!isChooseSetting(setting)) {
                     return setting;
                 }
 
@@ -400,12 +432,13 @@
     }
 
     async function onMultiChooseSettingChange(
-        settingIndex: number,
+        settingPath: number[],
         nextChoices: string[],
     ) {
         await updateActiveModuleSettings(
-            (setting, index) => {
-                if (index !== settingIndex || !isMultiChooseSetting(setting)) {
+            settingPath,
+            (setting) => {
+                if (!isMultiChooseSetting(setting)) {
                     return setting;
                 }
 
@@ -418,7 +451,7 @@
         );
     }
 
-    function estimateSettingHeight(setting: ModuleSetting) {
+    function estimateSettingHeight(setting: ModuleSetting): number {
         if (isBooleanSetting(setting)) {
             return 64;
         }
@@ -433,6 +466,20 @@
 
         if (isMultiChooseSetting(setting)) {
             return 136 + Math.ceil(setting.choices.length / 4) * 28;
+        }
+
+        if (isNestedSettingContainer(setting)) {
+            const nestedHeights = setting.value.reduce<number>(
+                (height, nestedSetting) =>
+                    height + estimateSettingHeight(nestedSetting),
+                0,
+            );
+
+            return (
+                54 +
+                nestedHeights +
+                Math.max(0, setting.value.length - 1) * 10
+            );
         }
 
         const valueLength = JSON.stringify(setting.value).length;
@@ -644,71 +691,19 @@
                     <div class="settings-column">
                         {#each column as item (item.settingIndex)}
                             <div
-                                class="setting-entry"
-                                class:inline-control-setting-entry={isBooleanSetting(item.setting) || isTextSetting(item.setting)}
+                                class="setting-entry-shell"
                                 use:trackSettingHeight={item.settingIndex}
                             >
-                                <div class="setting-header">
-                                    <strong>{item.setting.name}</strong>
-
-                                    {#if isBooleanSetting(item.setting)}
-                                        <BooleanSettingControl
-                                            setting={item.setting}
-                                            revealItemOptions={moduleRevealItemOptions}
-                                            onChange={(checked) =>
-                                                onBooleanSettingChange(
-                                                    item.settingIndex,
-                                                    checked,
-                                                )}
-                                        />
-                                    {:else if isTextSetting(item.setting)}
-                                        <TextSettingControl
-                                            setting={item.setting}
-                                            revealItemOptions={textInputRevealItemOptions}
-                                            onChange={(nextValue) =>
-                                                onTextSettingChange(
-                                                    item.settingIndex,
-                                                    nextValue,
-                                                )}
-                                        />
-                                    {:else if isChooseSetting(item.setting)}
-                                        <span class="setting-selection-summary">
-                                            one of {item.setting.choices.length}
-                                        </span>
-                                    {:else if isMultiChooseSetting(item.setting)}
-                                        <span class="setting-selection-summary">
-                                            {item.setting.value.length} of {item.setting.choices.length}
-                                        </span>
-                                    {:else}
-                                        <span>{item.setting.valueType}</span>
-                                    {/if}
-                                </div>
-
-                                {#if isChooseSetting(item.setting)}
-                                    <ChooseSettingControl
-                                        setting={item.setting}
-                                        revealItemOptions={moduleRevealItemOptions}
-                                        onChange={(nextChoice) =>
-                                            onChooseSettingChange(
-                                                item.settingIndex,
-                                                nextChoice,
-                                            )}
-                                    />
-                                {:else if isMultiChooseSetting(item.setting)}
-                                    <MultiChooseSettingControl
-                                        setting={item.setting}
-                                        revealItemOptions={moduleRevealItemOptions}
-                                        onChange={(nextChoices) =>
-                                            onMultiChooseSettingChange(
-                                                item.settingIndex,
-                                                nextChoices,
-                                            )}
-                                    />
-                                {:else if !isBooleanSetting(item.setting) && !isTextSetting(item.setting)}
-                                    <pre>
-                                        {JSON.stringify(item.setting.value, null, 2)}
-                                    </pre>
-                                {/if}
+                                <SettingEntry
+                                    setting={item.setting}
+                                    path={[item.settingIndex]}
+                                    revealItemOptions={moduleRevealItemOptions}
+                                    textInputRevealItemOptions={textInputRevealItemOptions}
+                                    onBooleanChange={onBooleanSettingChange}
+                                    onTextChange={onTextSettingChange}
+                                    onChooseChange={onChooseSettingChange}
+                                    onMultiChooseChange={onMultiChooseSettingChange}
+                                />
                             </div>
                         {/each}
                     </div>
@@ -832,7 +827,7 @@
         min-width: 0;
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 0;
     }
 
     :global(.clickgui > .main-content .settings-split) {
@@ -847,9 +842,23 @@
         gap: 10px;
     }
 
+    :global(.clickgui > .main-content .setting-entry-shell) {
+        min-width: 0;
+        padding: 7px 0;
+    }
+
+    :global(.clickgui > .main-content .setting-entry-shell + .setting-entry-shell) {
+        border-top: 1px solid rgba($clickgui-text-color, 0.16);
+    }
+
     :global(.clickgui > .main-content .setting-entry) {
-        border: 1px solid rgba($clickgui-text-color, 0.12);
+        padding: 0;
+    }
+
+    :global(.clickgui > .main-content .setting-entry.setting-entry--configurable) {
+        border: 1px solid rgba($clickgui-text-color, 0.14);
         padding: 10px;
+        background-color: rgba($clickgui-text-color, 0.05);
     }
 
     :global(.clickgui > .main-content .setting-header) {
@@ -862,6 +871,26 @@
 
     :global(.clickgui > .main-content .setting-entry.inline-control-setting-entry .setting-header) {
         margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: 0;
+    }
+
+    :global(.clickgui > .main-content .setting-entry.setting-entry--configurable .setting-children) {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+
+    :global(
+        .clickgui > .main-content .setting-entry.setting-entry--configurable .setting-children > .setting-entry
+    ) {
+        padding: 6px 0;
+    }
+
+    :global(
+        .clickgui > .main-content .setting-entry.setting-entry--configurable .setting-children > .setting-entry + .setting-entry
+    ) {
+        border-top: 1px solid rgba($clickgui-text-color, 0.16);
     }
 
     :global(.clickgui > .main-content .setting-selection-summary) {
