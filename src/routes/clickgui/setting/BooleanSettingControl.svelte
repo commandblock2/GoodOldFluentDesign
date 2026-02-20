@@ -57,7 +57,7 @@
         --reveal-focus-color: #{$accent-color};
         --setting-control-border-color: #{rgba($clickgui-text-color, 0.36)};
         --setting-control-background-color: #{rgba($clickgui-text-color, 0.18)};
-        --setting-control-border-radius: 999px;
+        --setting-control-border-radius: 0px;
         --setting-control-padding-inline: 12px;
     }
 
