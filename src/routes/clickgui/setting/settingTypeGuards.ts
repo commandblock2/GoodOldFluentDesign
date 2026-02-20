@@ -2,6 +2,10 @@ import type {
     BooleanSetting,
     ChooseSetting,
     ConfigurableSetting,
+    FloatRangeSetting,
+    FloatSetting,
+    IntRangeSetting,
+    IntSetting,
     ModuleSetting,
     MultiChooseSetting,
     TextSetting,
@@ -44,6 +48,44 @@ export function isMultiChooseSetting(
             setting.valueType === "MUTLI_CHOOSE") &&
         Array.isArray((setting as MultiChooseSetting).value) &&
         Array.isArray((setting as MultiChooseSetting).choices)
+    );
+}
+
+export function isFloatSetting(setting: ModuleSetting): setting is FloatSetting {
+    return (
+        setting.valueType === "FLOAT" &&
+        typeof (setting as FloatSetting).value === "number" &&
+        (setting as FloatSetting).range !== undefined
+    );
+}
+
+export function isIntSetting(setting: ModuleSetting): setting is IntSetting {
+    return (
+        setting.valueType === "INT" &&
+        typeof (setting as IntSetting).value === "number" &&
+        (setting as IntSetting).range !== undefined
+    );
+}
+
+export function isFloatRangeSetting(
+    setting: ModuleSetting,
+): setting is FloatRangeSetting {
+    return (
+        setting.valueType === "FLOAT_RANGE" &&
+        typeof (setting as FloatRangeSetting).value === "object" &&
+        (setting as FloatRangeSetting).value !== null &&
+        (setting as FloatRangeSetting).range !== undefined
+    );
+}
+
+export function isIntRangeSetting(
+    setting: ModuleSetting,
+): setting is IntRangeSetting {
+    return (
+        setting.valueType === "INT_RANGE" &&
+        typeof (setting as IntRangeSetting).value === "object" &&
+        (setting as IntRangeSetting).value !== null &&
+        (setting as IntRangeSetting).range !== undefined
     );
 }
 

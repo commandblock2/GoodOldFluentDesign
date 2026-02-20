@@ -1,17 +1,29 @@
 <script lang="ts">
     import type {
         BooleanSetting,
+        FloatRangeSetting,
+        FloatSetting,
+        IntRangeSetting,
+        IntSetting,
+        Range,
         ModuleSetting,
     } from "../../../integration/types";
     import type { RevealItemOptions } from "fluent-reveal-svelte";
     import BooleanSettingControl from "./BooleanSettingControl.svelte";
     import ChooseSettingControl from "./ChooseSettingControl.svelte";
     import MultiChooseSettingControl from "./MultiChooseSettingControl.svelte";
+    import NumberRangeSettingControl from "./NumberRangeSettingControl.svelte";
+    import NumberSettingControl from "./NumberSettingControl.svelte";
     import Self from "./SettingEntry.svelte";
     import TextSettingControl from "./TextSettingControl.svelte";
+    import { formatNumericValue } from "./numericSettingUtils";
     import {
         isBooleanSetting,
         isChooseSetting,
+        isFloatRangeSetting,
+        isFloatSetting,
+        isIntRangeSetting,
+        isIntSetting,
         isMultiChooseSetting,
         isNestedSettingContainer,
         isTextSetting,
@@ -38,12 +50,22 @@
             path: number[],
             values: string[],
         ) => void | Promise<void>;
+        onNumberChange?: (
+            path: number[],
+            value: number,
+        ) => void | Promise<void>;
+        onNumberRangeChange?: (
+            path: number[],
+            value: Range,
+        ) => void | Promise<void>;
     }
 
     const defaultBooleanChange = (_path: number[], _checked: boolean) => {};
     const defaultTextChange = (_path: number[], _value: string) => {};
     const defaultChooseChange = (_path: number[], _value: string) => {};
     const defaultMultiChooseChange = (_path: number[], _values: string[]) => {};
+    const defaultNumberChange = (_path: number[], _value: number) => {};
+    const defaultNumberRangeChange = (_path: number[], _value: Range) => {};
 
     let {
         setting,
@@ -54,6 +76,8 @@
         onTextChange = defaultTextChange,
         onChooseChange = defaultChooseChange,
         onMultiChooseChange = defaultMultiChooseChange,
+        onNumberChange = defaultNumberChange,
+        onNumberRangeChange = defaultNumberRangeChange,
     }: Props = $props();
 
     const childSettings = $derived(
@@ -99,6 +123,26 @@
     function childPath(childIndex: number) {
         return [...path, childIndex];
     }
+
+    function formatSingleNumericSummary(
+        setting: FloatSetting | IntSetting,
+        integer: boolean,
+    ): string {
+        const suffix = setting.suffix?.trim() ?? "";
+        const value = formatNumericValue(setting.value, integer);
+        return suffix.length > 0 ? `${value} ${suffix}` : value;
+    }
+
+    function formatRangeNumericSummary(
+        setting: FloatRangeSetting | IntRangeSetting,
+        integer: boolean,
+    ): string {
+        const suffix = setting.suffix?.trim() ?? "";
+        const lower = formatNumericValue(setting.value.from, integer);
+        const upper = formatNumericValue(setting.value.to, integer);
+        const joined = `${lower} to ${upper}`;
+        return suffix.length > 0 ? `${joined} ${suffix}` : joined;
+    }
 </script>
 
 <div
@@ -128,6 +172,22 @@
         {:else if isMultiChooseSetting(setting)}
             <span class="setting-selection-summary">
                 {setting.value.length} of {setting.choices.length}
+            </span>
+        {:else if isFloatSetting(setting)}
+            <span class="setting-selection-summary">
+                {formatSingleNumericSummary(setting, false)}
+            </span>
+        {:else if isIntSetting(setting)}
+            <span class="setting-selection-summary">
+                {formatSingleNumericSummary(setting, true)}
+            </span>
+        {:else if isFloatRangeSetting(setting)}
+            <span class="setting-selection-summary">
+                {formatRangeNumericSummary(setting, false)}
+            </span>
+        {:else if isIntRangeSetting(setting)}
+            <span class="setting-selection-summary">
+                {formatRangeNumericSummary(setting, true)}
             </span>
         {:else if isConfigurableGroupSetting}
             <div class="setting-group-meta">
@@ -165,6 +225,18 @@
             revealItemOptions={revealItemOptions}
             onChange={(nextChoices) => onMultiChooseChange(path, nextChoices)}
         />
+    {:else if isFloatSetting(setting) || isIntSetting(setting)}
+        <NumberSettingControl
+            setting={setting}
+            textInputRevealItemOptions={textInputRevealItemOptions}
+            onChange={(nextValue) => onNumberChange(path, nextValue)}
+        />
+    {:else if isFloatRangeSetting(setting) || isIntRangeSetting(setting)}
+        <NumberRangeSettingControl
+            setting={setting}
+            textInputRevealItemOptions={textInputRevealItemOptions}
+            onChange={(nextValue) => onNumberRangeChange(path, nextValue)}
+        />
     {:else if isConfigurableGroupSetting && visibleChildSettings.length > 0}
         <div class="setting-children">
             {#each visibleChildSettings as childSetting (childSetting.setting.key ?? `${childSetting.setting.name}-${childSetting.childIndex}`)}
@@ -177,6 +249,8 @@
                     {onTextChange}
                     {onChooseChange}
                     {onMultiChooseChange}
+                    {onNumberChange}
+                    {onNumberRangeChange}
                 />
             {/each}
         </div>

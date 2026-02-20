@@ -4,6 +4,7 @@
         GroupedModules,
         Module,
         ModuleSetting,
+        Range,
     } from "../../integration/types";
     import { onMount } from "svelte";
     import type {
@@ -23,8 +24,17 @@
     import ClickGuiThemeDetailView from "./views/ClickGuiThemeDetailView.svelte";
     import SettingEntry from "./setting/SettingEntry.svelte";
     import {
+        getBounds,
+        normalizeRangeValue,
+        normalizeSingleValue,
+    } from "./setting/numericSettingUtils";
+    import {
         isBooleanSetting,
         isChooseSetting,
+        isFloatRangeSetting,
+        isFloatSetting,
+        isIntRangeSetting,
+        isIntSetting,
         isMultiChooseSetting,
         isNestedSettingContainer,
         isTextSetting,
@@ -451,6 +461,106 @@
         );
     }
 
+    async function onNumberSettingChange(
+        settingPath: number[],
+        nextValue: number,
+    ) {
+        await updateActiveModuleSettings(
+            settingPath,
+            (setting) => {
+                if (isFloatSetting(setting)) {
+                    const normalized = normalizeSingleValue(
+                        nextValue,
+                        getBounds(setting.range),
+                        false,
+                    );
+
+                    if (normalized === setting.value) {
+                        return setting;
+                    }
+
+                    return {
+                        ...setting,
+                        value: normalized,
+                    };
+                }
+
+                if (isIntSetting(setting)) {
+                    const normalized = normalizeSingleValue(
+                        nextValue,
+                        getBounds(setting.range),
+                        true,
+                    );
+
+                    if (normalized === setting.value) {
+                        return setting;
+                    }
+
+                    return {
+                        ...setting,
+                        value: normalized,
+                    };
+                }
+
+                return setting;
+            },
+            "Failed to update numeric setting.",
+        );
+    }
+
+    async function onNumberRangeSettingChange(
+        settingPath: number[],
+        nextValue: Range,
+    ) {
+        await updateActiveModuleSettings(
+            settingPath,
+            (setting) => {
+                if (isFloatRangeSetting(setting)) {
+                    const normalized = normalizeRangeValue(
+                        nextValue,
+                        getBounds(setting.range),
+                        false,
+                    );
+
+                    if (
+                        normalized.from === setting.value.from &&
+                        normalized.to === setting.value.to
+                    ) {
+                        return setting;
+                    }
+
+                    return {
+                        ...setting,
+                        value: normalized,
+                    };
+                }
+
+                if (isIntRangeSetting(setting)) {
+                    const normalized = normalizeRangeValue(
+                        nextValue,
+                        getBounds(setting.range),
+                        true,
+                    );
+
+                    if (
+                        normalized.from === setting.value.from &&
+                        normalized.to === setting.value.to
+                    ) {
+                        return setting;
+                    }
+
+                    return {
+                        ...setting,
+                        value: normalized,
+                    };
+                }
+
+                return setting;
+            },
+            "Failed to update numeric range setting.",
+        );
+    }
+
     function estimateSettingHeight(setting: ModuleSetting): number {
         if (isBooleanSetting(setting)) {
             return 64;
@@ -466,6 +576,14 @@
 
         if (isMultiChooseSetting(setting)) {
             return 136 + Math.ceil(setting.choices.length / 4) * 28;
+        }
+
+        if (isFloatSetting(setting) || isIntSetting(setting)) {
+            return 108;
+        }
+
+        if (isFloatRangeSetting(setting) || isIntRangeSetting(setting)) {
+            return 136;
         }
 
         if (isNestedSettingContainer(setting)) {
@@ -703,6 +821,8 @@
                                     onTextChange={onTextSettingChange}
                                     onChooseChange={onChooseSettingChange}
                                     onMultiChooseChange={onMultiChooseSettingChange}
+                                    onNumberChange={onNumberSettingChange}
+                                    onNumberRangeChange={onNumberRangeSettingChange}
                                 />
                             </div>
                         {/each}
