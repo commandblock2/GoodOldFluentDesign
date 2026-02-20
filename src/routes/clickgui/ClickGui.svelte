@@ -882,7 +882,7 @@
     }
 
     :global(
-        .clickgui > .main-content .setting-entry.setting-entry--configurable .setting-children > .setting-entry
+        .clickgui > .main-content .setting-entry.setting-entry--configurable .setting-children > .setting-entry:not(.setting-entry--configurable)
     ) {
         padding: 6px 0;
     }
