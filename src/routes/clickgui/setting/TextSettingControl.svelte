@@ -31,12 +31,9 @@
 
     .text-setting-control {
         --reveal-focus-color: #{$accent-color};
-    }
-
-    .text-setting-shell .text-setting-control > .reveal-press-content {
-        width: clamp(150px, 34vw, 260px);
-        justify-content: flex-start;
-        padding: 0;
-        background-color: rgba($clickgui-text-color, 0.14);
+        --setting-control-content-width: clamp(150px, 34vw, 260px);
+        --setting-control-justify-content: flex-start;
+        --setting-control-padding-inline: 0;
+        --setting-control-background-color: #{rgba($clickgui-text-color, 0.14)};
     }
 </style>

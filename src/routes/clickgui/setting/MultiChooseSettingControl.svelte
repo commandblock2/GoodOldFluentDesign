@@ -96,13 +96,10 @@
 
     .setting-choice-btn {
         --reveal-focus-color: #{$accent-color};
-    }
-
-    .setting-choice-btn > .reveal-press-content {
-        min-width: 0;
-        padding-inline: 8px;
-        border-color: rgba($clickgui-text-color, 0.32);
-        background-color: rgba($clickgui-text-color, 0.14);
+        --setting-control-min-width: 0;
+        --setting-control-padding-inline: 8px;
+        --setting-control-border-color: #{rgba($clickgui-text-color, 0.32)};
+        --setting-control-background-color: #{rgba($clickgui-text-color, 0.14)};
     }
 
     .setting-choice-label {
@@ -117,9 +114,9 @@
         transition: color 120ms ease;
     }
 
-    .setting-input-control.setting-choice-btn.setting-choice-btn--active > .reveal-press-content {
-        border-color: $accent-color;
-        background-color: $accent-color;
+    .setting-choice-btn.setting-choice-btn--active {
+        --setting-control-border-color: #{$accent-color};
+        --setting-control-background-color: #{$accent-color};
     }
 
     .setting-choice-btn.setting-choice-btn--active .setting-choice-label {
@@ -128,9 +125,6 @@
 
     .setting-choice-btn.setting-choice-btn--locked {
         cursor: default;
-    }
-
-    .setting-choice-btn.setting-choice-btn--locked > .reveal-press-content {
-        border-color: rgba($clickgui-text-color, 0.2);
+        --setting-control-border-color: #{rgba($clickgui-text-color, 0.2)};
     }
 </style>

@@ -882,38 +882,48 @@
         width: 100%;
     }
 
-    :global(.clickgui > .main-content .setting-input-control) {
+    :global(.clickgui > .main-content :where(.setting-input-control)) {
         display: inline-flex;
         padding: 0;
         border: 0;
         background: transparent;
         color: inherit;
         min-width: 0;
+
+        --setting-control-border-color: #{rgba($clickgui-text-color, 0.32)};
+        --setting-control-background-color: #{rgba($clickgui-text-color, 0.14)};
+        --setting-control-box-shadow: 0 0 0 0 #{$accent-color};
+        --setting-control-min-width: 66px;
+        --setting-control-height: 24px;
+        --setting-control-padding-inline: 10px;
+        --setting-control-content-width: auto;
+        --setting-control-justify-content: center;
     }
 
-    :global(.clickgui > .main-content .setting-input-control > .reveal-press-content) {
+    :global(
+        .clickgui > .main-content :where(.setting-input-control) > :where(.reveal-press-content)
+    ) {
         display: inline-flex;
         align-items: center;
-        justify-content: center;
-        min-width: 66px;
-        height: 24px;
-        padding: 0 10px;
-        border: 1px solid rgba($clickgui-text-color, 0.32);
-        box-shadow: 0 0 0 0 $accent-color;
+        justify-content: var(--setting-control-justify-content);
+        width: var(--setting-control-content-width);
+        min-width: var(--setting-control-min-width);
+        height: var(--setting-control-height);
+        padding: 0 var(--setting-control-padding-inline);
+        border: 1px solid var(--setting-control-border-color);
+        background-color: var(--setting-control-background-color);
+        box-shadow: var(--setting-control-box-shadow);
         transition:
             background-color 120ms ease,
             border-color 120ms ease,
             box-shadow 120ms ease;
     }
 
-    :global(.clickgui > .main-content .setting-input-control--block) {
+    :global(.clickgui > .main-content :where(.setting-input-control--block)) {
         width: 100%;
-    }
-
-    :global(.clickgui > .main-content .setting-input-control--block > .reveal-press-content) {
-        width: 100%;
-        justify-content: flex-start;
-        padding: 0;
+        --setting-control-content-width: 100%;
+        --setting-control-justify-content: flex-start;
+        --setting-control-padding-inline: 0;
     }
 
     :global(.clickgui > .main-content .setting-input-text) {

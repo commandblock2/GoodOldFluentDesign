@@ -55,6 +55,8 @@
     .toggle-btn {
         cursor: pointer;
         --reveal-focus-color: #{$accent-color};
+        --setting-control-border-color: #{rgba($clickgui-text-color, 0.32)};
+        --setting-control-background-color: #{rgba($clickgui-text-color, 0.14)};
     }
 
     .toggle-state {
@@ -65,24 +67,13 @@
         transition: color 120ms ease;
     }
 
-    .setting-input-control.toggle-btn.setting-input-control--enabled > .reveal-press-content {
-        border-color: $accent-color;
-        background-color: $accent-color;
+    .toggle-btn.setting-input-control--enabled {
+        --setting-control-border-color: #{$accent-color};
+        --setting-control-background-color: #{$accent-color};
     }
 
     .toggle-btn.setting-input-control--enabled .toggle-state {
         color: $clickgui-text-color;
     }
 
-    .toggle-btn:not(.setting-input-control--enabled) > .reveal-press-content {
-        border-color: rgba($clickgui-text-color, 0.32);
-        background-color: rgba($clickgui-text-color, 0.14);
-        box-shadow: none;
-    }
-
-    .toggle-btn:not(.setting-input-control--enabled):focus-within > .reveal-press-content {
-        border-color: rgba($clickgui-text-color, 0.32);
-        background-color: rgba($clickgui-text-color, 0.14);
-        box-shadow: none;
-    }
 </style>
