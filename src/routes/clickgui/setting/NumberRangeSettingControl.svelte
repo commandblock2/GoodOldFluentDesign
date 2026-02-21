@@ -38,6 +38,7 @@
     const bounds = $derived(getBounds(setting.range));
     const sliderStep = $derived(getSliderStep(bounds, integerSetting));
     const stepped = $derived(integerSetting && isSmallIntegerDomain(bounds));
+    const numericInputMode = $derived(integerSetting ? "numeric" : "decimal");
     const safeRangeSpan = $derived(Math.max(0.000001, bounds.max - bounds.min));
     const boundsLabel = $derived(
         `${formatNumericValue(bounds.min, integerSetting)} to ${formatNumericValue(bounds.max, integerSetting)}${setting.suffix?.trim() ? setting.suffix.trim() : ""}`,
@@ -258,10 +259,9 @@
                     <span class="reveal-press-content">
                         <input
                             class="setting-input-text setting-input-number"
-                            type="number"
-                            min={bounds.min}
-                            max={bounds.max}
-                            step={sliderStep}
+                            type="text"
+                            inputmode={numericInputMode}
+                            spellcheck={false}
                             value={draftFromInput}
                             oninput={handleFromInput}
                             onchange={handleFromChange}
@@ -280,10 +280,9 @@
                     <span class="reveal-press-content">
                         <input
                             class="setting-input-text setting-input-number"
-                            type="number"
-                            min={bounds.min}
-                            max={bounds.max}
-                            step={sliderStep}
+                            type="text"
+                            inputmode={numericInputMode}
+                            spellcheck={false}
                             value={draftToInput}
                             oninput={handleToInput}
                             onchange={handleToChange}
