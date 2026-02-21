@@ -10,6 +10,7 @@
     } from "../../../integration/types";
     import type { RevealItemOptions } from "fluent-reveal-svelte";
     import BooleanSettingControl from "./BooleanSettingControl.svelte";
+    import ColorSettingControl from "./ColorSettingControl.svelte";
     import ChooseSettingControl from "./ChooseSettingControl.svelte";
     import MultiChooseSettingControl from "./MultiChooseSettingControl.svelte";
     import NumberRangeSettingControl from "./NumberRangeSettingControl.svelte";
@@ -19,6 +20,7 @@
     import { formatNumericValue } from "./numericSettingUtils";
     import {
         isBooleanSetting,
+        isColorSetting,
         isChooseSetting,
         isFloatRangeSetting,
         isFloatSetting,
@@ -42,6 +44,10 @@
             path: number[],
             value: string,
         ) => void | Promise<void>;
+        onColorChange?: (
+            path: number[],
+            value: number,
+        ) => void | Promise<void>;
         onChooseChange?: (
             path: number[],
             value: string,
@@ -62,6 +68,7 @@
 
     const defaultBooleanChange = (_path: number[], _checked: boolean) => {};
     const defaultTextChange = (_path: number[], _value: string) => {};
+    const defaultColorChange = (_path: number[], _value: number) => {};
     const defaultChooseChange = (_path: number[], _value: string) => {};
     const defaultMultiChooseChange = (_path: number[], _values: string[]) => {};
     const defaultNumberChange = (_path: number[], _value: number) => {};
@@ -74,6 +81,7 @@
         textInputRevealItemOptions,
         onBooleanChange = defaultBooleanChange,
         onTextChange = defaultTextChange,
+        onColorChange = defaultColorChange,
         onChooseChange = defaultChooseChange,
         onMultiChooseChange = defaultMultiChooseChange,
         onNumberChange = defaultNumberChange,
@@ -114,7 +122,9 @@
         `${visibleChildSettingsCount} Setting${visibleChildSettingsCount === 1 ? "" : "s"}`,
     );
     const isInlineControlSetting = $derived(
-        isBooleanSetting(setting) || isTextSetting(setting),
+        isBooleanSetting(setting) ||
+            isTextSetting(setting) ||
+            isColorSetting(setting),
     );
     const isConfigurableGroupSetting = $derived(
         isNestedSettingContainer(setting),
@@ -164,6 +174,12 @@
                 {setting}
                 revealItemOptions={textInputRevealItemOptions}
                 onChange={(nextValue) => onTextChange(path, nextValue)}
+            />
+        {:else if isColorSetting(setting)}
+            <ColorSettingControl
+                {setting}
+                revealItemOptions={revealItemOptions}
+                onChange={(nextValue) => onColorChange(path, nextValue)}
             />
         {:else if isChooseSetting(setting)}
             <span class="setting-selection-summary">
@@ -247,6 +263,7 @@
                     {textInputRevealItemOptions}
                     {onBooleanChange}
                     {onTextChange}
+                    {onColorChange}
                     {onChooseChange}
                     {onMultiChooseChange}
                     {onNumberChange}
@@ -254,7 +271,7 @@
                 />
             {/each}
         </div>
-    {:else if !isBooleanSetting(setting) && !isTextSetting(setting)}
+    {:else if !isBooleanSetting(setting) && !isTextSetting(setting) && !isColorSetting(setting)}
         <pre>{JSON.stringify(setting.value, null, 2)}</pre>
     {/if}
 </div>

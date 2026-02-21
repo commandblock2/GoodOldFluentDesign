@@ -1,5 +1,6 @@
 import type {
     BooleanSetting,
+    ColorSetting,
     ChooseSetting,
     ConfigurableSetting,
     FloatRangeSetting,
@@ -27,6 +28,13 @@ export function isTextSetting(setting: ModuleSetting): setting is TextSetting {
     return (
         setting.valueType === "TEXT" &&
         typeof (setting as TextSetting).value === "string"
+    );
+}
+
+export function isColorSetting(setting: ModuleSetting): setting is ColorSetting {
+    return (
+        setting.valueType === "COLOR" &&
+        typeof (setting as ColorSetting).value === "number"
     );
 }
 

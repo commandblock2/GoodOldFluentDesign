@@ -30,6 +30,7 @@
     } from "./setting/numericSettingUtils";
     import {
         isBooleanSetting,
+        isColorSetting,
         isChooseSetting,
         isFloatRangeSetting,
         isFloatSetting,
@@ -424,6 +425,26 @@
         );
     }
 
+    async function onColorSettingChange(
+        settingPath: number[],
+        nextValue: number,
+    ) {
+        await updateActiveModuleSettings(
+            settingPath,
+            (setting) => {
+                if (!isColorSetting(setting) || setting.value === nextValue) {
+                    return setting;
+                }
+
+                return {
+                    ...setting,
+                    value: nextValue,
+                };
+            },
+            "Failed to update color setting.",
+        );
+    }
+
     async function onChooseSettingChange(
         settingPath: number[],
         nextChoice: string,
@@ -575,6 +596,10 @@
 
         if (isTextSetting(setting)) {
             return 88;
+        }
+
+        if (isColorSetting(setting)) {
+            return 64;
         }
 
         if (isChooseSetting(setting)) {
@@ -845,6 +870,7 @@
                                     textInputRevealItemOptions={textInputRevealItemOptions}
                                     onBooleanChange={onBooleanSettingChange}
                                     onTextChange={onTextSettingChange}
+                                    onColorChange={onColorSettingChange}
                                     onChooseChange={onChooseSettingChange}
                                     onMultiChooseChange={onMultiChooseSettingChange}
                                     onNumberChange={onNumberSettingChange}
