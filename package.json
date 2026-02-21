@@ -10,11 +10,11 @@
     "check": "svelte-check --tsconfig ./tsconfig.json"
   },
   "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "^5.0.0",
-    "@tsconfig/svelte": "^5.0.4",
-    "sass": "^1.70.0",
+    "@sveltejs/vite-plugin-svelte": "^5.1.1",
+    "@tsconfig/svelte": "^5.0.8",
+    "sass": "^1.97.3",
     "svelte": "^5.53.1",
-    "svelte-check": "^4.1.0",
+    "svelte-check": "^4.4.3",
     "tslib": "^2.8.1",
     "typescript": "~5.6.2",
     "vite": "^6.4.1"
@@ -22,7 +22,7 @@
   "dependencies": {
     "@jhubbardsf/svelte-sortablejs": "^1.1.0",
     "@simonwep/pickr": "^1.9.0",
-    "chart.js": "^4.5.0",
+    "chart.js": "^4.5.1",
     "chartjs-plugin-dragdata": "^2.3.1",
     "country-code-lookup": "^0.1.2",
     "dateformat": "^5.0.3",
