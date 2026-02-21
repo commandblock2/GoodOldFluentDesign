@@ -34,9 +34,13 @@
      - `.setting-entry`
 4. Setting controls mount inside each setting row:
    - `BooleanSettingControl`
+   - `BindSettingControl`
+   - `ColorSettingControl`
    - `TextSettingControl`
    - `ChooseSettingControl`
    - `MultiChooseSettingControl`
+   - `NumberSettingControl`
+   - `NumberRangeSettingControl`
 
 ## How CSS Is Applied
 
@@ -81,7 +85,7 @@
 
 ### P2 (Feature completion after clean baseline)
 
-1. Add remaining setting editors (`BIND`, ranges, color, etc.).
+1. Add remaining setting editors for non-covered types (`BLOCKS`, `CHOICE`, list variants, vectors, `KEY`, `FILE`, `CURVE`).
 2. Align module row actions fully with `docs/clickgui-ux.md`.
 
 ### P3 (Intentionally deferred)
@@ -115,3 +119,41 @@
 1. ClickGUI now has less vendor-specific style surface in core layout files.
 2. Main remaining debt is still selector breadth in `ClickGui.svelte` (global descendant style ownership).
 3. Behavior for settings search is still visual-only; filtering is not yet wired.
+
+## Setting Coverage Snapshot (2026-02-21)
+
+1. Total `ModuleSetting` variants in `src/integration/types.ts`: `22`.
+2. Implemented in the current ClickGUI settings flow (`SettingEntry` + guards + controls): `12`.
+3. Not implemented in the current ClickGUI settings flow: `10`.
+
+### Implemented (`12`)
+
+1. `BOOLEAN`
+2. `TEXT`
+3. `BIND`
+4. `COLOR`
+5. `CHOOSE`
+6. `MULTI_CHOOSE` (and legacy typo `MUTLI_CHOOSE`)
+7. `FLOAT`
+8. `INT`
+9. `FLOAT_RANGE`
+10. `INT_RANGE`
+11. `CONFIGURABLE`
+12. `TOGGLABLE` / `TOGGLEABLE`
+
+### Not Implemented (`10`)
+
+1. `BLOCKS`
+2. `CHOICE`
+3. `LIST`
+4. `REGISTRY_LIST`
+5. `ITEM_LIST`
+6. `VEC2`
+7. `VEC3`
+8. `KEY`
+9. `FILE`
+10. `CURVE`
+
+### Current Unsupported Behavior
+
+1. Unsupported setting types fall back to JSON rendering in `src/routes/clickgui/setting/SettingEntry.svelte`.
