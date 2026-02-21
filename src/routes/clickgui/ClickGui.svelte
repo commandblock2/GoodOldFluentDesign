@@ -1002,7 +1002,7 @@
         flex-shrink: 0;
         height: 100%;
         min-height: 0;
-        width: 280px;
+        width: 210px;
         background-color: var(--clickgui-surface-color);
         color: $clickgui-text-color;
         border-radius: 0;
