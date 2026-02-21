@@ -745,6 +745,7 @@
         box-sizing: border-box;
         padding-inline: 8px;
         overflow: visible;
+        isolation: isolate;
     }
 
     .numeric-range-value-shell {
@@ -752,14 +753,19 @@
         top: 0;
         width: var(--range-value-width);
         transform: translateX(-50%);
-    }
-
-    .numeric-range-value-shell--from {
         z-index: 1;
     }
 
-    .numeric-range-value-shell--to {
+    .numeric-range-value-shell--from {
         z-index: 2;
+    }
+
+    .numeric-range-value-shell--to {
+        z-index: 3;
+    }
+
+    .numeric-range-value-shell:focus-within {
+        z-index: 4;
     }
 
     .numeric-range-value-control {
