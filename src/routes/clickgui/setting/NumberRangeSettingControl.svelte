@@ -79,7 +79,7 @@
     );
     const safeRangeSpan = $derived(Math.max(0.000001, bounds.max - bounds.min));
     const boundsLabel = $derived(
-        `${formatNumericValue(bounds.min, integerSetting)} to ${formatNumericValue(bounds.max, integerSetting)}${setting.suffix?.trim() ? setting.suffix.trim() : ""}`,
+        `${formatNumericValue(bounds.min, integerSetting)} to ${formatNumericValue(bounds.max, integerSetting)} ${setting.suffix?.trim() ? setting.suffix.trim() : ""}`,
     );
 
     let lowerThumbValue = $state(0);
