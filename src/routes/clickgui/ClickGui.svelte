@@ -905,7 +905,6 @@
         z-index: 2;
         background-color: transparent;
         backdrop-filter: blur(0);
-        -webkit-backdrop-filter: blur(0);
         transition:
             background-color 140ms ease,
             backdrop-filter 140ms ease,
@@ -957,7 +956,6 @@
         z-index: 2;
         background-color: transparent;
         backdrop-filter: blur(0);
-        -webkit-backdrop-filter: blur(0);
         transition:
             background-color 140ms ease,
             backdrop-filter 140ms ease,
@@ -1003,7 +1001,6 @@
     :global(.clickgui > .main-content.surface-scrolled .main-content-search) {
         background-color: rgba($clickgui-base-color, 0.72);
         backdrop-filter: blur(12px) saturate(130%);
-        -webkit-backdrop-filter: blur(12px) saturate(130%);
         box-shadow: 0 8px 14px rgba($clickgui-base-color, 0.35);
     }
 
@@ -1013,12 +1010,11 @@
                 180deg,
                 rgba($clickgui-text-color, 0.18) 0%,
                 rgba($clickgui-text-color, 0.07) 58%,
-                rgba($clickgui-text-color, 0.03) 100%
+            rgba($clickgui-text-color, 0.03) 100%
             ),
             rgba($clickgui-base-color, 0.94);
         border-bottom-color: rgba($clickgui-text-color, 0.34);
         backdrop-filter: blur(14px) saturate(135%);
-        -webkit-backdrop-filter: blur(14px) saturate(135%);
         box-shadow: 0 12px 18px rgba($clickgui-base-color, 0.52);
     }
 
@@ -1193,41 +1189,4 @@
         scrollbar-color: rgba($clickgui-text-color, 0.56) transparent;
     }
 
-    @supports selector(::-webkit-scrollbar) {
-        :global(.clickgui .scroll-surface::-webkit-scrollbar) {
-            width: 12px;
-            height: 12px;
-            background: transparent;
-        }
-
-        :global(.clickgui .scroll-surface::-webkit-scrollbar-track) {
-            background: transparent;
-        }
-
-        :global(.clickgui .scroll-surface::-webkit-scrollbar-thumb) {
-            background-color: transparent;
-            border: 5px solid transparent;
-            border-radius: 999px;
-            background-clip: content-box;
-            transition:
-                background-color 120ms ease,
-                border-width 120ms ease;
-        }
-
-        :global(.clickgui .scroll-surface:hover::-webkit-scrollbar-thumb) {
-            background-color: rgba($clickgui-text-color, 0.36);
-            border-width: 4px;
-        }
-
-        :global(.clickgui .scroll-surface.scrollbar-strong:hover::-webkit-scrollbar-thumb) {
-            background-color: rgba($clickgui-text-color, 0.56);
-            border-width: 1px;
-        }
-
-        :global(
-            .clickgui .scroll-surface.scrollbar-strong:hover::-webkit-scrollbar-thumb:hover
-        ) {
-            background-color: rgba($clickgui-text-color, 0.64);
-        }
-    }
 </style>

@@ -78,7 +78,6 @@
             var(--clickgui-surface-strong-color);
         border-bottom: 1px solid rgba(255, 255, 255, 0.24);
         backdrop-filter: blur(8px) saturate(125%);
-        -webkit-backdrop-filter: blur(8px) saturate(125%);
         box-shadow: 0 10px 16px rgba(0, 0, 0, 0.32);
         transition:
             background 140ms ease,

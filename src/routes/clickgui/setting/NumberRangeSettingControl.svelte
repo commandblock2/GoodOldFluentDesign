@@ -448,12 +448,6 @@
         -moz-appearance: textfield;
     }
 
-    .numeric-range-value-control .setting-input-number::-webkit-outer-spin-button,
-    .numeric-range-value-control .setting-input-number::-webkit-inner-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-    }
-
     .range-divider {
         font-size: 10px;
         letter-spacing: 0.08em;

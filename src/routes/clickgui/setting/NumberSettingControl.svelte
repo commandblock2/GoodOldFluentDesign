@@ -291,10 +291,4 @@
         appearance: textfield;
         -moz-appearance: textfield;
     }
-
-    .numeric-value-control .setting-input-number::-webkit-outer-spin-button,
-    .numeric-value-control .setting-input-number::-webkit-inner-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-    }
 </style>

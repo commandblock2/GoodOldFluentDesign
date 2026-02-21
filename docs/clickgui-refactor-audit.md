@@ -94,3 +94,24 @@
 2. No selector in ClickGUI styles should target child internals through broad generic descendant chains unless intentionally documented.
 3. All active selectors map to real markup (no dead selectors).
 4. Visual regression from current baseline is zero or intentional.
+
+## Recent Progress Update (2026-02-21)
+
+1. Implemented sticky UX adjustments:
+   - Sidebar search remains pinned in non-detail views.
+   - Category detail has a sticky top back-surface band.
+   - Main content keeps title/description static, with only settings search sticky.
+2. Added module description placement in module config view:
+   - Between main title and settings search.
+3. Introduced scroll-state styling hook:
+   - `surface-scrolled` class from `scrollbarHoverSurface`.
+   - Used to apply stronger sticky-region emphasis when scrolled.
+4. Browser-specific cleanup:
+   - Removed non-slider WebKit-specific CSS from ClickGUI styles.
+   - Retained WebKit selectors only for slider thumb/track rules in numeric controls.
+
+## Current Debt Notes After This Pass
+
+1. ClickGUI now has less vendor-specific style surface in core layout files.
+2. Main remaining debt is still selector breadth in `ClickGui.svelte` (global descendant style ownership).
+3. Behavior for settings search is still visual-only; filtering is not yet wired.
