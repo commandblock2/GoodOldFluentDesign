@@ -116,6 +116,7 @@ For repeated on/off behavior, promote keybind assignment as the intended path.
 1. Backdrop blur visibility depends on runtime/browser compositing support and scene contrast.
 2. Current project-wide typecheck still fails from pre-existing, unrelated files outside ClickGUI.
 3. ClickGUI style scope still relies heavily on global descendant selectors in `ClickGui.svelte`.
+4. Manual QA has not been completed yet for the most recent ClickGUI refactor changes (slider/range/color/error-state updates).
 
 ## Open UX Follow-Ups
 

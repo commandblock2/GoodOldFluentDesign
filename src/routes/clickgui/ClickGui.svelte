@@ -166,6 +166,13 @@
                   (module) => module.name === activeConfigPage.moduleName,
               )?.description ?? "",
     );
+    const activeModuleLoadError = $derived(
+        activeConfigPage.type === "module" &&
+            activeConfigurable === null &&
+            activeConfigError !== null
+            ? activeConfigError
+            : null,
+    );
     const activeModuleSettings = $derived(activeConfigurable?.value ?? []);
     const settingsColumnCount = $derived(Math.max(1, settingsSplitCount + 1));
     const settingsColumns = $derived(
@@ -282,6 +289,27 @@
                     : "Failed to load module settings.";
             activeConfigLoading = false;
         }
+    }
+
+    async function retryActiveModuleConfigLoad() {
+        if (
+            activeConfigPage.type !== "module" ||
+            activeConfigPage.moduleName === null
+        ) {
+            return;
+        }
+
+        const module = modules.find(
+            (nextModule) => nextModule.name === activeConfigPage.moduleName,
+        );
+
+        if (module === undefined) {
+            activeConfigError = "Module is no longer available.";
+            activeConfigLoading = false;
+            return;
+        }
+
+        await openModuleConfig(module);
     }
 
     type SettingMapper = (setting: ModuleSetting) => ModuleSetting;
@@ -885,6 +913,22 @@
                     {/if}
                 {/each}
             </div>
+        {:else if activeModuleLoadError !== null}
+            <div class="settings-error-state" role="alert" aria-live="polite">
+                <div class="settings-error-card">
+                    <h3 class="settings-error-title">Failed To Load Module Settings</h3>
+                    <p class="settings-error-message">{activeModuleLoadError}</p>
+                    <div class="settings-error-actions">
+                        <button
+                            class="setting-input-control settings-error-retry"
+                            type="button"
+                            onclick={retryActiveModuleConfigLoad}
+                        >
+                            <span class="reveal-press-content">Retry</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
         {:else}
             <pre>{activeConfigPayloadJson}</pre>
         {/if}
@@ -1048,6 +1092,63 @@
         display: flex;
         align-items: stretch;
         gap: 10px;
+    }
+
+    :global(.clickgui > .main-content .settings-error-state) {
+        display: flex;
+        width: 100%;
+    }
+
+    :global(.clickgui > .main-content .settings-error-card) {
+        display: grid;
+        gap: 10px;
+        width: min(520px, 100%);
+        padding: 12px;
+        border: 1px solid rgba($clickgui-text-color, 0.28);
+        background-color: rgba($clickgui-base-color, 0.42);
+    }
+
+    :global(.clickgui > .main-content .settings-error-title) {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        color: $clickgui-text-color;
+    }
+
+    :global(.clickgui > .main-content .settings-error-message) {
+        margin: 0;
+        font-size: 12px;
+        line-height: 1.5;
+        color: rgba($clickgui-text-dimmed-color, 0.96);
+        white-space: pre-wrap;
+    }
+
+    :global(.clickgui > .main-content .settings-error-actions) {
+        display: flex;
+    }
+
+    :global(.clickgui > .main-content .settings-error-retry) {
+        cursor: pointer;
+        --setting-control-padding-inline: 14px;
+        --setting-control-border-color: #{rgba($clickgui-text-color, 0.34)};
+        --setting-control-background-color: #{rgba($clickgui-text-color, 0.12)};
+    }
+
+    :global(.clickgui > .main-content .settings-error-retry > .reveal-press-content) {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        color: rgba($clickgui-text-dimmed-color, 0.96);
+    }
+
+    :global(.clickgui > .main-content .settings-error-retry:hover > .reveal-press-content) {
+        color: $clickgui-text-color;
+    }
+
+    :global(.clickgui > .main-content .settings-error-retry:focus-visible > .reveal-press-content) {
+        border-color: $accent-color;
+        box-shadow: 0 0 0 1px $accent-color;
     }
 
     :global(.clickgui > .main-content .settings-column) {
