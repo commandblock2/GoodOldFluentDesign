@@ -2,6 +2,7 @@
     import type {
         ConfigurableSetting,
         GroupedModules,
+        InputBind,
         Module,
         ModuleSetting,
         Range,
@@ -30,6 +31,7 @@
     } from "./setting/numericSettingUtils";
     import {
         isBooleanSetting,
+        isBindSetting,
         isColorSetting,
         isChooseSetting,
         isFloatRangeSetting,
@@ -453,6 +455,43 @@
         );
     }
 
+    async function onBindSettingChange(
+        settingPath: number[],
+        nextValue: InputBind,
+    ) {
+        await updateActiveModuleSettings(
+            settingPath,
+            (setting) => {
+                if (!isBindSetting(setting)) {
+                    return setting;
+                }
+
+                const current = setting.value;
+                const currentModifiers = Array.isArray(current.modifiers)
+                    ? current.modifiers
+                    : [];
+                const unchanged =
+                    current.boundKey === nextValue.boundKey &&
+                    current.action === nextValue.action &&
+                    currentModifiers.length === nextValue.modifiers.length &&
+                    currentModifiers.every(
+                        (modifier, index) =>
+                            modifier === nextValue.modifiers[index],
+                    );
+
+                if (unchanged) {
+                    return setting;
+                }
+
+                return {
+                    ...setting,
+                    value: nextValue,
+                };
+            },
+            "Failed to update bind setting.",
+        );
+    }
+
     async function onColorSettingChange(
         settingPath: number[],
         nextValue: number,
@@ -624,6 +663,10 @@
 
         if (isTextSetting(setting)) {
             return 88;
+        }
+
+        if (isBindSetting(setting)) {
+            return 64;
         }
 
         if (isColorSetting(setting)) {
@@ -898,6 +941,7 @@
                                     textInputRevealItemOptions={textInputRevealItemOptions}
                                     onBooleanChange={onBooleanSettingChange}
                                     onTextChange={onTextSettingChange}
+                                    onBindChange={onBindSettingChange}
                                     onColorChange={onColorSettingChange}
                                     onChooseChange={onChooseSettingChange}
                                     onMultiChooseChange={onMultiChooseSettingChange}

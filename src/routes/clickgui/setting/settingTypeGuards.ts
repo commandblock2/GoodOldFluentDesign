@@ -1,4 +1,6 @@
 import type {
+    BindSetting,
+    InputBind,
     BooleanSetting,
     ColorSetting,
     ChooseSetting,
@@ -35,6 +37,19 @@ export function isColorSetting(setting: ModuleSetting): setting is ColorSetting 
     return (
         setting.valueType === "COLOR" &&
         typeof (setting as ColorSetting).value === "number"
+    );
+}
+
+export function isBindSetting(setting: ModuleSetting): setting is BindSetting {
+    const bindValue = (setting as { value?: Partial<InputBind> }).value;
+    return (
+        setting.valueType === "BIND" &&
+        typeof bindValue === "object" &&
+        bindValue !== null &&
+        typeof bindValue.boundKey === "string" &&
+        typeof bindValue.action === "string" &&
+        (bindValue.modifiers === undefined ||
+            Array.isArray(bindValue.modifiers))
     );
 }
 

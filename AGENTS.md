@@ -12,6 +12,12 @@
 - Treat derived values as **values**, not functions.
 - Avoid passing derived values as callbacks or indexing with unknown types.
 
+## Fail Early Strategy
+- Prefer **fail-early** behavior over silent fallback when requirements are unclear or runtime data is inconsistent.
+- If payloads contradict declared types/contracts, stop the flow, surface an explicit error, and include actionable diagnostics.
+- Do not silently remap/guess values unless there is a documented compatibility rule.
+- If critical context/spec is missing, ask for clarification before adding broad heuristics.
+
 ## Tooling / Execution Notes
 - Be prepared for runs where tool usage is disabled.
 - When tools are unavailable, respond with direct file content only, following the required code block format.
