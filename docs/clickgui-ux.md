@@ -103,6 +103,14 @@ For repeated on/off behavior, promote keybind assignment as the intended path.
 2. WebKit support is intentionally retained only for slider/thumb styling in numeric slider controls.
 3. Standard properties (for example `backdrop-filter`, `scrollbar-width`) remain in use where applicable.
 
+## Stepped Slider Spec
+
+1. Stepped mode applies only to integer sliders in a small domain (`max - min <= 5`).
+2. Both single-value and range sliders use evenly spaced step markers derived from the actual interval count, not hardcoded spacing.
+3. Marker style uses the same white-tinted expression family as input/button surfaces (`rgba($clickgui-text-color, ...)`) and stays square.
+4. Step markers are purely visual track decoration and do not use reveal effects.
+5. Endpoints are explicit markers (left and right edges are always present).
+
 ## Known Technical Constraints
 
 1. Backdrop blur visibility depends on runtime/browser compositing support and scene contrast.

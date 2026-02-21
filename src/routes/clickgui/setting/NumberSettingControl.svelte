@@ -33,6 +33,40 @@
     const sliderStep = $derived(getSliderStep(bounds, integerSetting));
     const stepped = $derived(integerSetting && isSmallIntegerDomain(bounds));
     const numericInputMode = $derived(integerSetting ? "numeric" : "decimal");
+    const stepIntervalCount = $derived(
+        !stepped || sliderStep <= 0
+            ? 1
+            : Math.max(
+                  1,
+                  Math.round((bounds.max - bounds.min) / sliderStep),
+              ),
+    );
+    const stepMarkerPositions = $derived(
+        !stepped
+            ? []
+            : Array.from(
+                  { length: stepIntervalCount + 1 },
+                  (_, markerIndex) => (markerIndex / stepIntervalCount) * 100,
+              ),
+    );
+    const stepMarkers = $derived(
+        !stepped
+            ? []
+            : stepMarkerPositions.map((position, markerIndex) => {
+                  const markerValue = normalizeSingleValue(
+                      bounds.min + markerIndex * sliderStep,
+                      bounds,
+                      integerSetting,
+                  );
+                  const markerIsActive =
+                      markerValue <= draftValue + Math.max(0.000001, sliderStep / 2);
+
+                  return {
+                      position,
+                      markerIsActive,
+                  };
+              }),
+    );
     const boundsLabel = $derived(
         `${formatNumericValue(bounds.min, integerSetting)} to ${formatNumericValue(bounds.max, integerSetting)}${setting.suffix?.trim() ? setting.suffix.trim() : ""}`,
     );
@@ -133,17 +167,33 @@
                 class:numeric-slider-control--stepped={stepped}
             >
                 <span class="numeric-slider-content">
-                    <input
-                        class="setting-slider-input"
-                        class:setting-slider-input--stepped={stepped}
-                        type="range"
-                        min={bounds.min}
-                        max={bounds.max}
-                        step={sliderStep}
-                        value={draftValue}
-                        oninput={handleSliderInput}
-                        onchange={handleSliderChange}
-                    />
+                    <div class="numeric-slider-track-shell">
+                        <div class="setting-slider-track"></div>
+
+                        {#if stepped}
+                            <div class="setting-slider-markers" aria-hidden="true">
+                                {#each stepMarkers as marker}
+                                    <span
+                                        class="setting-slider-step-marker"
+                                        class:setting-slider-step-marker--active={marker.markerIsActive}
+                                        style={`left:${marker.position}%;`}
+                                    ></span>
+                                {/each}
+                            </div>
+                        {/if}
+
+                        <input
+                            class="setting-slider-input"
+                            class:setting-slider-input--stepped={stepped}
+                            type="range"
+                            min={bounds.min}
+                            max={bounds.max}
+                            step={sliderStep}
+                            value={draftValue}
+                            oninput={handleSliderInput}
+                            onchange={handleSliderChange}
+                        />
+                    </div>
                 </span>
             </label>
         </div>
@@ -198,60 +248,112 @@
         padding: 0 8px;
         border: 1px solid #{rgba($clickgui-text-color, 0.28)};
         background-color: #{rgba($clickgui-text-color, 0.08)};
+        --slider-thumb-size: 10px;
+        --slider-thumb-half-size: calc(var(--slider-thumb-size) / 2);
+        --step-marker-size: 6px;
+        --step-marker-color: #{rgba($clickgui-text-color, 0.68)};
+        --step-marker-active-color: #{$accent-color};
     }
 
     .numeric-slider-content {
         width: 100%;
     }
 
+    .numeric-slider-track-shell {
+        position: relative;
+        width: 100%;
+        height: 16px;
+        overflow: visible;
+    }
+
+    .setting-slider-track {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 50%;
+        height: 2px;
+        transform: translateY(-50%);
+        border-radius: 999px;
+        background-color: #{rgba($clickgui-text-color, 0.38)};
+        z-index: 1;
+    }
+
+    .numeric-slider-control.numeric-slider-control--stepped .setting-slider-track {
+        border-radius: 0;
+    }
+
+    .setting-slider-markers {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: var(--slider-thumb-half-size);
+        right: var(--slider-thumb-half-size);
+        pointer-events: none;
+        z-index: 2;
+    }
+
+    .setting-slider-step-marker {
+        position: absolute;
+        top: 50%;
+        width: var(--step-marker-size);
+        height: var(--step-marker-size);
+        border-radius: 0;
+        background-color: var(--step-marker-color);
+        transform: translate(-50%, -50%);
+    }
+
+    .setting-slider-step-marker--active {
+        background-color: var(--step-marker-active-color);
+    }
+
     .setting-slider-input {
         appearance: none;
+        position: absolute;
+        inset: 0;
         width: 100%;
         height: 16px;
         margin: 0;
         background: transparent;
         cursor: pointer;
+        z-index: 3;
     }
 
     .setting-slider-input::-webkit-slider-runnable-track {
         height: 2px;
-        border-radius: 999px;
-        background-color: #{rgba($clickgui-text-color, 0.3)};
+        border-radius: 0;
+        background: transparent;
     }
 
     .setting-slider-input::-webkit-slider-thumb {
         appearance: none;
-        width: 10px;
-        height: 10px;
+        width: var(--slider-thumb-size);
+        height: var(--slider-thumb-size);
         border: 0;
         border-radius: 0;
-        margin-top: -4px;
+        margin-top: calc((2px - var(--slider-thumb-size)) / 2);
         background-color: $accent-color;
     }
 
     .setting-slider-input::-moz-range-track {
         height: 2px;
         border: 0;
-        border-radius: 999px;
-        background-color: #{rgba($clickgui-text-color, 0.3)};
+        border-radius: 0;
+        background: transparent;
     }
 
     .setting-slider-input::-moz-range-thumb {
-        width: 10px;
-        height: 10px;
+        width: var(--slider-thumb-size);
+        height: var(--slider-thumb-size);
         border: 0;
         border-radius: 0;
         background-color: $accent-color;
     }
 
     .setting-slider-input.setting-slider-input--stepped::-webkit-slider-runnable-track {
-        background-image: repeating-linear-gradient(
-            to right,
-            #{rgba($clickgui-text-color, 0.3)} 0,
-            #{rgba($clickgui-text-color, 0.3)} 1px,
-            transparent 1px,
-            transparent 20%
-        );
+        background-color: transparent;
+    }
+
+    .setting-slider-input.setting-slider-input--stepped::-moz-range-track {
         background-color: transparent;
     }
 
