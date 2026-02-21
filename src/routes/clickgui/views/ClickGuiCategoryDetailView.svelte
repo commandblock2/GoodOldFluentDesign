@@ -17,7 +17,7 @@
 </script>
 
 <div class="category-page" use:revealContainer={subsectionRevealOptions}>
-    <div class="item btn-border" use:revealBorder>
+    <div class="item btn-border category-back-shell" use:revealBorder>
         <button
             class="btn category-back-btn"
             type="button"
@@ -61,4 +61,29 @@
     @include shared.module-item-block;
     @include shared.empty-block;
     @include shared.reveal-hover-overlay-block;
+
+    .category-back-shell {
+        position: sticky;
+        top: -10px;
+        z-index: 2;
+        margin: 0 -10px 0;
+        padding: 20px 10px 6px;
+        background:
+            linear-gradient(
+                180deg,
+                rgba(255, 255, 255, 0.12) 0%,
+                rgba(255, 255, 255, 0.05) 58%,
+                rgba(255, 255, 255, 0.02) 100%
+            ),
+            var(--clickgui-surface-strong-color);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.24);
+        backdrop-filter: blur(8px) saturate(125%);
+        -webkit-backdrop-filter: blur(8px) saturate(125%);
+        box-shadow: 0 10px 16px rgba(0, 0, 0, 0.32);
+        transition:
+            background 140ms ease,
+            border-color 140ms ease,
+            backdrop-filter 140ms ease,
+            box-shadow 140ms ease;
+    }
 </style>

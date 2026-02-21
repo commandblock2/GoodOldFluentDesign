@@ -158,6 +158,13 @@
                 ? "Theme Settings"
                 : "Click GUI",
     );
+    const activeModuleDescription = $derived(
+        activeConfigPage.type !== "module" || activeConfigPage.moduleName === null
+            ? ""
+            : modules.find(
+                  (module) => module.name === activeConfigPage.moduleName,
+              )?.description ?? "",
+    );
     const activeModuleSettings = $derived(activeConfigurable?.value ?? []);
     const settingsColumnCount = $derived(Math.max(1, settingsSplitCount + 1));
     const settingsColumns = $derived(
@@ -664,9 +671,13 @@
         let rafId = 0;
 
         const hasVerticalOverflow = () => node.scrollHeight > node.clientHeight + 1;
+        const applyScrollState = () => {
+            node.classList.toggle("surface-scrolled", node.scrollTop > 0);
+        };
 
         const applyState = () => {
             rafId = 0;
+            applyScrollState();
 
             if (!hasVerticalOverflow()) {
                 node.classList.remove("scrollbar-strong");
@@ -711,13 +722,18 @@
         };
 
         const onScroll = () => {
+            applyScrollState();
             scheduleApplyState();
         };
 
         const resizeObserver = new ResizeObserver(() => {
+            applyScrollState();
             scheduleApplyState();
         });
         resizeObserver.observe(node);
+
+        applyScrollState();
+        scheduleApplyState();
 
         node.addEventListener("pointermove", onPointerMove);
         node.addEventListener("pointerleave", onPointerLeave);
@@ -735,6 +751,7 @@
                 }
 
                 node.classList.remove("scrollbar-strong");
+                node.classList.remove("surface-scrolled");
             },
         };
     }
@@ -796,6 +813,15 @@
     >
         <div class="main-content-header">
             <h2 class="main-content-title">{activeConfigTitle}</h2>
+
+            {#if activeModuleDescription.trim().length > 0}
+                <p class="main-content-description">
+                    {activeModuleDescription}
+                </p>
+            {/if}
+        </div>
+
+        <div class="main-content-search">
             <input
                 class="settings-search-input"
                 type="text"
@@ -877,7 +903,13 @@
         position: sticky;
         top: 0;
         z-index: 2;
-        background-color: var(--clickgui-surface-color);
+        background-color: transparent;
+        backdrop-filter: blur(0);
+        -webkit-backdrop-filter: blur(0);
+        transition:
+            background-color 140ms ease,
+            backdrop-filter 140ms ease,
+            box-shadow 140ms ease;
         padding-bottom: 8px;
     }
 
@@ -919,10 +951,32 @@
         margin-bottom: 10px;
     }
 
+    :global(.clickgui > .main-content .main-content-search) {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background-color: transparent;
+        backdrop-filter: blur(0);
+        -webkit-backdrop-filter: blur(0);
+        transition:
+            background-color 140ms ease,
+            backdrop-filter 140ms ease,
+            box-shadow 140ms ease;
+        padding: 0 0 10px;
+        margin-bottom: 10px;
+    }
+
     :global(.clickgui > .main-content .main-content-title) {
         font-size: 20px;
         font-weight: 600;
         line-height: 1.1;
+    }
+
+    :global(.clickgui > .main-content .main-content-description) {
+        margin: 0;
+        font-size: 12px;
+        line-height: 1.4;
+        color: $clickgui-text-dimmed-color;
     }
 
     :global(.clickgui > .main-content .settings-search-input) {
@@ -934,6 +988,38 @@
         color: $clickgui-text-color;
         font-size: 13px;
         outline: none;
+
+        &::placeholder {
+            color: $clickgui-text-dimmed-color;
+        }
+
+        &:focus {
+            border-color: $accent-color;
+            box-shadow: 0 0 0 2px $accent-color;
+        }
+    }
+
+    :global(.clickgui > .sidebar.surface-scrolled > .search),
+    :global(.clickgui > .main-content.surface-scrolled .main-content-search) {
+        background-color: rgba($clickgui-base-color, 0.72);
+        backdrop-filter: blur(12px) saturate(130%);
+        -webkit-backdrop-filter: blur(12px) saturate(130%);
+        box-shadow: 0 8px 14px rgba($clickgui-base-color, 0.35);
+    }
+
+    :global(.clickgui > .sidebar.surface-scrolled .category-back-shell) {
+        background:
+            linear-gradient(
+                180deg,
+                rgba($clickgui-text-color, 0.18) 0%,
+                rgba($clickgui-text-color, 0.07) 58%,
+                rgba($clickgui-text-color, 0.03) 100%
+            ),
+            rgba($clickgui-base-color, 0.94);
+        border-bottom-color: rgba($clickgui-text-color, 0.34);
+        backdrop-filter: blur(14px) saturate(135%);
+        -webkit-backdrop-filter: blur(14px) saturate(135%);
+        box-shadow: 0 12px 18px rgba($clickgui-base-color, 0.52);
     }
 
     :global(.clickgui > .main-content .settings-split-layout) {
