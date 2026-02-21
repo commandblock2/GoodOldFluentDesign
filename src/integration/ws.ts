@@ -5,6 +5,8 @@ import {onDestroy} from "svelte";
 console.log("Connecting to server at: ", WS_BASE);
 
 let ws: WebSocket;
+let shouldReconnect = true;
+let reconnectTimeout: ReturnType<typeof setTimeout> | undefined = undefined;
 
 function connect() {
     ws = new WebSocket(WS_BASE);
@@ -15,8 +17,14 @@ function connect() {
     };
 
     ws.onclose = () => {
+        if (!shouldReconnect) {
+            console.log("[WS] Disconnected");
+            return;
+        }
+
         console.log("[WS] Disconnected from server, attempting to reconnect...");
-        setTimeout(() => {
+        reconnectTimeout = setTimeout(() => {
+            reconnectTimeout = undefined;
             connect();
         }, 1000);
     };
@@ -99,6 +107,7 @@ export async function waitMatches<NAME extends keyof EventMap>(eventName: NAME, 
 
 export function cleanupListeners() {
     listeners.clear();
+    alwaysListeners.clear();
     console.log("[WS] Cleaned up event listeners");
 }
 
@@ -110,7 +119,7 @@ export function deleteListener<NAME extends keyof EventMap>(eventName: NAME, cb:
 }
 
 // Send ping to server every 5 seconds
-setInterval(() => {
+const pingIntervalId = setInterval(() => {
     if (!ws) return;
     if (ws.readyState !== 1) return;
 
@@ -121,3 +130,38 @@ setInterval(() => {
 }, 5000);
 
 connect();
+
+const importMeta = import.meta as ImportMeta & {
+    hot?: {
+        dispose: (callback: () => void) => void;
+    };
+};
+
+if (importMeta.hot) {
+    // NOTE (UNVERIFIED): Dev-only HMR cleanup intended to reduce stale WS/listener state.
+    // This path has not been manually validated end-to-end across all runtime scenarios.
+    importMeta.hot.dispose(() => {
+        shouldReconnect = false;
+        cleanupListeners();
+
+        if (reconnectTimeout !== undefined) {
+            clearTimeout(reconnectTimeout);
+            reconnectTimeout = undefined;
+        }
+
+        clearInterval(pingIntervalId);
+
+        if (!ws) {
+            return;
+        }
+
+        ws.onopen = null;
+        ws.onclose = null;
+        ws.onerror = null;
+        ws.onmessage = null;
+
+        if (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN) {
+            ws.close();
+        }
+    });
+}
