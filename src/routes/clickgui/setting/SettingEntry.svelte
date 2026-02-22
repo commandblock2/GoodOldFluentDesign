@@ -20,6 +20,7 @@
     import Self from "./SettingEntry.svelte";
     import TextSettingControl from "./TextSettingControl.svelte";
     import { formatNumericValue } from "./numericSettingUtils";
+    import { getSettingEntryRowKey } from "./settingEntryKey.js";
     import {
         isBooleanSetting,
         isBindSetting,
@@ -271,7 +272,7 @@
         />
     {:else if isConfigurableGroupSetting && visibleChildSettings.length > 0}
         <div class="setting-children">
-            {#each visibleChildSettings as childSetting (childSetting.setting.key ?? `${childSetting.setting.name}-${childSetting.childIndex}`)}
+            {#each visibleChildSettings as childSetting (getSettingEntryRowKey(childSetting.setting, childSetting.childIndex))}
                 <Self
                     setting={childSetting.setting}
                     path={childPath(childSetting.childIndex)}

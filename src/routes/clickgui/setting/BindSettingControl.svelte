@@ -9,7 +9,10 @@
         KeyboardKeyEvent,
         MouseButtonEvent,
     } from "../../../integration/events";
-    import { getPrintableKeyName } from "../../../integration/rest";
+    import {
+        clearPrintableKeyNameLookup,
+        getPrintableKeyName,
+    } from "../../../integration/rest";
     import type {
         BindModifier,
         BindSetting,
@@ -58,6 +61,8 @@
     let isListening = $state(false);
     let isHovered = $state(false);
     let printableKeyName = $state<string | undefined>(undefined);
+    let lookupErrorMessage = $state<string | null>(null);
+    let lookupRevision = $state(0);
     let addedModifiers = $state<BindModifier[]>([]);
     let lookupRequestId = 0;
     let listenSessionId = 0;
@@ -70,6 +75,8 @@
     const displayedModifiers = $derived(getModifiers(setting.value));
 
     $effect(() => {
+        lookupRevision;
+
         if (isListening) {
             return;
         }
@@ -77,11 +84,13 @@
         const boundKey = setting.value.boundKey;
         if (boundKey === UNKNOWN_KEY) {
             printableKeyName = undefined;
+            lookupErrorMessage = null;
             return;
         }
 
         const requestId = ++lookupRequestId;
         printableKeyName = boundKey;
+        lookupErrorMessage = null;
 
         getPrintableKeyName(boundKey)
             .then((printableKey) => {
@@ -90,13 +99,18 @@
                 }
 
                 printableKeyName = printableKey.localized;
+                lookupErrorMessage = null;
             })
-            .catch(() => {
+            .catch((error) => {
                 if (requestId !== lookupRequestId) {
                     return;
                 }
 
                 printableKeyName = boundKey;
+                lookupErrorMessage =
+                    error instanceof Error
+                        ? error.message
+                        : "Failed to resolve printable key name.";
             });
     });
 
@@ -306,6 +320,21 @@
         onChange(nextBind);
     }
 
+    function retryPrintableKeyLookup() {
+        if (isListening) {
+            return;
+        }
+
+        const boundKey = setting.value.boundKey;
+        if (boundKey === UNKNOWN_KEY) {
+            return;
+        }
+
+        clearPrintableKeyNameLookup(boundKey);
+        lookupErrorMessage = null;
+        lookupRevision += 1;
+    }
+
     function getModifiers(bind: Partial<InputBind>): BindModifier[] {
         return Array.isArray(bind.modifiers) ? bind.modifiers : [];
     }
@@ -363,6 +392,21 @@
             {/if}
         </span>
     </button>
+
+    {#if lookupErrorMessage !== null && !isListening}
+        <div class="bind-setting-lookup-status" role="status" aria-live="polite">
+            <span class="bind-setting-lookup-error" title={lookupErrorMessage}>
+                Key name lookup failed.
+            </span>
+            <button
+                class="bind-setting-lookup-retry"
+                type="button"
+                onclick={retryPrintableKeyLookup}
+            >
+                Retry
+            </button>
+        </div>
+    {/if}
 </div>
 
 <style lang="scss">
@@ -413,5 +457,34 @@
         font-size: 11px;
         letter-spacing: 0.04em;
         text-transform: uppercase;
+    }
+
+    .bind-setting-lookup-status {
+        margin-top: 6px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .bind-setting-lookup-error {
+        font-size: 10px;
+        color: rgba($clickgui-text-color, 0.74);
+    }
+
+    .bind-setting-lookup-retry {
+        appearance: none;
+        border: 1px solid rgba($clickgui-text-color, 0.36);
+        background-color: rgba($clickgui-text-color, 0.12);
+        color: rgba($clickgui-text-color, 0.9);
+        font-size: 10px;
+        line-height: 1;
+        padding: 3px 6px;
+        cursor: pointer;
+
+        &:hover {
+            border-color: rgba($clickgui-text-color, 0.55);
+            background-color: rgba($clickgui-text-color, 0.2);
+        }
     }
 </style>

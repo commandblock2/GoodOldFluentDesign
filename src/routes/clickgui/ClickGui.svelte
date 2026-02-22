@@ -62,6 +62,7 @@
     // TODO: wire this from theme settings.
     let settingsSplitCount = $state(1);
     let settingHeights = $state<Record<number, number>>({});
+    let settingHeightsSignature = "";
 
     const sortByName = (a: string, b: string) => a.localeCompare(b);
 
@@ -176,9 +177,27 @@
             : null,
     );
     const activeModuleSettings = $derived(activeConfigurable?.value ?? []);
+    const activeModuleSettingsShapeSignature = $derived(
+        activeModuleSettings
+            .map((setting, settingIndex) => {
+                const maybeWithKey = setting as ModuleSetting & {
+                    key?: string;
+                };
+                return `${settingIndex}:${setting.valueType}:${setting.name}:${maybeWithKey.key ?? ""}`;
+            })
+            .join("|"),
+    );
+    const allActiveSettingsMeasured = $derived(
+        activeModuleSettings.length > 0 &&
+            activeModuleSettings.every(
+                (_setting, settingIndex) =>
+                    settingHeights[settingIndex] !== undefined,
+            ),
+    );
     const settingsColumnCount = $derived(Math.max(1, settingsSplitCount + 1));
     const settingsColumns = $derived(
         (() => {
+            const heightSource = allActiveSettingsMeasured ? settingHeights : {};
             const columns = Array.from(
                 { length: settingsColumnCount },
                 () => [] as { setting: ModuleSetting; settingIndex: number }[],
@@ -199,12 +218,26 @@
 
                 columns[targetColumn].push({ setting, settingIndex });
                 columnHeights[targetColumn] +=
-                    settingHeights[settingIndex] ?? estimateSettingHeight(setting);
+                    heightSource[settingIndex] ?? estimateSettingHeight(setting);
             });
 
             return columns;
         })(),
     );
+
+    $effect(() => {
+        const moduleName =
+            activeConfigPage.type === "module"
+                ? activeConfigPage.moduleName ?? ""
+                : "";
+        const nextSignature = `${moduleName}|${activeModuleSettingsShapeSignature}`;
+        if (nextSignature === settingHeightsSignature) {
+            return;
+        }
+
+        settingHeightsSignature = nextSignature;
+        settingHeights = {};
+    });
 
     onMount(async () => {
         modules = await getModules();
@@ -710,6 +743,7 @@
     function trackSettingHeight(node: HTMLElement, settingIndex: number) {
         let activeIndex = settingIndex;
         let resizeObserver: ResizeObserver | null = null;
+        let scheduledWriteFrame = 0;
 
         const writeHeight = () => {
             const nextHeight = Math.ceil(node.getBoundingClientRect().height);
@@ -724,37 +758,40 @@
             };
         };
 
-        const clearHeight = (index: number) => {
-            if (settingHeights[index] === undefined) {
+        const scheduleWriteHeight = () => {
+            if (scheduledWriteFrame !== 0) {
                 return;
             }
 
-            const nextHeights = { ...settingHeights };
-            delete nextHeights[index];
-            settingHeights = nextHeights;
+            scheduledWriteFrame = requestAnimationFrame(() => {
+                scheduledWriteFrame = 0;
+                writeHeight();
+            });
         };
 
         if (typeof ResizeObserver !== "undefined") {
-            resizeObserver = new ResizeObserver(writeHeight);
+            resizeObserver = new ResizeObserver(scheduleWriteHeight);
             resizeObserver.observe(node);
         }
 
-        requestAnimationFrame(writeHeight);
+        scheduleWriteHeight();
 
         return {
             update(nextIndex: number) {
                 if (nextIndex === activeIndex) {
-                    writeHeight();
+                    scheduleWriteHeight();
                     return;
                 }
 
-                clearHeight(activeIndex);
                 activeIndex = nextIndex;
-                writeHeight();
+                scheduleWriteHeight();
             },
             destroy() {
                 resizeObserver?.disconnect();
-                clearHeight(activeIndex);
+                if (scheduledWriteFrame !== 0) {
+                    cancelAnimationFrame(scheduledWriteFrame);
+                    scheduledWriteFrame = 0;
+                }
             },
         };
     }

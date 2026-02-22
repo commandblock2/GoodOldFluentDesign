@@ -157,3 +157,87 @@
 ### Current Unsupported Behavior
 
 1. Unsupported setting types fall back to JSON rendering in `src/routes/clickgui/setting/SettingEntry.svelte`.
+
+## Full Test Suite Plan (Including Playwright Regression Coverage)
+
+### Objective
+
+1. Prevent UI lockups caused by reactive layout feedback loops.
+2. Detect repeated unintended API calls (for example bind label lookups) early.
+3. Keep deterministic layout behavior verifiable as settings evolve.
+
+### Test Layers
+
+#### Layer 1: Unit Tests (Node test runner)
+
+1. Keep existing key-generation coverage (`tests/settingEntryKey.test.mjs`).
+2. Add pure-layout tests for deterministic column assignment:
+   - same input settings + same measured heights => identical column output
+   - estimate-only phase produces stable initial output
+   - measured phase converges and stays stable when heights stop changing
+3. Add bind lookup policy tests (small utility-level tests):
+   - one in-flight request per key
+   - cached failure is surfaced (no silent retry loop)
+   - explicit retry path clears failure cache
+
+#### Layer 2: Component/Integration Tests (Svelte runtime harness)
+
+1. Mount `ClickGui` with fixture module settings that include deep nested groups (Scaffold/HUD-like payloads).
+2. Mock `ResizeObserver` + `requestAnimationFrame` and assert:
+   - finite convergence of layout updates
+   - no unbounded remount/update cycle
+   - stable column assignment after convergence
+3. Mount `BindSettingControl` with failing key lookup and assert:
+   - visible inline error state appears
+   - no repeated hidden retries
+   - retry button triggers exactly one new request attempt
+
+#### Layer 3: End-to-End + Regression (Playwright)
+
+1. Add Playwright suite under `tests/e2e/clickgui/`.
+2. Introduce deterministic network stubs/fixtures for:
+   - `/api/v1/client/modules`
+   - `/api/v1/client/modules/settings?name=...`
+   - `/api/v1/client/input?key=...`
+3. High-priority regression scenarios:
+   - Open Scaffold settings and keep page idle for N seconds; app remains interactive.
+   - Assert bind label endpoint request count is bounded (`<= 1` per key unless user clicks retry).
+   - Scroll + click controls repeatedly; clicks still produce state changes (no frozen input path).
+   - Open/close module settings repeatedly; no growth in in-flight bind lookup requests.
+4. Add a stress case with mixed setting types and large nested payload to simulate real-world heavy screens.
+
+#### Layer 4: Performance Guardrails (Playwright + browser metrics)
+
+1. Capture long-task style proxies during key flows:
+   - repeated layout frames
+   - interaction latency between click and visible state update
+2. Fail CI on clear regressions:
+   - request-count threshold exceeded
+   - interaction timeout exceeded
+   - convergence timeout exceeded
+
+### CI Plan
+
+1. `npm run test` remains required (unit).
+2. Add `npm run test:e2e` for Playwright regression suite.
+3. Add staged gating:
+   - PR gate: core Playwright smoke + request-count checks.
+   - Nightly gate: full stress/perf scenarios.
+
+### Implementation Milestones
+
+1. Milestone A:
+   - extract deterministic column balancing into a testable utility
+   - add unit tests for estimate/measured convergence
+2. Milestone B:
+   - add bind lookup policy tests + component harness tests
+3. Milestone C:
+   - add Playwright smoke suite with fixture-backed network interception
+4. Milestone D:
+   - add stress/perf thresholds and make them part of nightly CI
+
+### Exit Criteria
+
+1. No reproduction of "scroll works but UI input is stuck" in automated Playwright regression runs.
+2. No repeated silent bind lookup request loops.
+3. Deterministic settings layout remains stable after measurement convergence.

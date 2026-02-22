@@ -31,6 +31,9 @@ import type {PlayerInventory} from "./events";
 import {isLoggingIn} from "../routes/menu/altmanager/altmanager_store";
 
 const API_BASE = `${REST_BASE}/api/v1`;
+const printableKeyCache = new Map<string, PrintableKey>();
+const printableKeyInFlight = new Map<string, Promise<PrintableKey>>();
+const printableKeyFailures = new Map<string, Error>();
 
 export async function getMetadata(): Promise<Metadata> {
     const response = await fetch(`metadata.json`);
@@ -189,12 +192,55 @@ export async function getCrosshairData(): Promise<HitResult> {
 }
 
 export async function getPrintableKeyName(key: string): Promise<PrintableKey> {
+    const cachedPrintableKey = printableKeyCache.get(key);
+    if (cachedPrintableKey !== undefined) {
+        return cachedPrintableKey;
+    }
+
+    const cachedFailure = printableKeyFailures.get(key);
+    if (cachedFailure !== undefined) {
+        throw cachedFailure;
+    }
+
+    const inFlightRequest = printableKeyInFlight.get(key);
+    if (inFlightRequest !== undefined) {
+        return inFlightRequest;
+    }
+
     const searchParams = new URLSearchParams({key});
+    const request = (async () => {
+        const response = await fetch(`${API_BASE}/client/input?${searchParams.toString()}`);
+        if (!response.ok) {
+            throw new Error(`Failed to resolve printable key "${key}" (HTTP ${response.status})`);
+        }
 
-    const response = await fetch(`${API_BASE}/client/input?${searchParams.toString()}`);
-    const data: PrintableKey = await response.json();
+        const data: PrintableKey = await response.json();
+        printableKeyCache.set(key, data);
+        printableKeyFailures.delete(key);
+        return data;
+    })();
 
-    return data;
+    printableKeyInFlight.set(key, request);
+
+    try {
+        return await request;
+    } catch (error) {
+        const resolvedError =
+            error instanceof Error
+                ? error
+                : new Error(`Failed to resolve printable key "${key}"`);
+
+        printableKeyFailures.set(key, resolvedError);
+        throw resolvedError;
+    } finally {
+        printableKeyInFlight.delete(key);
+    }
+}
+
+export function clearPrintableKeyNameLookup(key: string) {
+    printableKeyCache.delete(key);
+    printableKeyFailures.delete(key);
+    printableKeyInFlight.delete(key);
 }
 
 export async function getMinecraftKeybinds(): Promise<MinecraftKeybind[]> {
