@@ -7,7 +7,7 @@
         ModuleSetting,
         Range,
     } from "../../integration/types";
-    import { onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import type {
         RevealContainerOptions,
         RevealItemOptions,
@@ -23,6 +23,11 @@
     import ClickGuiHomeView from "./views/ClickGuiHomeView.svelte";
     import ClickGuiSearchView from "./views/ClickGuiSearchView.svelte";
     import ClickGuiThemeDetailView from "./views/ClickGuiThemeDetailView.svelte";
+    import {
+        getPersistedClickGuiState,
+        setPersistedClickGuiState,
+        type ClickGuiActivePageState,
+    } from "./clickGuiSessionState";
     import SettingEntry from "./setting/SettingEntry.svelte";
     import {
         getBounds,
@@ -48,10 +53,7 @@
     let searchQuery = $state("");
     let selectedCategory = $state<string | null>(null);
     let selectedThemeSettings = $state(false);
-    let activeConfigPage = $state<{
-        type: "clickgui" | "quick-settings" | "theme-settings" | "module";
-        moduleName: string | null;
-    }>({
+    let activeConfigPage = $state<ClickGuiActivePageState>({
         type: "clickgui",
         moduleName: null,
     });
@@ -242,7 +244,67 @@
     onMount(async () => {
         modules = await getModules();
         categories = groupByCategory(modules);
+
+        await restorePersistedState();
     });
+
+    onDestroy(() => {
+        setPersistedClickGuiState({
+            searchQuery,
+            selectedCategory,
+            selectedThemeSettings,
+            activeConfigPage: { ...activeConfigPage },
+            activeConfigurable,
+            settingsSplitCount,
+        });
+    });
+
+    async function restorePersistedState() {
+        const persistedState = getPersistedClickGuiState();
+        if (persistedState === null) {
+            return;
+        }
+
+        searchQuery = persistedState.searchQuery;
+        selectedCategory = persistedState.selectedCategory;
+        selectedThemeSettings = persistedState.selectedThemeSettings;
+        activeConfigPage = { ...persistedState.activeConfigPage };
+        activeConfigurable = persistedState.activeConfigurable;
+        activeConfigError = null;
+        activeConfigLoading = false;
+        settingsSplitCount = persistedState.settingsSplitCount;
+
+        if (selectedThemeSettings) {
+            selectedCategory = null;
+        } else if (
+            selectedCategory !== null &&
+            categories[selectedCategory] === undefined
+        ) {
+            selectedCategory = null;
+        }
+
+        if (
+            activeConfigPage.type !== "module" ||
+            activeConfigPage.moduleName === null ||
+            activeConfigurable !== null
+        ) {
+            return;
+        }
+
+        const module = modules.find(
+            (nextModule) => nextModule.name === activeConfigPage.moduleName,
+        );
+
+        if (module === undefined) {
+            activeConfigPage = {
+                type: "clickgui",
+                moduleName: null,
+            };
+            return;
+        }
+
+        await openModuleConfig(module);
+    }
 
     function moduleMatchesQuery(module: Module, query: string) {
         const haystack = [

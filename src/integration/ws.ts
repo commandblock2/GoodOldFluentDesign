@@ -105,9 +105,13 @@ export async function waitMatches<NAME extends keyof EventMap>(eventName: NAME, 
     });
 }
 
-export function cleanupListeners() {
+export function cleanupListeners({ includeAlways = false }: { includeAlways?: boolean } = {}) {
     listeners.clear();
-    alwaysListeners.clear();
+
+    if (includeAlways) {
+        alwaysListeners.clear();
+    }
+
     console.log("[WS] Cleaned up event listeners");
 }
 
@@ -142,7 +146,7 @@ if (importMeta.hot) {
     // This path has not been manually validated end-to-end across all runtime scenarios.
     importMeta.hot.dispose(() => {
         shouldReconnect = false;
-        cleanupListeners();
+        cleanupListeners({includeAlways: true});
 
         if (reconnectTimeout !== undefined) {
             clearTimeout(reconnectTimeout);
