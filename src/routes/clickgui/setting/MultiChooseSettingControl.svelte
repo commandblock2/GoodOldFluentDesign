@@ -50,19 +50,16 @@
 <div class="setting-input-shell setting-input-shell--block multi-choice-setting-shell">
     <div class="setting-choice-grid setting-choice-grid--multi" role="group" aria-label={setting.name}>
         {#each setting.choices as choice}
-            {@const selected = isSelected(choice)}
-            {@const locked = isLocked(choice)}
-
             <div class="setting-choice-entry" use:revealBorder>
                 <button
                     class="setting-input-control setting-choice-btn"
-                    class:setting-input-control--enabled={selected}
-                    class:setting-choice-btn--active={selected}
-                    class:setting-choice-btn--locked={locked}
+                    class:setting-input-control--enabled={isSelected(choice)}
+                    class:setting-choice-btn--active={isSelected(choice)}
+                    class:setting-choice-btn--locked={isLocked(choice)}
                     type="button"
-                    aria-pressed={selected}
+                    aria-pressed={isSelected(choice)}
                     aria-label={choice}
-                    disabled={locked}
+                    disabled={isLocked(choice)}
                     onclick={() => onToggleChoice(choice)}
                     use:revealItem={revealItemOptions}
                 >
