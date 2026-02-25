@@ -38,6 +38,7 @@
    - `ColorSettingControl`
    - `TextSettingControl`
    - `ChooseSettingControl`
+   - `ChoiceSettingControl`
    - `MultiChooseSettingControl`
    - `NumberSettingControl`
    - `NumberRangeSettingControl`
@@ -85,7 +86,7 @@
 
 ### P2 (Feature completion after clean baseline)
 
-1. Add remaining setting editors for non-covered types (`BLOCKS`, `CHOICE`, list variants, vectors, `KEY`, `FILE`, `CURVE`).
+1. Add remaining setting editors for non-covered types (`BLOCKS`, list variants, vectors, `KEY`, `FILE`, `CURVE`).
 2. Align module row actions fully with `docs/clickgui-ux.md`.
 
 ### P3 (Intentionally deferred)
@@ -114,45 +115,59 @@
    - Removed non-slider WebKit-specific CSS from ClickGUI styles.
    - Retained WebKit selectors only for slider thumb/track rules in numeric controls.
 
+## Recent Progress Update (2026-02-25)
+
+1. Added `CHOICE` setting support in ClickGUI:
+   - tab-style selector control
+   - nested active-tab content rendering, aligned with configurable group layout
+   - keyed tab-content remount on active tab change
+2. Added fail-early `CHOICE` payload validation:
+   - empty `choices` map
+   - missing/invalid `active` key
+   - non-container active tab payload (`valueType` mismatch)
+3. Fixed `MULTI_CHOOSE` visual reactivity issue:
+   - active/locked/pressed state bindings now resolve from live expressions each render
+   - avoids stale visual state that previously only refreshed after remount/reopen
+
 ## Current Debt Notes After This Pass
 
 1. ClickGUI now has less vendor-specific style surface in core layout files.
 2. Main remaining debt is still selector breadth in `ClickGui.svelte` (global descendant style ownership).
 3. Behavior for settings search is still visual-only; filtering is not yet wired.
 
-## Setting Coverage Snapshot (2026-02-21)
+## Setting Coverage Snapshot (2026-02-25)
 
 1. Total `ModuleSetting` variants in `src/integration/types.ts`: `22`.
-2. Implemented in the current ClickGUI settings flow (`SettingEntry` + guards + controls): `12`.
-3. Not implemented in the current ClickGUI settings flow: `10`.
+2. Implemented in the current ClickGUI settings flow (`SettingEntry` + guards + controls): `13`.
+3. Not implemented in the current ClickGUI settings flow: `9`.
 
-### Implemented (`12`)
+### Implemented (`13`)
 
 1. `BOOLEAN`
 2. `TEXT`
 3. `BIND`
 4. `COLOR`
 5. `CHOOSE`
-6. `MULTI_CHOOSE` (and legacy typo `MUTLI_CHOOSE`)
-7. `FLOAT`
-8. `INT`
-9. `FLOAT_RANGE`
-10. `INT_RANGE`
-11. `CONFIGURABLE`
-12. `TOGGLABLE` / `TOGGLEABLE`
+6. `CHOICE`
+7. `MULTI_CHOOSE` (and legacy typo `MUTLI_CHOOSE`)
+8. `FLOAT`
+9. `INT`
+10. `FLOAT_RANGE`
+11. `INT_RANGE`
+12. `CONFIGURABLE`
+13. `TOGGLABLE` / `TOGGLEABLE`
 
-### Not Implemented (`10`)
+### Not Implemented (`9`)
 
 1. `BLOCKS`
-2. `CHOICE`
-3. `LIST`
-4. `REGISTRY_LIST`
-5. `ITEM_LIST`
-6. `VEC2`
-7. `VEC3`
-8. `KEY`
-9. `FILE`
-10. `CURVE`
+2. `LIST`
+3. `REGISTRY_LIST`
+4. `ITEM_LIST`
+5. `VEC2`
+6. `VEC3`
+7. `KEY`
+8. `FILE`
+9. `CURVE`
 
 ### Current Unsupported Behavior
 
@@ -203,6 +218,7 @@
    - Open Scaffold settings and keep page idle for N seconds; app remains interactive.
    - Assert bind label endpoint request count is bounded (`<= 1` per key unless user clicks retry).
    - Scroll + click controls repeatedly; clicks still produce state changes (no frozen input path).
+   - Toggle `MULTI_CHOOSE` options and assert button visual state updates without reopening module settings.
    - Open/close module settings repeatedly; no growth in in-flight bind lookup requests.
 4. Add a stress case with mixed setting types and large nested payload to simulate real-world heavy screens.
 
