@@ -30,6 +30,10 @@
     } from "./clickGuiSessionState";
     import SettingEntry from "./setting/SettingEntry.svelte";
     import {
+        assertChoiceExists,
+        getActiveChoiceTab,
+    } from "./setting/choiceSettingUtils";
+    import {
         getBounds,
         normalizeRangeValue,
         normalizeSingleValue,
@@ -37,6 +41,7 @@
     import {
         isBooleanSetting,
         isBindSetting,
+        isChoiceSetting,
         isColorSetting,
         isChooseSetting,
         isFloatRangeSetting,
@@ -439,6 +444,32 @@
             return nextSettings;
         }
 
+        if (isChoiceSetting(targetSetting)) {
+            const activeChoiceTab = getActiveChoiceTab(targetSetting);
+            const nextChoiceSettings = mapSettingTree(
+                activeChoiceTab.setting.value,
+                restPath,
+                mapper,
+            );
+
+            if (nextChoiceSettings === activeChoiceTab.setting.value) {
+                return settings;
+            }
+
+            const nextSettings = [...settings];
+            nextSettings[targetIndex] = {
+                ...targetSetting,
+                choices: {
+                    ...targetSetting.choices,
+                    [activeChoiceTab.name]: {
+                        ...activeChoiceTab.setting,
+                        value: nextChoiceSettings,
+                    },
+                },
+            };
+            return nextSettings;
+        }
+
         if (!isNestedSettingContainer(targetSetting)) {
             return settings;
         }
@@ -631,6 +662,32 @@
         );
     }
 
+    async function onChoiceSettingChange(
+        settingPath: number[],
+        nextChoice: string,
+    ) {
+        await updateActiveModuleSettings(
+            settingPath,
+            (setting) => {
+                if (!isChoiceSetting(setting)) {
+                    return setting;
+                }
+
+                if (setting.active === nextChoice) {
+                    return setting;
+                }
+
+                assertChoiceExists(setting, nextChoice);
+
+                return {
+                    ...setting,
+                    active: nextChoice,
+                };
+            },
+            "Failed to update choice setting.",
+        );
+    }
+
     async function onMultiChooseSettingChange(
         settingPath: number[],
         nextChoices: string[],
@@ -766,6 +823,21 @@
 
         if (isColorSetting(setting)) {
             return 64;
+        }
+
+        if (isChoiceSetting(setting)) {
+            const activeChoiceTab = getActiveChoiceTab(setting);
+            const nestedHeights = activeChoiceTab.setting.value.reduce<number>(
+                (height, nestedSetting) =>
+                    height + estimateSettingHeight(nestedSetting),
+                0,
+            );
+
+            return (
+                110 +
+                nestedHeights +
+                Math.max(0, activeChoiceTab.setting.value.length - 1) * 10
+            );
         }
 
         if (isChooseSetting(setting)) {
@@ -1043,6 +1115,7 @@
                                     onBindChange={onBindSettingChange}
                                     onColorChange={onColorSettingChange}
                                     onChooseChange={onChooseSettingChange}
+                                    onChoiceChange={onChoiceSettingChange}
                                     onMultiChooseChange={onMultiChooseSettingChange}
                                     onNumberChange={onNumberSettingChange}
                                     onNumberRangeChange={onNumberRangeSettingChange}

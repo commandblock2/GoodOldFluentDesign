@@ -2,6 +2,7 @@ import type {
     BindSetting,
     InputBind,
     BooleanSetting,
+    ChoiceSetting,
     ColorSetting,
     ChooseSetting,
     ConfigurableSetting,
@@ -50,6 +51,22 @@ export function isBindSetting(setting: ModuleSetting): setting is BindSetting {
         typeof bindValue.action === "string" &&
         (bindValue.modifiers === undefined ||
             Array.isArray(bindValue.modifiers))
+    );
+}
+
+export function isChoiceSetting(
+    setting: ModuleSetting,
+): setting is ChoiceSetting {
+    const choiceSetting = setting as Partial<ChoiceSetting>;
+
+    return (
+        setting.valueType === "CHOICE" &&
+        typeof choiceSetting.active === "string" &&
+        Array.isArray(choiceSetting.value) &&
+        choiceSetting.choices !== null &&
+        choiceSetting.choices !== undefined &&
+        typeof choiceSetting.choices === "object" &&
+        !Array.isArray(choiceSetting.choices)
     );
 }
 

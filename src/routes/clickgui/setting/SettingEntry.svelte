@@ -12,6 +12,7 @@
     import type { RevealItemOptions } from "fluent-reveal-svelte";
     import BindSettingControl from "./BindSettingControl.svelte";
     import BooleanSettingControl from "./BooleanSettingControl.svelte";
+    import ChoiceSettingControl from "./ChoiceSettingControl.svelte";
     import ColorSettingControl from "./ColorSettingControl.svelte";
     import ChooseSettingControl from "./ChooseSettingControl.svelte";
     import MultiChooseSettingControl from "./MultiChooseSettingControl.svelte";
@@ -19,11 +20,17 @@
     import NumberSettingControl from "./NumberSettingControl.svelte";
     import Self from "./SettingEntry.svelte";
     import TextSettingControl from "./TextSettingControl.svelte";
+    import {
+        getActiveChoiceTab,
+        getChoiceContentKey,
+        getChoiceNames,
+    } from "./choiceSettingUtils";
     import { formatNumericValue } from "./numericSettingUtils";
     import { getSettingEntryRowKey } from "./settingEntryKey.js";
     import {
         isBooleanSetting,
         isBindSetting,
+        isChoiceSetting,
         isColorSetting,
         isChooseSetting,
         isFloatRangeSetting,
@@ -60,6 +67,10 @@
             path: number[],
             value: string,
         ) => void | Promise<void>;
+        onChoiceChange?: (
+            path: number[],
+            value: string,
+        ) => void | Promise<void>;
         onMultiChooseChange?: (
             path: number[],
             values: string[],
@@ -79,6 +90,7 @@
     const defaultBindChange = (_path: number[], _value: InputBind) => {};
     const defaultColorChange = (_path: number[], _value: number) => {};
     const defaultChooseChange = (_path: number[], _value: string) => {};
+    const defaultChoiceChange = (_path: number[], _value: string) => {};
     const defaultMultiChooseChange = (_path: number[], _values: string[]) => {};
     const defaultNumberChange = (_path: number[], _value: number) => {};
     const defaultNumberRangeChange = (_path: number[], _value: Range) => {};
@@ -93,6 +105,7 @@
         onBindChange = defaultBindChange,
         onColorChange = defaultColorChange,
         onChooseChange = defaultChooseChange,
+        onChoiceChange = defaultChoiceChange,
         onMultiChooseChange = defaultMultiChooseChange,
         onNumberChange = defaultNumberChange,
         onNumberRangeChange = defaultNumberRangeChange,
@@ -139,6 +152,57 @@
     );
     const isConfigurableGroupSetting = $derived(
         isNestedSettingContainer(setting),
+    );
+    const choiceSetting = $derived(
+        isChoiceSetting(setting) ? setting : null,
+    );
+    const choiceNames = $derived(
+        choiceSetting === null ? [] : getChoiceNames(choiceSetting),
+    );
+    const activeChoiceTab = $derived(
+        choiceSetting === null ? null : getActiveChoiceTab(choiceSetting),
+    );
+    const choiceIndexedChildSettings = $derived(
+        activeChoiceTab === null
+            ? []
+            : activeChoiceTab.setting.value.map((childSetting, childIndex) => ({
+                  setting: childSetting,
+                  childIndex,
+              })),
+    );
+    const choiceEnabledChildSetting = $derived(
+        choiceIndexedChildSettings.find(
+            (
+                childSetting,
+            ): childSetting is {
+                setting: BooleanSetting;
+                childIndex: number;
+            } =>
+                isBooleanSetting(childSetting.setting) &&
+                childSetting.setting.name.trim().toLowerCase() === "enabled",
+        ) ?? null,
+    );
+    const choiceVisibleChildSettings = $derived(
+        choiceEnabledChildSetting === null
+            ? choiceIndexedChildSettings
+            : choiceIndexedChildSettings.filter(
+                  (childSetting) =>
+                      childSetting.childIndex !== choiceEnabledChildSetting.childIndex,
+              ),
+    );
+    const choiceVisibleChildSettingsCount = $derived(
+        choiceVisibleChildSettings.length,
+    );
+    const choiceSettingsCountLabel = $derived(
+        `${choiceVisibleChildSettingsCount} Setting${choiceVisibleChildSettingsCount === 1 ? "" : "s"}`,
+    );
+    const choiceSelectionSummary = $derived(
+        choiceSetting === null
+            ? ""
+            : `${choiceSetting.active} | ${choiceNames.length} Tab${choiceNames.length === 1 ? "" : "s"}`,
+    );
+    const choiceContentKey = $derived(
+        choiceSetting === null ? "" : getChoiceContentKey(choiceSetting),
     );
 
     function childPath(childIndex: number) {
@@ -198,6 +262,10 @@
                 revealItemOptions={revealItemOptions}
                 onChange={(nextValue) => onColorChange(path, nextValue)}
             />
+        {:else if isChoiceSetting(setting)}
+            <span class="setting-selection-summary">
+                {choiceSelectionSummary}
+            </span>
         {:else if isChooseSetting(setting)}
             <span class="setting-selection-summary">
                 one of {setting.choices.length}
@@ -246,7 +314,68 @@
         {/if}
     </div>
 
-    {#if isChooseSetting(setting)}
+    {#if isChoiceSetting(setting)}
+        <ChoiceSettingControl
+            setting={setting}
+            revealItemOptions={revealItemOptions}
+            onChange={(nextChoice: string) => onChoiceChange(path, nextChoice)}
+        />
+
+        {#if activeChoiceTab !== null}
+            {#key choiceContentKey}
+                <div class="setting-entry setting-entry--configurable choice-setting-content">
+                    <div class="setting-header">
+                        <strong>{activeChoiceTab.name}</strong>
+
+                        <div class="setting-group-meta">
+                            <span class="setting-selection-summary">
+                                {choiceSettingsCountLabel}
+                            </span>
+
+                            {#if choiceEnabledChildSetting !== null}
+                                <span class="setting-group-divider" aria-hidden="true">|</span>
+                                <BooleanSettingControl
+                                    setting={choiceEnabledChildSetting.setting}
+                                    revealItemOptions={revealItemOptions}
+                                    onChange={(checked) =>
+                                        onBooleanChange(
+                                            childPath(choiceEnabledChildSetting.childIndex),
+                                            checked,
+                                        )}
+                                />
+                            {/if}
+                        </div>
+                    </div>
+
+                    {#if choiceVisibleChildSettings.length === 0}
+                        <div class="choice-setting-empty">
+                            No settings in this tab.
+                        </div>
+                    {:else}
+                        <div class="setting-children">
+                            {#each choiceVisibleChildSettings as childSetting (getSettingEntryRowKey(childSetting.setting, childSetting.childIndex))}
+                                <Self
+                                    setting={childSetting.setting}
+                                    path={childPath(childSetting.childIndex)}
+                                    {revealItemOptions}
+                                    {textInputRevealItemOptions}
+                                    {onBooleanChange}
+                                    {onTextChange}
+                                    {onBindChange}
+                                    {onColorChange}
+                                    {onChooseChange}
+                                    {onChoiceChange}
+                                    {onMultiChooseChange}
+                                    {onNumberChange}
+                                    {onNumberRangeChange}
+                                />
+                            {/each}
+                        </div>
+                    {/if}
+                </div>
+            {/key}
+        {/if}
+    {:else if isChooseSetting(setting)}
         <ChooseSettingControl
             {setting}
             revealItemOptions={revealItemOptions}
@@ -283,13 +412,14 @@
                     {onBindChange}
                     {onColorChange}
                     {onChooseChange}
+                    {onChoiceChange}
                     {onMultiChooseChange}
                     {onNumberChange}
                     {onNumberRangeChange}
                 />
             {/each}
         </div>
-    {:else if !isBooleanSetting(setting) && !isTextSetting(setting) && !isBindSetting(setting) && !isColorSetting(setting)}
+    {:else if !isBooleanSetting(setting) && !isTextSetting(setting) && !isBindSetting(setting) && !isColorSetting(setting) && !isChoiceSetting(setting)}
         <pre>{JSON.stringify(setting.value, null, 2)}</pre>
     {/if}
 </div>
@@ -305,5 +435,16 @@
         opacity: 0.62;
         font-size: 11px;
         line-height: 1;
+    }
+
+    .choice-setting-content {
+        margin-top: 8px;
+    }
+
+    .choice-setting-empty {
+        font-size: 11px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        opacity: 0.76;
     }
 </style>
