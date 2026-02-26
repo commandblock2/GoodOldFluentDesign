@@ -135,11 +135,13 @@
 2. Main remaining debt is still selector breadth in `ClickGui.svelte` (global descendant style ownership).
 3. Behavior for settings search is still visual-only; filtering is not yet wired.
 
-## Setting Coverage Snapshot (2026-02-25)
+## Setting Coverage Snapshot (2026-02-26)
 
 1. Total `ModuleSetting` variants in `src/integration/types.ts`: `22`.
 2. Implemented in the current ClickGUI settings flow (`SettingEntry` + guards + controls): `13`.
-3. Not implemented in the current ClickGUI settings flow: `9`.
+3. Not implemented in the current ClickGUI settings flow:
+   - runtime-observed payload names: `8`
+   - integration-defined but not currently observed at runtime: `2`
 
 ### Implemented (`13`)
 
@@ -157,21 +159,107 @@
 12. `CONFIGURABLE`
 13. `TOGGLABLE` / `TOGGLEABLE`
 
-### Not Implemented (`9`)
+### Not Implemented (Runtime-Observed Payload Names) (`8`)
+
+1. `CURVE`
+2. `FILE`
+3. `KEY`
+4. `MUTABLE_LIST` (integration mapping: `LIST`)
+5. `REGISTRY_LIST`
+6. `VECTOR2_F` (integration mapping: `VEC2`)
+7. `VECTOR3_D` (integration mapping: `VEC3`)
+8. `VECTOR3_I` (integration mapping: `VEC3`)
+
+### Not Implemented (Integration-Defined, Not Observed In Current Runtime Scan) (`2`)
 
 1. `BLOCKS`
-2. `LIST`
-3. `REGISTRY_LIST`
-4. `ITEM_LIST`
-5. `VEC2`
-6. `VEC3`
-7. `KEY`
-8. `FILE`
-9. `CURVE`
+2. `ITEM_LIST`
 
 ### Current Unsupported Behavior
 
 1. Unsupported setting types fall back to JSON rendering in `src/routes/clickgui/setting/SettingEntry.svelte`.
+
+## Runtime ValueType Inventory (2026-02-26)
+
+1. Runtime inventory is collected by `docs/scripts/scan-runtime-setting-types.mjs`.
+2. The scanner requires user-provided API base input (CLI argument, environment variable, or interactive prompt). No fixed port is documented.
+3. Usage:
+
+```bash
+node docs/scripts/scan-runtime-setting-types.mjs --api-base "<api-base-url>"
+```
+
+4. Environment variable alternative:
+
+```bash
+CLICKGUI_SETTINGS_API_BASE="<api-base-url>" node docs/scripts/scan-runtime-setting-types.mjs
+```
+
+5. Snapshot from local scan:
+   - modules scanned: `226`
+   - successful settings fetches: `226`
+   - failed settings fetches: `0`
+   - unique runtime `valueType` count: `21`
+6. Runtime `valueType` values observed:
+   - `BIND`
+   - `BOOLEAN`
+   - `CHOICE`
+   - `CHOOSE`
+   - `COLOR`
+   - `CONFIGURABLE`
+   - `CURVE`
+   - `FILE`
+   - `FLOAT`
+   - `FLOAT_RANGE`
+   - `INT`
+   - `INT_RANGE`
+   - `KEY`
+   - `MULTI_CHOOSE`
+   - `MUTABLE_LIST`
+   - `REGISTRY_LIST`
+   - `TEXT`
+   - `TOGGLEABLE`
+   - `VECTOR2_F`
+   - `VECTOR3_D`
+   - `VECTOR3_I`
+7. Mapping note: this audit's coverage section uses integration-level categories from `src/integration/types.ts`, while runtime payloads can use narrower names.
+8. Mapping highlights:
+   - runtime `MUTABLE_LIST` maps to integration `ListSetting` abstraction.
+   - runtime `VECTOR2_F`, `VECTOR3_D`, and `VECTOR3_I` map to integration vector abstractions (`Vec2Setting`/`Vec3Setting`) with numeric-specialized payload types.
+   - runtime currently uses `TOGGLEABLE`; integration also accepts legacy `TOGGLABLE`.
+9. Not observed in this runtime snapshot:
+   - `BLOCKS`
+   - `ITEM_LIST`
+   - `MUTLI_CHOOSE`
+   - `TOGGLABLE`
+
+## Scanner Snippet
+
+```js
+function walkSettingTree(setting, moduleName, byType) {
+    const valueType =
+        typeof setting.valueType === "string" ? setting.valueType : "<undefined>";
+
+    if (!byType.has(valueType)) {
+        byType.set(valueType, { settingCount: 0, modules: new Set() });
+    }
+    const row = byType.get(valueType);
+    row.settingCount += 1;
+    row.modules.add(moduleName);
+
+    if (["CONFIGURABLE", "TOGGLEABLE", "TOGGLABLE"].includes(valueType)) {
+        for (const childSetting of setting.value ?? []) {
+            walkSettingTree(childSetting, moduleName, byType);
+        }
+    }
+
+    if (valueType === "CHOICE") {
+        for (const choiceSetting of Object.values(setting.choices ?? {})) {
+            walkSettingTree(choiceSetting, moduleName, byType);
+        }
+    }
+}
+```
 
 ## Full Test Suite Plan (Including Playwright Regression Coverage)
 
