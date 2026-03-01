@@ -49,6 +49,7 @@
         isIntRangeSetting,
         isIntSetting,
         isMultiChooseSetting,
+        isMutableListSetting,
         isNestedSettingContainer,
         isTextSetting,
     } from "./setting/settingTypeGuards";
@@ -708,6 +709,36 @@
         );
     }
 
+    async function onMutableListSettingChange(
+        settingPath: number[],
+        nextValues: string[],
+    ) {
+        await updateActiveModuleSettings(
+            settingPath,
+            (setting) => {
+                if (!isMutableListSetting(setting)) {
+                    return setting;
+                }
+
+                const unchanged =
+                    setting.value.length === nextValues.length &&
+                    setting.value.every(
+                        (value, index) => value === nextValues[index],
+                    );
+
+                if (unchanged) {
+                    return setting;
+                }
+
+                return {
+                    ...setting,
+                    value: [...nextValues],
+                };
+            },
+            "Failed to update mutable list setting.",
+        );
+    }
+
     async function onNumberSettingChange(
         settingPath: number[],
         nextValue: number,
@@ -846,6 +877,10 @@
 
         if (isMultiChooseSetting(setting)) {
             return 136 + Math.ceil(setting.choices.length / 4) * 28;
+        }
+
+        if (isMutableListSetting(setting)) {
+            return 92 + Math.max(1, setting.value.length) * 36;
         }
 
         if (isFloatSetting(setting) || isIntSetting(setting)) {
@@ -1117,6 +1152,7 @@
                                     onChooseChange={onChooseSettingChange}
                                     onChoiceChange={onChoiceSettingChange}
                                     onMultiChooseChange={onMultiChooseSettingChange}
+                                    onMutableListChange={onMutableListSettingChange}
                                     onNumberChange={onNumberSettingChange}
                                     onNumberRangeChange={onNumberRangeSettingChange}
                                 />

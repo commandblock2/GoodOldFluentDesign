@@ -37,6 +37,7 @@
    - `BindSettingControl`
    - `ColorSettingControl`
    - `TextSettingControl`
+   - `MutableListSettingControl`
    - `ChooseSettingControl`
    - `ChoiceSettingControl`
    - `MultiChooseSettingControl`
@@ -129,21 +130,37 @@
    - active/locked/pressed state bindings now resolve from live expressions each render
    - avoids stale visual state that previously only refreshed after remount/reopen
 
+## Recent Progress Update (2026-03-01)
+
+1. Added `MUTABLE_LIST` setting support in ClickGUI:
+   - list-of-inputs editor with add/remove row actions
+   - guard-based payload validation via `isMutableListSetting`
+   - integrated update/persist flow in `ClickGui.svelte` (`onMutableListSettingChange`)
+2. Added shared expandable text editor behavior for long content:
+   - applied to `TEXT` and `MUTABLE_LIST` item inputs
+   - collapsed single-line input in normal state
+   - expanded floating multiline editor on overflow/newline
+3. Updated setting rendering/plumbing:
+   - `SettingEntry` routes mutable-list settings to `MutableListSettingControl`
+   - mutable-list callback is threaded through recursive child rendering
+
 ## Current Debt Notes After This Pass
 
 1. ClickGUI now has less vendor-specific style surface in core layout files.
 2. Main remaining debt is still selector breadth in `ClickGui.svelte` (global descendant style ownership).
 3. Behavior for settings search is still visual-only; filtering is not yet wired.
+4. Reveal host/item sizing pitfalls are now documented in:
+   - `docs/clickgui-reveal-border-alignment.md`
 
-## Setting Coverage Snapshot (2026-02-26)
+## Setting Coverage Snapshot (2026-03-01)
 
 1. Total `ModuleSetting` variants in `src/integration/types.ts`: `22`.
-2. Implemented in the current ClickGUI settings flow (`SettingEntry` + guards + controls): `13`.
+2. Implemented in the current ClickGUI settings flow (`SettingEntry` + guards + controls): `14`.
 3. Not implemented in the current ClickGUI settings flow:
-   - runtime-observed payload names: `8`
+   - runtime-observed payload names: `7`
    - integration-defined but not currently observed at runtime: `2`
 
-### Implemented (`13`)
+### Implemented (`14`)
 
 1. `BOOLEAN`
 2. `TEXT`
@@ -158,17 +175,17 @@
 11. `INT_RANGE`
 12. `CONFIGURABLE`
 13. `TOGGLABLE` / `TOGGLEABLE`
+14. `MUTABLE_LIST` (integration mapping: `LIST`)
 
-### Not Implemented (Runtime-Observed Payload Names) (`8`)
+### Not Implemented (Runtime-Observed Payload Names) (`7`)
 
 1. `CURVE`
 2. `FILE`
 3. `KEY`
-4. `MUTABLE_LIST` (integration mapping: `LIST`)
-5. `REGISTRY_LIST`
-6. `VECTOR2_F` (integration mapping: `VEC2`)
-7. `VECTOR3_D` (integration mapping: `VEC3`)
-8. `VECTOR3_I` (integration mapping: `VEC3`)
+4. `REGISTRY_LIST`
+5. `VECTOR2_F` (integration mapping: `VEC2`)
+6. `VECTOR3_D` (integration mapping: `VEC3`)
+7. `VECTOR3_I` (integration mapping: `VEC3`)
 
 ### Not Implemented (Integration-Defined, Not Observed In Current Runtime Scan) (`2`)
 

@@ -617,6 +617,14 @@
         --step-marker-size: 6px;
         --step-marker-color: #{rgba($clickgui-text-color, 0.68)};
         --step-marker-active-color: #{$accent-color};
+        transition:
+            border-color 120ms ease,
+            box-shadow 120ms ease;
+    }
+
+    .numeric-range-slider-control:focus-within {
+        border-color: rgba($accent-color, 0.92);
+        box-shadow: 0 0 0 1px rgba($accent-color, 0.78);
     }
 
     .numeric-range-slider-content {
@@ -770,6 +778,7 @@
 
     .numeric-range-value-control {
         width: 100%;
+        --reveal-focus-color: #{$accent-color};
         --setting-control-content-width: 100%;
         --setting-control-min-width: 0;
         --setting-control-justify-content: flex-start;

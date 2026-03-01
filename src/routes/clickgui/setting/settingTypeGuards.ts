@@ -12,6 +12,7 @@ import type {
     IntSetting,
     ModuleSetting,
     MultiChooseSetting,
+    ListSetting,
     TextSetting,
     TogglableSetting,
 } from "../../../integration/types";
@@ -88,6 +89,19 @@ export function isMultiChooseSetting(
             setting.valueType === "MUTLI_CHOOSE") &&
         Array.isArray((setting as MultiChooseSetting).value) &&
         Array.isArray((setting as MultiChooseSetting).choices)
+    );
+}
+
+export function isMutableListSetting(
+    setting: ModuleSetting,
+): setting is ListSetting {
+    const listSetting = setting as Partial<ListSetting>;
+
+    return (
+        (setting.valueType === "MUTABLE_LIST" || setting.valueType === "LIST") &&
+        Array.isArray(listSetting.value) &&
+        listSetting.value.every((entry) => typeof entry === "string") &&
+        typeof listSetting.innerValueType === "string"
     );
 }
 

@@ -16,6 +16,7 @@
     import ColorSettingControl from "./ColorSettingControl.svelte";
     import ChooseSettingControl from "./ChooseSettingControl.svelte";
     import MultiChooseSettingControl from "./MultiChooseSettingControl.svelte";
+    import MutableListSettingControl from "./MutableListSettingControl.svelte";
     import NumberRangeSettingControl from "./NumberRangeSettingControl.svelte";
     import NumberSettingControl from "./NumberSettingControl.svelte";
     import Self from "./SettingEntry.svelte";
@@ -38,6 +39,7 @@
         isIntRangeSetting,
         isIntSetting,
         isMultiChooseSetting,
+        isMutableListSetting,
         isNestedSettingContainer,
         isTextSetting,
     } from "./settingTypeGuards";
@@ -75,6 +77,10 @@
             path: number[],
             values: string[],
         ) => void | Promise<void>;
+        onMutableListChange?: (
+            path: number[],
+            values: string[],
+        ) => void | Promise<void>;
         onNumberChange?: (
             path: number[],
             value: number,
@@ -92,6 +98,7 @@
     const defaultChooseChange = (_path: number[], _value: string) => {};
     const defaultChoiceChange = (_path: number[], _value: string) => {};
     const defaultMultiChooseChange = (_path: number[], _values: string[]) => {};
+    const defaultMutableListChange = (_path: number[], _values: string[]) => {};
     const defaultNumberChange = (_path: number[], _value: number) => {};
     const defaultNumberRangeChange = (_path: number[], _value: Range) => {};
 
@@ -107,6 +114,7 @@
         onChooseChange = defaultChooseChange,
         onChoiceChange = defaultChoiceChange,
         onMultiChooseChange = defaultMultiChooseChange,
+        onMutableListChange = defaultMutableListChange,
         onNumberChange = defaultNumberChange,
         onNumberRangeChange = defaultNumberRangeChange,
     }: Props = $props();
@@ -274,6 +282,10 @@
             <span class="setting-selection-summary">
                 {setting.value.length} of {setting.choices.length}
             </span>
+        {:else if isMutableListSetting(setting)}
+            <span class="setting-selection-summary">
+                {setting.value.length} Entr{setting.value.length === 1 ? "y" : "ies"}
+            </span>
         {:else if isFloatSetting(setting)}
             <span class="setting-selection-summary">
                 {formatSingleNumericSummary(setting, false)}
@@ -366,6 +378,7 @@
                                     {onChooseChange}
                                     {onChoiceChange}
                                     {onMultiChooseChange}
+                                    {onMutableListChange}
                                     {onNumberChange}
                                     {onNumberRangeChange}
                                 />
@@ -386,6 +399,13 @@
             {setting}
             revealItemOptions={revealItemOptions}
             onChange={(nextChoices) => onMultiChooseChange(path, nextChoices)}
+        />
+    {:else if isMutableListSetting(setting)}
+        <MutableListSettingControl
+            {setting}
+            textInputRevealItemOptions={textInputRevealItemOptions}
+            actionRevealItemOptions={revealItemOptions}
+            onChange={(nextValues) => onMutableListChange(path, nextValues)}
         />
     {:else if isFloatSetting(setting) || isIntSetting(setting)}
         <NumberSettingControl
@@ -414,12 +434,13 @@
                     {onChooseChange}
                     {onChoiceChange}
                     {onMultiChooseChange}
+                    {onMutableListChange}
                     {onNumberChange}
                     {onNumberRangeChange}
                 />
             {/each}
         </div>
-    {:else if !isBooleanSetting(setting) && !isTextSetting(setting) && !isBindSetting(setting) && !isColorSetting(setting) && !isChoiceSetting(setting)}
+    {:else if !isBooleanSetting(setting) && !isTextSetting(setting) && !isBindSetting(setting) && !isColorSetting(setting) && !isChoiceSetting(setting) && !isMutableListSetting(setting)}
         <pre>{JSON.stringify(setting.value, null, 2)}</pre>
     {/if}
 </div>
