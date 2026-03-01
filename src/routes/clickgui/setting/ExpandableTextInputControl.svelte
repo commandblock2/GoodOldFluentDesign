@@ -315,10 +315,10 @@
         role="dialog"
         aria-label="Expanded text editor"
     >
-        <div class="expandable-text-floating-shell" use:revealBorder>
+        <div class="expandable-text-floating-local-underlay" aria-hidden="true"></div>
+        <div class="expandable-text-floating-shell">
             <label
                 class="setting-input-control setting-input-control--block expandable-text-floating-control"
-                use:revealItem={revealItemOptions}
             >
                 <span class="reveal-press-content">
                     <textarea
@@ -373,13 +373,25 @@
         position: fixed;
         z-index: 2000;
         pointer-events: auto;
+        overflow: hidden;
+        isolation: isolate;
     }
 
     .expandable-text-floating-shell {
         position: relative;
+        z-index: 1;
         width: 100%;
         overflow: hidden;
-        background-color: rgba($clickgui-base-color, 0.24);
+        background-color: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(48px) saturate(120%);
+    }
+
+    .expandable-text-floating-local-underlay {
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        background-color: rgba(0, 0, 0, 0.4);
     }
 
     .expandable-text-floating-control {
@@ -404,7 +416,6 @@
         height: auto;
         min-height: 120px;
         align-items: stretch;
-        background: rgba($clickgui-base-color, 0.08);
     }
 
     .expandable-textarea {
