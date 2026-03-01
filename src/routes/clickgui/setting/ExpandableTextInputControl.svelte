@@ -347,10 +347,6 @@
 
     .expandable-text-input-control {
         --reveal-focus-color: #{$accent-color};
-        --reveal-focus-width: 1px;
-        --reveal-focus-offset: 0px;
-        --reveal-focus-glow: 0px;
-        --reveal-focus-glow-soft: 0px;
         --setting-control-content-width: clamp(150px, 34vw, 260px);
         --setting-control-justify-content: flex-start;
         --setting-control-padding-inline: 0;
@@ -390,10 +386,6 @@
         position: relative;
         z-index: 1;
         --reveal-focus-color: #{$accent-color};
-        --reveal-focus-width: 1px;
-        --reveal-focus-offset: 0px;
-        --reveal-focus-glow: 0px;
-        --reveal-focus-glow-soft: 0px;
         --setting-control-height: auto;
         --setting-control-content-width: 100%;
         --setting-control-min-width: 0;
