@@ -50,6 +50,7 @@
         isFloatSetting,
         isIntRangeSetting,
         isIntSetting,
+        isKeySetting,
         isMultiChooseSetting,
         isMutableListSetting,
         isNestedSettingContainer,
@@ -623,6 +624,26 @@
         );
     }
 
+    async function onKeySettingChange(
+        settingPath: number[],
+        nextValue: string,
+    ) {
+        await updateActiveModuleSettings(
+            settingPath,
+            (setting) => {
+                if (!isKeySetting(setting) || setting.value === nextValue) {
+                    return setting;
+                }
+
+                return {
+                    ...setting,
+                    value: nextValue,
+                };
+            },
+            "Failed to update key setting.",
+        );
+    }
+
     async function onColorSettingChange(
         settingPath: number[],
         nextValue: number,
@@ -947,6 +968,10 @@
             return 64;
         }
 
+        if (isKeySetting(setting)) {
+            return 64;
+        }
+
         if (isColorSetting(setting)) {
             return 64;
         }
@@ -1251,6 +1276,7 @@
                                     onBooleanChange={onBooleanSettingChange}
                                     onTextChange={onTextSettingChange}
                                     onBindChange={onBindSettingChange}
+                                    onKeyChange={onKeySettingChange}
                                     onColorChange={onColorSettingChange}
                                     onChooseChange={onChooseSettingChange}
                                     onChoiceChange={onChoiceSettingChange}

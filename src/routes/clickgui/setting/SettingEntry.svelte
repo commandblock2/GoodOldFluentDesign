@@ -19,6 +19,7 @@
     import ChoiceSettingControl from "./ChoiceSettingControl.svelte";
     import ColorSettingControl from "./ColorSettingControl.svelte";
     import ChooseSettingControl from "./ChooseSettingControl.svelte";
+    import KeySettingControl from "./KeySettingControl.svelte";
     import MultiChooseSettingControl from "./MultiChooseSettingControl.svelte";
     import MutableListSettingControl from "./MutableListSettingControl.svelte";
     import NumberRangeSettingControl from "./NumberRangeSettingControl.svelte";
@@ -44,6 +45,7 @@
         isFloatSetting,
         isIntRangeSetting,
         isIntSetting,
+        isKeySetting,
         isMultiChooseSetting,
         isMutableListSetting,
         isNestedSettingContainer,
@@ -68,6 +70,10 @@
         onBindChange?: (
             path: number[],
             value: InputBind,
+        ) => void | Promise<void>;
+        onKeyChange?: (
+            path: number[],
+            value: string,
         ) => void | Promise<void>;
         onColorChange?: (
             path: number[],
@@ -110,6 +116,7 @@
     const defaultBooleanChange = (_path: number[], _checked: boolean) => {};
     const defaultTextChange = (_path: number[], _value: string) => {};
     const defaultBindChange = (_path: number[], _value: InputBind) => {};
+    const defaultKeyChange = (_path: number[], _value: string) => {};
     const defaultColorChange = (_path: number[], _value: number) => {};
     const defaultChooseChange = (_path: number[], _value: string) => {};
     const defaultChoiceChange = (_path: number[], _value: string) => {};
@@ -128,6 +135,7 @@
         onBooleanChange = defaultBooleanChange,
         onTextChange = defaultTextChange,
         onBindChange = defaultBindChange,
+        onKeyChange = defaultKeyChange,
         onColorChange = defaultColorChange,
         onChooseChange = defaultChooseChange,
         onChoiceChange = defaultChoiceChange,
@@ -176,6 +184,7 @@
         isBooleanSetting(setting) ||
             isTextSetting(setting) ||
             isBindSetting(setting) ||
+            isKeySetting(setting) ||
             isColorSetting(setting),
     );
     const isConfigurableGroupSetting = $derived(
@@ -292,6 +301,12 @@
                 {setting}
                 revealItemOptions={revealItemOptions}
                 onChange={(nextValue) => onBindChange(path, nextValue)}
+            />
+        {:else if isKeySetting(setting)}
+            <KeySettingControl
+                {setting}
+                revealItemOptions={revealItemOptions}
+                onChange={(nextValue) => onKeyChange(path, nextValue)}
             />
         {:else if isColorSetting(setting)}
             <ColorSettingControl
@@ -411,6 +426,7 @@
                                     {onBooleanChange}
                                     {onTextChange}
                                     {onBindChange}
+                                    {onKeyChange}
                                     {onColorChange}
                                     {onChooseChange}
                                     {onChoiceChange}
@@ -481,6 +497,7 @@
                     {onBooleanChange}
                     {onTextChange}
                     {onBindChange}
+                    {onKeyChange}
                     {onColorChange}
                     {onChooseChange}
                     {onChoiceChange}
@@ -493,7 +510,7 @@
                 />
             {/each}
         </div>
-    {:else if !isBooleanSetting(setting) && !isTextSetting(setting) && !isBindSetting(setting) && !isColorSetting(setting) && !isChoiceSetting(setting) && !isMutableListSetting(setting)}
+    {:else if !isBooleanSetting(setting) && !isTextSetting(setting) && !isBindSetting(setting) && !isKeySetting(setting) && !isColorSetting(setting) && !isChoiceSetting(setting) && !isMutableListSetting(setting)}
         <pre>{JSON.stringify(setting.value, null, 2)}</pre>
     {/if}
 </div>

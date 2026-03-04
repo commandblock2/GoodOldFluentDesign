@@ -87,7 +87,7 @@
 
 ### P2 (Feature completion after clean baseline)
 
-1. Add remaining setting editors for non-covered types (`REGISTRY_LIST`, `KEY`, `FILE`, `CURVE`).
+1. Add remaining setting editors for non-covered types (`REGISTRY_LIST`, `FILE`, `CURVE`).
 2. Align module row actions fully with `docs/clickgui-ux.md`.
 
 ### P3 (Intentionally deferred)
@@ -157,6 +157,10 @@
 3. Vec3 axis inputs keep default reveal focus behavior:
    - no custom `:focus-within` border/ring override
    - preserves default out-of-border focus rendering
+4. Added `KEY` setting support in ClickGUI:
+   - dedicated `KeySettingControl` with click-to-listen key capture
+   - lookup-backed printable label display + retry path
+   - integrated update/persist flow in `ClickGui.svelte` (`onKeySettingChange`)
 
 ## Current Debt Notes After This Pass
 
@@ -169,14 +173,14 @@
 ## Setting Coverage Snapshot (2026-03-04)
 
 1. Total `ModuleSetting` variants in `src/integration/types.ts`: `22`.
-2. Implemented in the current ClickGUI settings flow (`SettingEntry` + guards + controls): `16`.
+2. Implemented in the current ClickGUI settings flow (`SettingEntry` + guards + controls): `17`.
 3. Not implemented in the current ClickGUI settings flow:
-   - runtime-observed payload names: `4`
+   - runtime-observed payload names: `3`
 4. Excluded from current implementation range:
    - `BLOCKS`
    - `ITEM_LIST`
 
-### Implemented (`16`)
+### Implemented (`17`)
 
 1. `BOOLEAN`
 2. `TEXT`
@@ -194,13 +198,13 @@
 14. `MUTABLE_LIST` (integration mapping: `LIST`)
 15. `VECTOR2_F` (integration mapping: `VEC2`)
 16. `VECTOR3_D` / `VECTOR3_I` (integration mapping: `VEC3`)
+17. `KEY`
 
-### Not Implemented (Runtime-Observed Payload Names) (`4`)
+### Not Implemented (Runtime-Observed Payload Names) (`3`)
 
 1. `CURVE`
 2. `FILE`
-3. `KEY`
-4. `REGISTRY_LIST`
+3. `REGISTRY_LIST`
 
 ### Current Unsupported Behavior
 

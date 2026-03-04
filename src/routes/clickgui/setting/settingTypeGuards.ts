@@ -13,6 +13,7 @@ import type {
     ModuleSetting,
     MultiChooseSetting,
     ListSetting,
+    KeySetting,
     TextSetting,
     TogglableSetting,
     Vec2Setting,
@@ -54,6 +55,13 @@ export function isBindSetting(setting: ModuleSetting): setting is BindSetting {
         typeof bindValue.action === "string" &&
         (bindValue.modifiers === undefined ||
             Array.isArray(bindValue.modifiers))
+    );
+}
+
+export function isKeySetting(setting: ModuleSetting): setting is KeySetting {
+    return (
+        setting.valueType === "KEY" &&
+        typeof (setting as KeySetting).value === "string"
     );
 }
 
