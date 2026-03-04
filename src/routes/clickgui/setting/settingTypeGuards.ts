@@ -15,6 +15,8 @@ import type {
     ListSetting,
     TextSetting,
     TogglableSetting,
+    Vec2Setting,
+    Vec3Setting,
 } from "../../../integration/types";
 
 export type NestedSettingContainer = ConfigurableSetting | TogglableSetting;
@@ -140,6 +142,37 @@ export function isIntRangeSetting(
         typeof (setting as IntRangeSetting).value === "object" &&
         (setting as IntRangeSetting).value !== null &&
         (setting as IntRangeSetting).range !== undefined
+    );
+}
+
+export function isVec2Setting(setting: ModuleSetting): setting is Vec2Setting {
+    const value = (setting as { value?: Partial<Vec2Setting["value"]> }).value;
+
+    return (
+        setting.valueType === "VECTOR2_F" &&
+        typeof value === "object" &&
+        value !== null &&
+        typeof value.x === "number" &&
+        Number.isFinite(value.x) &&
+        typeof value.y === "number" &&
+        Number.isFinite(value.y)
+    );
+}
+
+export function isVec3Setting(setting: ModuleSetting): setting is Vec3Setting {
+    const value = (setting as { value?: Partial<Vec3Setting["value"]> }).value;
+
+    return (
+        (setting.valueType === "VECTOR3_D" ||
+            setting.valueType === "VECTOR3_I") &&
+        typeof value === "object" &&
+        value !== null &&
+        typeof value.x === "number" &&
+        Number.isFinite(value.x) &&
+        typeof value.y === "number" &&
+        Number.isFinite(value.y) &&
+        typeof value.z === "number" &&
+        Number.isFinite(value.z)
     );
 }
 

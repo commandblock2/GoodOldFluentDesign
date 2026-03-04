@@ -8,6 +8,10 @@
         IntSetting,
         Range,
         ModuleSetting,
+        Vec2,
+        Vec2Setting,
+        Vec3,
+        Vec3Setting,
     } from "../../../integration/types";
     import type { RevealItemOptions } from "fluent-reveal-svelte";
     import BindSettingControl from "./BindSettingControl.svelte";
@@ -21,6 +25,8 @@
     import NumberSettingControl from "./NumberSettingControl.svelte";
     import Self from "./SettingEntry.svelte";
     import TextSettingControl from "./TextSettingControl.svelte";
+    import Vec2SettingControl from "./Vec2SettingControl.svelte";
+    import Vector3SettingControl from "./Vector3SettingControl.svelte";
     import {
         getActiveChoiceTab,
         getChoiceContentKey,
@@ -42,6 +48,8 @@
         isMutableListSetting,
         isNestedSettingContainer,
         isTextSetting,
+        isVec2Setting,
+        isVec3Setting,
     } from "./settingTypeGuards";
 
     interface Props {
@@ -89,6 +97,14 @@
             path: number[],
             value: Range,
         ) => void | Promise<void>;
+        onVector2Change?: (
+            path: number[],
+            value: Vec2,
+        ) => void | Promise<void>;
+        onVector3Change?: (
+            path: number[],
+            value: Vec3,
+        ) => void | Promise<void>;
     }
 
     const defaultBooleanChange = (_path: number[], _checked: boolean) => {};
@@ -101,6 +117,8 @@
     const defaultMutableListChange = (_path: number[], _values: string[]) => {};
     const defaultNumberChange = (_path: number[], _value: number) => {};
     const defaultNumberRangeChange = (_path: number[], _value: Range) => {};
+    const defaultVector2Change = (_path: number[], _value: Vec2) => {};
+    const defaultVector3Change = (_path: number[], _value: Vec3) => {};
 
     let {
         setting,
@@ -117,6 +135,8 @@
         onMutableListChange = defaultMutableListChange,
         onNumberChange = defaultNumberChange,
         onNumberRangeChange = defaultNumberRangeChange,
+        onVector2Change = defaultVector2Change,
+        onVector3Change = defaultVector3Change,
     }: Props = $props();
 
     const childSettings = $derived(
@@ -236,6 +256,15 @@
         const joined = `${lower} to ${upper}`;
         return suffix.length > 0 ? `${joined} ${suffix}` : joined;
     }
+
+    function formatVec2Summary(setting: Vec2Setting): string {
+        return `X ${formatNumericValue(setting.value.x, false)} | Y ${formatNumericValue(setting.value.y, false)}`;
+    }
+
+    function formatVectorSummary(setting: Vec3Setting): string {
+        const integer = setting.valueType === "VECTOR3_I";
+        return `X ${formatNumericValue(setting.value.x, integer)} | Y ${formatNumericValue(setting.value.y, integer)} | Z ${formatNumericValue(setting.value.z, integer)}`;
+    }
 </script>
 
 <div
@@ -301,6 +330,14 @@
         {:else if isIntRangeSetting(setting)}
             <span class="setting-selection-summary">
                 {formatRangeNumericSummary(setting, true)}
+            </span>
+        {:else if isVec2Setting(setting)}
+            <span class="setting-selection-summary">
+                {formatVec2Summary(setting)}
+            </span>
+        {:else if isVec3Setting(setting)}
+            <span class="setting-selection-summary">
+                {formatVectorSummary(setting)}
             </span>
         {:else if isConfigurableGroupSetting}
             <div class="setting-group-meta">
@@ -381,6 +418,8 @@
                                     {onMutableListChange}
                                     {onNumberChange}
                                     {onNumberRangeChange}
+                                    {onVector2Change}
+                                    {onVector3Change}
                                 />
                             {/each}
                         </div>
@@ -419,6 +458,18 @@
             textInputRevealItemOptions={textInputRevealItemOptions}
             onChange={(nextValue) => onNumberRangeChange(path, nextValue)}
         />
+    {:else if isVec2Setting(setting)}
+        <Vec2SettingControl
+            {setting}
+            textInputRevealItemOptions={textInputRevealItemOptions}
+            onChange={(nextValue) => onVector2Change(path, nextValue)}
+        />
+    {:else if isVec3Setting(setting)}
+        <Vector3SettingControl
+            {setting}
+            textInputRevealItemOptions={textInputRevealItemOptions}
+            onChange={(nextValue) => onVector3Change(path, nextValue)}
+        />
     {:else if isConfigurableGroupSetting && visibleChildSettings.length > 0}
         <div class="setting-children">
             {#each visibleChildSettings as childSetting (getSettingEntryRowKey(childSetting.setting, childSetting.childIndex))}
@@ -437,6 +488,8 @@
                     {onMutableListChange}
                     {onNumberChange}
                     {onNumberRangeChange}
+                    {onVector2Change}
+                    {onVector3Change}
                 />
             {/each}
         </div>

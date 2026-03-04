@@ -6,6 +6,8 @@
         Module,
         ModuleSetting,
         Range,
+        Vec2,
+        Vec3,
     } from "../../integration/types";
     import { onDestroy, onMount } from "svelte";
     import type {
@@ -52,6 +54,8 @@
         isMutableListSetting,
         isNestedSettingContainer,
         isTextSetting,
+        isVec2Setting,
+        isVec3Setting,
     } from "./setting/settingTypeGuards";
 
     let categories = $state<GroupedModules>({});
@@ -839,6 +843,97 @@
         );
     }
 
+    function normalizeVectorComponent(
+        value: number,
+        integer: boolean,
+        axis: "x" | "y" | "z",
+    ): number {
+        if (!Number.isFinite(value)) {
+            throw new Error(
+                `VECTOR3 setting update received a non-finite "${axis}" component: ${value}.`,
+            );
+        }
+
+        return integer ? Math.round(value) : value;
+    }
+
+    function normalizeVectorValue(value: Vec3, integer: boolean): Vec3 {
+        return {
+            x: normalizeVectorComponent(value.x, integer, "x"),
+            y: normalizeVectorComponent(value.y, integer, "y"),
+            z: normalizeVectorComponent(value.z, integer, "z"),
+        };
+    }
+
+    function normalizeVec2Value(value: Vec2): Vec2 {
+        return {
+            x: normalizeVectorComponent(value.x, false, "x"),
+            y: normalizeVectorComponent(value.y, false, "y"),
+        };
+    }
+
+    async function onVector2SettingChange(
+        settingPath: number[],
+        nextValue: Vec2,
+    ) {
+        await updateActiveModuleSettings(
+            settingPath,
+            (setting) => {
+                if (!isVec2Setting(setting)) {
+                    return setting;
+                }
+
+                const normalized = normalizeVec2Value(nextValue);
+                const unchanged =
+                    setting.value.x === normalized.x &&
+                    setting.value.y === normalized.y;
+
+                if (unchanged) {
+                    return setting;
+                }
+
+                return {
+                    ...setting,
+                    value: normalized,
+                };
+            },
+            "Failed to update vector setting.",
+        );
+    }
+
+    async function onVector3SettingChange(
+        settingPath: number[],
+        nextValue: Vec3,
+    ) {
+        await updateActiveModuleSettings(
+            settingPath,
+            (setting) => {
+                if (!isVec3Setting(setting)) {
+                    return setting;
+                }
+
+                const normalized = normalizeVectorValue(
+                    nextValue,
+                    setting.valueType === "VECTOR3_I",
+                );
+                const unchanged =
+                    setting.value.x === normalized.x &&
+                    setting.value.y === normalized.y &&
+                    setting.value.z === normalized.z;
+
+                if (unchanged) {
+                    return setting;
+                }
+
+                return {
+                    ...setting,
+                    value: normalized,
+                };
+            },
+            "Failed to update vector setting.",
+        );
+    }
+
     function estimateSettingHeight(setting: ModuleSetting): number {
         if (isBooleanSetting(setting)) {
             return 64;
@@ -889,6 +984,14 @@
 
         if (isFloatRangeSetting(setting) || isIntRangeSetting(setting)) {
             return 136;
+        }
+
+        if (isVec2Setting(setting)) {
+            return 84;
+        }
+
+        if (isVec3Setting(setting)) {
+            return 84;
         }
 
         if (isNestedSettingContainer(setting)) {
@@ -1155,6 +1258,8 @@
                                     onMutableListChange={onMutableListSettingChange}
                                     onNumberChange={onNumberSettingChange}
                                     onNumberRangeChange={onNumberRangeSettingChange}
+                                    onVector2Change={onVector2SettingChange}
+                                    onVector3Change={onVector3SettingChange}
                                 />
                             </div>
                         {/each}

@@ -87,7 +87,7 @@
 
 ### P2 (Feature completion after clean baseline)
 
-1. Add remaining setting editors for non-covered types (`BLOCKS`, list variants, vectors, `KEY`, `FILE`, `CURVE`).
+1. Add remaining setting editors for non-covered types (`REGISTRY_LIST`, `KEY`, `FILE`, `CURVE`).
 2. Align module row actions fully with `docs/clickgui-ux.md`.
 
 ### P3 (Intentionally deferred)
@@ -144,6 +144,20 @@
    - `SettingEntry` routes mutable-list settings to `MutableListSettingControl`
    - mutable-list callback is threaded through recursive child rendering
 
+## Recent Progress Update (2026-03-04)
+
+1. Added vector setting support in ClickGUI:
+   - `VECTOR2_F` via `Vec2SettingControl` (`X`, `Y` inputs)
+   - `VECTOR3_D` / `VECTOR3_I` via `Vector3SettingControl` (`X`, `Y`, `Z` inputs)
+   - value guard coverage via `isVec2Setting` / `isVec3Setting`
+   - integrated update/persist flow in `ClickGui.svelte` (`onVector2SettingChange` / `onVector3SettingChange`)
+2. Vector editors keep reveal host/control box alignment:
+   - each axis input uses a fill-width reveal host wrapper
+   - matches documented `revealBorder` alignment pattern (`docs/clickgui-reveal-border-alignment.md`)
+3. Vec3 axis inputs keep default reveal focus behavior:
+   - no custom `:focus-within` border/ring override
+   - preserves default out-of-border focus rendering
+
 ## Current Debt Notes After This Pass
 
 1. ClickGUI now has less vendor-specific style surface in core layout files.
@@ -152,15 +166,17 @@
 4. Reveal host/item sizing pitfalls are now documented in:
    - `docs/clickgui-reveal-border-alignment.md`
 
-## Setting Coverage Snapshot (2026-03-01)
+## Setting Coverage Snapshot (2026-03-04)
 
 1. Total `ModuleSetting` variants in `src/integration/types.ts`: `22`.
-2. Implemented in the current ClickGUI settings flow (`SettingEntry` + guards + controls): `14`.
+2. Implemented in the current ClickGUI settings flow (`SettingEntry` + guards + controls): `16`.
 3. Not implemented in the current ClickGUI settings flow:
-   - runtime-observed payload names: `7`
-   - integration-defined but not currently observed at runtime: `2`
+   - runtime-observed payload names: `4`
+4. Excluded from current implementation range:
+   - `BLOCKS`
+   - `ITEM_LIST`
 
-### Implemented (`14`)
+### Implemented (`16`)
 
 1. `BOOLEAN`
 2. `TEXT`
@@ -176,21 +192,15 @@
 12. `CONFIGURABLE`
 13. `TOGGLABLE` / `TOGGLEABLE`
 14. `MUTABLE_LIST` (integration mapping: `LIST`)
+15. `VECTOR2_F` (integration mapping: `VEC2`)
+16. `VECTOR3_D` / `VECTOR3_I` (integration mapping: `VEC3`)
 
-### Not Implemented (Runtime-Observed Payload Names) (`7`)
+### Not Implemented (Runtime-Observed Payload Names) (`4`)
 
 1. `CURVE`
 2. `FILE`
 3. `KEY`
 4. `REGISTRY_LIST`
-5. `VECTOR2_F` (integration mapping: `VEC2`)
-6. `VECTOR3_D` (integration mapping: `VEC3`)
-7. `VECTOR3_I` (integration mapping: `VEC3`)
-
-### Not Implemented (Integration-Defined, Not Observed In Current Runtime Scan) (`2`)
-
-1. `BLOCKS`
-2. `ITEM_LIST`
 
 ### Current Unsupported Behavior
 
@@ -245,10 +255,11 @@ CLICKGUI_SETTINGS_API_BASE="<api-base-url>" node docs/scripts/scan-runtime-setti
    - runtime `VECTOR2_F`, `VECTOR3_D`, and `VECTOR3_I` map to integration vector abstractions (`Vec2Setting`/`Vec3Setting`) with numeric-specialized payload types.
    - runtime currently uses `TOGGLEABLE`; integration also accepts legacy `TOGGLABLE`.
 9. Not observed in this runtime snapshot:
-   - `BLOCKS`
-   - `ITEM_LIST`
    - `MUTLI_CHOOSE`
    - `TOGGLABLE`
+10. Excluded from current implementation range:
+   - `BLOCKS`
+   - `ITEM_LIST`
 
 ## Scanner Snippet
 

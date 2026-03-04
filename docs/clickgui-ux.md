@@ -123,6 +123,7 @@ For repeated on/off behavior, promote keybind assignment as the intended path.
 1. Wire settings search input to real filtering behavior.
 2. Add explicit loading/empty/error states in main content panel for non-module pages.
 3. Decide whether sticky surface intensity should be user-theme-configurable.
+4. Show short explanation/description snippets for separate modules in sidebar module lists (deferred, not part of this implementation pass).
 
 ## Design Principles Used During Refactor
 
