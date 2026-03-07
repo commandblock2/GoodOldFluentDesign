@@ -36,6 +36,10 @@
    - `BooleanSettingControl`
    - `BindSettingControl`
    - `ColorSettingControl`
+   - `CurveSettingControl`
+   - `FileSettingControl`
+   - `KeySettingControl`
+   - `RegistryListSettingControl`
    - `TextSettingControl`
    - `MutableListSettingControl`
    - `ChooseSettingControl`
@@ -43,6 +47,8 @@
    - `MultiChooseSettingControl`
    - `NumberSettingControl`
    - `NumberRangeSettingControl`
+   - `Vec2SettingControl`
+   - `Vector3SettingControl`
 
 ## How CSS Is Applied
 
@@ -87,7 +93,7 @@
 
 ### P2 (Feature completion after clean baseline)
 
-1. Add remaining setting editors for non-covered types (`REGISTRY_LIST`, `FILE`, `CURVE`).
+1. Add deferred explanations for separated setting modules in documentation/UX copy (not implemented in this pass).
 2. Align module row actions fully with `docs/clickgui-ux.md`.
 
 ### P3 (Intentionally deferred)
@@ -161,6 +167,14 @@
    - dedicated `KeySettingControl` with click-to-listen key capture
    - lookup-backed printable label display + retry path
    - integrated update/persist flow in `ClickGui.svelte` (`onKeySettingChange`)
+5. Added remaining runtime-observed setting support in ClickGUI:
+   - `FILE` via `FileSettingControl` (`openFileDialog` + reset/open actions)
+   - `REGISTRY_LIST` via `RegistryListSettingControl` (registry fetch + searchable toggle list)
+   - `CURVE` via `CurveSettingControl` (chart editing: add/drag/remove points, endpoint locks)
+   - integrated update/persist flow in `ClickGui.svelte`:
+     - `onFileSettingChange`
+     - `onRegistryListSettingChange`
+     - `onCurveSettingChange`
 
 ## Current Debt Notes After This Pass
 
@@ -173,14 +187,14 @@
 ## Setting Coverage Snapshot (2026-03-04)
 
 1. Total `ModuleSetting` variants in `src/integration/types.ts`: `22`.
-2. Implemented in the current ClickGUI settings flow (`SettingEntry` + guards + controls): `17`.
+2. Implemented in the current ClickGUI settings flow (`SettingEntry` + guards + controls): `20`.
 3. Not implemented in the current ClickGUI settings flow:
-   - runtime-observed payload names: `3`
+   - runtime-observed payload names: `0`
 4. Excluded from current implementation range:
    - `BLOCKS`
    - `ITEM_LIST`
 
-### Implemented (`17`)
+### Implemented (`20`)
 
 1. `BOOLEAN`
 2. `TEXT`
@@ -199,16 +213,17 @@
 15. `VECTOR2_F` (integration mapping: `VEC2`)
 16. `VECTOR3_D` / `VECTOR3_I` (integration mapping: `VEC3`)
 17. `KEY`
+18. `FILE`
+19. `REGISTRY_LIST`
+20. `CURVE`
 
-### Not Implemented (Runtime-Observed Payload Names) (`3`)
+### Not Implemented (Runtime-Observed Payload Names) (`0`)
 
-1. `CURVE`
-2. `FILE`
-3. `REGISTRY_LIST`
+1. None.
 
 ### Current Unsupported Behavior
 
-1. Unsupported setting types fall back to JSON rendering in `src/routes/clickgui/setting/SettingEntry.svelte`.
+1. Excluded setting types (`BLOCKS`, `ITEM_LIST`) still fall back to JSON rendering in `src/routes/clickgui/setting/SettingEntry.svelte`.
 
 ## Runtime ValueType Inventory (2026-02-26)
 

@@ -6,10 +6,13 @@ import type {
     ColorSetting,
     ChooseSetting,
     ConfigurableSetting,
+    CurveSetting,
+    FileSetting,
     FloatRangeSetting,
     FloatSetting,
     IntRangeSetting,
     IntSetting,
+    RegistryListSetting,
     ModuleSetting,
     MultiChooseSetting,
     ListSetting,
@@ -65,6 +68,24 @@ export function isKeySetting(setting: ModuleSetting): setting is KeySetting {
     );
 }
 
+export function isFileSetting(setting: ModuleSetting): setting is FileSetting {
+    const fileSetting = setting as Partial<FileSetting>;
+    const extensions = fileSetting.supportedExtensions;
+
+    return (
+        setting.valueType === "FILE" &&
+        typeof fileSetting.value === "string" &&
+        (fileSetting.dialogMode === "OPEN_FILE" ||
+            fileSetting.dialogMode === "OPEN_FOLDER" ||
+            fileSetting.dialogMode === "SAVE_FILE") &&
+        (extensions === undefined ||
+            (Array.isArray(extensions) &&
+                extensions.every(
+                    (extension) => typeof extension === "string",
+                )))
+    );
+}
+
 export function isChoiceSetting(
     setting: ModuleSetting,
 ): setting is ChoiceSetting {
@@ -112,6 +133,20 @@ export function isMutableListSetting(
         Array.isArray(listSetting.value) &&
         listSetting.value.every((entry) => typeof entry === "string") &&
         typeof listSetting.innerValueType === "string"
+    );
+}
+
+export function isRegistryListSetting(
+    setting: ModuleSetting,
+): setting is RegistryListSetting {
+    const registryListSetting = setting as Partial<RegistryListSetting>;
+
+    return (
+        setting.valueType === "REGISTRY_LIST" &&
+        Array.isArray(registryListSetting.value) &&
+        registryListSetting.value.every((entry) => typeof entry === "string") &&
+        typeof registryListSetting.innerValueType === "string" &&
+        typeof registryListSetting.registry === "string"
     );
 }
 
@@ -181,6 +216,39 @@ export function isVec3Setting(setting: ModuleSetting): setting is Vec3Setting {
         Number.isFinite(value.y) &&
         typeof value.z === "number" &&
         Number.isFinite(value.z)
+    );
+}
+
+export function isCurveSetting(setting: ModuleSetting): setting is CurveSetting {
+    const curveSetting = setting as Partial<CurveSetting>;
+    const points = curveSetting.value;
+    const xAxis = curveSetting.xAxis;
+    const yAxis = curveSetting.yAxis;
+
+    return (
+        setting.valueType === "CURVE" &&
+        Array.isArray(points) &&
+        points.every(
+            (point) =>
+                typeof point === "object" &&
+                point !== null &&
+                typeof point.x === "number" &&
+                Number.isFinite(point.x) &&
+                typeof point.y === "number" &&
+                Number.isFinite(point.y),
+        ) &&
+        typeof xAxis === "object" &&
+        xAxis !== null &&
+        typeof xAxis.label === "string" &&
+        typeof xAxis.range === "object" &&
+        xAxis.range !== null &&
+        typeof yAxis === "object" &&
+        yAxis !== null &&
+        typeof yAxis.label === "string" &&
+        typeof yAxis.range === "object" &&
+        yAxis.range !== null &&
+        typeof curveSetting.tension === "number" &&
+        Number.isFinite(curveSetting.tension)
     );
 }
 

@@ -1,6 +1,7 @@
 <script lang="ts">
     import type {
         ConfigurableSetting,
+        CurveSetting,
         GroupedModules,
         InputBind,
         Module,
@@ -45,7 +46,9 @@
         isBindSetting,
         isChoiceSetting,
         isColorSetting,
+        isCurveSetting,
         isChooseSetting,
+        isFileSetting,
         isFloatRangeSetting,
         isFloatSetting,
         isIntRangeSetting,
@@ -54,6 +57,7 @@
         isMultiChooseSetting,
         isMutableListSetting,
         isNestedSettingContainer,
+        isRegistryListSetting,
         isTextSetting,
         isVec2Setting,
         isVec3Setting,
@@ -76,6 +80,7 @@
     let settingsSplitCount = $state(1);
     let settingHeights = $state<Record<number, number>>({});
     let settingHeightsSignature = "";
+    const CURVE_ENDPOINT_EPSILON = 1e-9;
 
     const sortByName = (a: string, b: string) => a.localeCompare(b);
 
@@ -764,6 +769,56 @@
         );
     }
 
+    async function onFileSettingChange(
+        settingPath: number[],
+        nextValue: string,
+    ) {
+        await updateActiveModuleSettings(
+            settingPath,
+            (setting) => {
+                if (!isFileSetting(setting) || setting.value === nextValue) {
+                    return setting;
+                }
+
+                return {
+                    ...setting,
+                    value: nextValue,
+                };
+            },
+            "Failed to update file setting.",
+        );
+    }
+
+    async function onRegistryListSettingChange(
+        settingPath: number[],
+        nextValues: string[],
+    ) {
+        await updateActiveModuleSettings(
+            settingPath,
+            (setting) => {
+                if (!isRegistryListSetting(setting)) {
+                    return setting;
+                }
+
+                const unchanged =
+                    setting.value.length === nextValues.length &&
+                    setting.value.every(
+                        (value, index) => value === nextValues[index],
+                    );
+
+                if (unchanged) {
+                    return setting;
+                }
+
+                return {
+                    ...setting,
+                    value: [...nextValues],
+                };
+            },
+            "Failed to update registry list setting.",
+        );
+    }
+
     async function onNumberSettingChange(
         settingPath: number[],
         nextValue: number,
@@ -893,6 +948,58 @@
         };
     }
 
+    function normalizeCurvePoints(
+        value: Vec2[],
+        setting: CurveSetting,
+    ): Vec2[] {
+        const xBounds = getBounds(setting.xAxis.range);
+        const yBounds = getBounds(setting.yAxis.range);
+        const midpointY = yBounds.min + (yBounds.max - yBounds.min) / 2;
+        const normalized = value.map((point, pointIndex) => {
+            if (!Number.isFinite(point.x) || !Number.isFinite(point.y)) {
+                throw new Error(
+                    `CURVE setting "${setting.name}" update has non-finite point at index ${pointIndex}: (${point.x}, ${point.y}).`,
+                );
+            }
+
+            return {
+                x: normalizeSingleValue(point.x, xBounds, false),
+                y: normalizeSingleValue(point.y, yBounds, false),
+            };
+        });
+
+        let hasMinEndpoint = false;
+        let hasMaxEndpoint = false;
+
+        for (const point of normalized) {
+            if (Math.abs(point.x - xBounds.min) <= CURVE_ENDPOINT_EPSILON) {
+                point.x = xBounds.min;
+                hasMinEndpoint = true;
+            }
+
+            if (Math.abs(point.x - xBounds.max) <= CURVE_ENDPOINT_EPSILON) {
+                point.x = xBounds.max;
+                hasMaxEndpoint = true;
+            }
+        }
+
+        if (!hasMinEndpoint) {
+            normalized.push({
+                x: xBounds.min,
+                y: midpointY,
+            });
+        }
+
+        if (!hasMaxEndpoint) {
+            normalized.push({
+                x: xBounds.max,
+                y: midpointY,
+            });
+        }
+
+        return normalized.sort((left, right) => left.x - right.x);
+    }
+
     async function onVector2SettingChange(
         settingPath: number[],
         nextValue: Vec2,
@@ -955,6 +1062,39 @@
         );
     }
 
+    async function onCurveSettingChange(
+        settingPath: number[],
+        nextValue: Vec2[],
+    ) {
+        await updateActiveModuleSettings(
+            settingPath,
+            (setting) => {
+                if (!isCurveSetting(setting)) {
+                    return setting;
+                }
+
+                const normalized = normalizeCurvePoints(nextValue, setting);
+                const unchanged =
+                    setting.value.length === normalized.length &&
+                    setting.value.every(
+                        (point, index) =>
+                            point.x === normalized[index].x &&
+                            point.y === normalized[index].y,
+                    );
+
+                if (unchanged) {
+                    return setting;
+                }
+
+                return {
+                    ...setting,
+                    value: normalized,
+                };
+            },
+            "Failed to update curve setting.",
+        );
+    }
+
     function estimateSettingHeight(setting: ModuleSetting): number {
         if (isBooleanSetting(setting)) {
             return 64;
@@ -1003,6 +1143,18 @@
             return 92 + Math.max(1, setting.value.length) * 36;
         }
 
+        if (isFileSetting(setting)) {
+            return 88;
+        }
+
+        if (isRegistryListSetting(setting)) {
+            return 322;
+        }
+
+        if (isCurveSetting(setting)) {
+            return 248;
+        }
+
         if (isFloatSetting(setting) || isIntSetting(setting)) {
             return 108;
         }
@@ -1037,14 +1189,35 @@
         return 90 + Math.min(240, Math.ceil(valueLength / 42) * 18);
     }
 
+    function readObservedBlockSize(
+        entry: ResizeObserverEntry,
+    ): number | null {
+        const borderBoxSize = entry.borderBoxSize as
+            | ResizeObserverSize
+            | readonly ResizeObserverSize[]
+            | undefined;
+
+        if (Array.isArray(borderBoxSize)) {
+            return borderBoxSize[0]?.blockSize ?? null;
+        }
+
+        const singleBorderBoxSize = borderBoxSize as
+            | ResizeObserverSize
+            | undefined;
+        if (singleBorderBoxSize !== undefined) {
+            return singleBorderBoxSize.blockSize;
+        }
+
+        return null;
+    }
+
     function trackSettingHeight(node: HTMLElement, settingIndex: number) {
         let activeIndex = settingIndex;
         let resizeObserver: ResizeObserver | null = null;
         let scheduledWriteFrame = 0;
+        let pendingHeight: number | null = null;
 
-        const writeHeight = () => {
-            const nextHeight = Math.ceil(node.getBoundingClientRect().height);
-
+        const commitHeight = (nextHeight: number) => {
             if (settingHeights[activeIndex] === nextHeight) {
                 return;
             }
@@ -1055,33 +1228,53 @@
             };
         };
 
-        const scheduleWriteHeight = () => {
+        const flushPendingHeight = () => {
+            scheduledWriteFrame = 0;
+            if (pendingHeight === null) {
+                return;
+            }
+
+            const nextHeight = pendingHeight;
+            pendingHeight = null;
+            commitHeight(nextHeight);
+        };
+
+        const scheduleWriteHeight = (nextHeight: number) => {
+            pendingHeight = nextHeight;
+
             if (scheduledWriteFrame !== 0) {
                 return;
             }
 
-            scheduledWriteFrame = requestAnimationFrame(() => {
-                scheduledWriteFrame = 0;
-                writeHeight();
-            });
+            scheduledWriteFrame = requestAnimationFrame(flushPendingHeight);
+        };
+
+        const measureHeight = () => {
+            scheduleWriteHeight(Math.ceil(node.offsetHeight));
         };
 
         if (typeof ResizeObserver !== "undefined") {
-            resizeObserver = new ResizeObserver(scheduleWriteHeight);
-            resizeObserver.observe(node);
-        }
+            resizeObserver = new ResizeObserver((entries) => {
+                const entry = entries[0];
+                const observedBlockSize =
+                    entry === undefined ? null : readObservedBlockSize(entry);
 
-        scheduleWriteHeight();
-
-        return {
-            update(nextIndex: number) {
-                if (nextIndex === activeIndex) {
-                    scheduleWriteHeight();
+                if (observedBlockSize === null) {
+                    measureHeight();
                     return;
                 }
 
+                scheduleWriteHeight(Math.ceil(observedBlockSize));
+            });
+            resizeObserver.observe(node);
+        }
+
+        measureHeight();
+
+        return {
+            update(nextIndex: number) {
                 activeIndex = nextIndex;
-                scheduleWriteHeight();
+                measureHeight();
             },
             destroy() {
                 resizeObserver?.disconnect();
@@ -1097,38 +1290,40 @@
         const scrollbarAreaWidth = 14;
 
         let lastPointerX = 0;
-        let lastPointerY = 0;
+        let pointerInsideSurface = false;
         let rafId = 0;
+        let rectLeft = 0;
+        let rectRight = 0;
+        let rectDirty = true;
 
         const hasVerticalOverflow = () => node.scrollHeight > node.clientHeight + 1;
         const applyScrollState = () => {
             node.classList.toggle("surface-scrolled", node.scrollTop > 0);
+        };
+        const refreshRect = () => {
+            const rect = node.getBoundingClientRect();
+            rectLeft = rect.left;
+            rectRight = rect.right;
+            rectDirty = false;
         };
 
         const applyState = () => {
             rafId = 0;
             applyScrollState();
 
-            if (!hasVerticalOverflow()) {
+            if (!hasVerticalOverflow() || !pointerInsideSurface) {
                 node.classList.remove("scrollbar-strong");
                 return;
             }
 
-            const rect = node.getBoundingClientRect();
-            const insideSurface =
-                lastPointerX >= rect.left &&
-                lastPointerX <= rect.right &&
-                lastPointerY >= rect.top &&
-                lastPointerY <= rect.bottom;
-
-            if (!insideSurface) {
-                node.classList.remove("scrollbar-strong");
-                return;
+            if (rectDirty) {
+                refreshRect();
             }
 
             const isInScrollbarArea =
-                lastPointerX >= rect.right - scrollbarAreaWidth &&
-                lastPointerX <= rect.right;
+                lastPointerX >= rectRight - scrollbarAreaWidth &&
+                lastPointerX >= rectLeft &&
+                lastPointerX <= rectRight;
 
             node.classList.toggle("scrollbar-strong", isInScrollbarArea);
         };
@@ -1141,13 +1336,25 @@
             rafId = requestAnimationFrame(applyState);
         };
 
-        const onPointerMove = (event: PointerEvent) => {
+        const invalidateRect = () => {
+            rectDirty = true;
+            scheduleApplyState();
+        };
+
+        const onPointerEnter = (event: PointerEvent) => {
+            pointerInsideSurface = true;
             lastPointerX = event.clientX;
-            lastPointerY = event.clientY;
+            invalidateRect();
+        };
+
+        const onPointerMove = (event: PointerEvent) => {
+            pointerInsideSurface = true;
+            lastPointerX = event.clientX;
             scheduleApplyState();
         };
 
         const onPointerLeave = () => {
+            pointerInsideSurface = false;
             node.classList.remove("scrollbar-strong");
         };
 
@@ -1158,13 +1365,19 @@
 
         const resizeObserver = new ResizeObserver(() => {
             applyScrollState();
-            scheduleApplyState();
+            invalidateRect();
         });
         resizeObserver.observe(node);
 
         applyScrollState();
         scheduleApplyState();
 
+        window.addEventListener("resize", invalidateRect, { passive: true });
+        window.addEventListener("scroll", invalidateRect, {
+            passive: true,
+            capture: true,
+        });
+        node.addEventListener("pointerenter", onPointerEnter);
         node.addEventListener("pointermove", onPointerMove);
         node.addEventListener("pointerleave", onPointerLeave);
         node.addEventListener("scroll", onScroll);
@@ -1172,6 +1385,9 @@
         return {
             destroy() {
                 resizeObserver.disconnect();
+                window.removeEventListener("resize", invalidateRect);
+                window.removeEventListener("scroll", invalidateRect, true);
+                node.removeEventListener("pointerenter", onPointerEnter);
                 node.removeEventListener("pointermove", onPointerMove);
                 node.removeEventListener("pointerleave", onPointerLeave);
                 node.removeEventListener("scroll", onScroll);
@@ -1282,6 +1498,9 @@
                                     onChoiceChange={onChoiceSettingChange}
                                     onMultiChooseChange={onMultiChooseSettingChange}
                                     onMutableListChange={onMutableListSettingChange}
+                                    onFileChange={onFileSettingChange}
+                                    onRegistryListChange={onRegistryListSettingChange}
+                                    onCurveChange={onCurveSettingChange}
                                     onNumberChange={onNumberSettingChange}
                                     onNumberRangeChange={onNumberRangeSettingChange}
                                     onVector2Change={onVector2SettingChange}

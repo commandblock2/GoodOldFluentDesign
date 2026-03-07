@@ -1,5 +1,7 @@
 <script lang="ts">
     import type {
+        CurveSetting,
+        FileSetting,
         InputBind,
         BooleanSetting,
         FloatRangeSetting,
@@ -18,12 +20,15 @@
     import BooleanSettingControl from "./BooleanSettingControl.svelte";
     import ChoiceSettingControl from "./ChoiceSettingControl.svelte";
     import ColorSettingControl from "./ColorSettingControl.svelte";
+    import CurveSettingControl from "./CurveSettingControl.svelte";
     import ChooseSettingControl from "./ChooseSettingControl.svelte";
+    import FileSettingControl from "./FileSettingControl.svelte";
     import KeySettingControl from "./KeySettingControl.svelte";
     import MultiChooseSettingControl from "./MultiChooseSettingControl.svelte";
     import MutableListSettingControl from "./MutableListSettingControl.svelte";
     import NumberRangeSettingControl from "./NumberRangeSettingControl.svelte";
     import NumberSettingControl from "./NumberSettingControl.svelte";
+    import RegistryListSettingControl from "./RegistryListSettingControl.svelte";
     import Self from "./SettingEntry.svelte";
     import TextSettingControl from "./TextSettingControl.svelte";
     import Vec2SettingControl from "./Vec2SettingControl.svelte";
@@ -40,7 +45,9 @@
         isBindSetting,
         isChoiceSetting,
         isColorSetting,
+        isCurveSetting,
         isChooseSetting,
+        isFileSetting,
         isFloatRangeSetting,
         isFloatSetting,
         isIntRangeSetting,
@@ -49,6 +56,7 @@
         isMultiChooseSetting,
         isMutableListSetting,
         isNestedSettingContainer,
+        isRegistryListSetting,
         isTextSetting,
         isVec2Setting,
         isVec3Setting,
@@ -95,6 +103,18 @@
             path: number[],
             values: string[],
         ) => void | Promise<void>;
+        onFileChange?: (
+            path: number[],
+            value: string,
+        ) => void | Promise<void>;
+        onRegistryListChange?: (
+            path: number[],
+            values: string[],
+        ) => void | Promise<void>;
+        onCurveChange?: (
+            path: number[],
+            values: Vec2[],
+        ) => void | Promise<void>;
         onNumberChange?: (
             path: number[],
             value: number,
@@ -122,6 +142,9 @@
     const defaultChoiceChange = (_path: number[], _value: string) => {};
     const defaultMultiChooseChange = (_path: number[], _values: string[]) => {};
     const defaultMutableListChange = (_path: number[], _values: string[]) => {};
+    const defaultFileChange = (_path: number[], _value: string) => {};
+    const defaultRegistryListChange = (_path: number[], _values: string[]) => {};
+    const defaultCurveChange = (_path: number[], _values: Vec2[]) => {};
     const defaultNumberChange = (_path: number[], _value: number) => {};
     const defaultNumberRangeChange = (_path: number[], _value: Range) => {};
     const defaultVector2Change = (_path: number[], _value: Vec2) => {};
@@ -141,6 +164,9 @@
         onChoiceChange = defaultChoiceChange,
         onMultiChooseChange = defaultMultiChooseChange,
         onMutableListChange = defaultMutableListChange,
+        onFileChange = defaultFileChange,
+        onRegistryListChange = defaultRegistryListChange,
+        onCurveChange = defaultCurveChange,
         onNumberChange = defaultNumberChange,
         onNumberRangeChange = defaultNumberRangeChange,
         onVector2Change = defaultVector2Change,
@@ -274,6 +300,14 @@
         const integer = setting.valueType === "VECTOR3_I";
         return `X ${formatNumericValue(setting.value.x, integer)} | Y ${formatNumericValue(setting.value.y, integer)} | Z ${formatNumericValue(setting.value.z, integer)}`;
     }
+
+    function formatFileSummary(setting: FileSetting): string {
+        return setting.value.trim().length === 0 ? "empty" : "selected";
+    }
+
+    function formatCurveSummary(setting: CurveSetting): string {
+        return `${setting.value.length} Point${setting.value.length === 1 ? "" : "s"}`;
+    }
 </script>
 
 <div
@@ -329,6 +363,18 @@
         {:else if isMutableListSetting(setting)}
             <span class="setting-selection-summary">
                 {setting.value.length} Entr{setting.value.length === 1 ? "y" : "ies"}
+            </span>
+        {:else if isFileSetting(setting)}
+            <span class="setting-selection-summary">
+                {formatFileSummary(setting)}
+            </span>
+        {:else if isRegistryListSetting(setting)}
+            <span class="setting-selection-summary">
+                {setting.value.length} Selected
+            </span>
+        {:else if isCurveSetting(setting)}
+            <span class="setting-selection-summary">
+                {formatCurveSummary(setting)}
             </span>
         {:else if isFloatSetting(setting)}
             <span class="setting-selection-summary">
@@ -432,6 +478,9 @@
                                     {onChoiceChange}
                                     {onMultiChooseChange}
                                     {onMutableListChange}
+                                    {onFileChange}
+                                    {onRegistryListChange}
+                                    {onCurveChange}
                                     {onNumberChange}
                                     {onNumberRangeChange}
                                     {onVector2Change}
@@ -461,6 +510,25 @@
             textInputRevealItemOptions={textInputRevealItemOptions}
             actionRevealItemOptions={revealItemOptions}
             onChange={(nextValues) => onMutableListChange(path, nextValues)}
+        />
+    {:else if isFileSetting(setting)}
+        <FileSettingControl
+            {setting}
+            revealItemOptions={revealItemOptions}
+            onChange={(nextValue) => onFileChange(path, nextValue)}
+        />
+    {:else if isRegistryListSetting(setting)}
+        <RegistryListSettingControl
+            {setting}
+            revealItemOptions={revealItemOptions}
+            textInputRevealItemOptions={textInputRevealItemOptions}
+            onChange={(nextValues) => onRegistryListChange(path, nextValues)}
+        />
+    {:else if isCurveSetting(setting)}
+        <CurveSettingControl
+            {setting}
+            revealItemOptions={revealItemOptions}
+            onChange={(nextValues) => onCurveChange(path, nextValues)}
         />
     {:else if isFloatSetting(setting) || isIntSetting(setting)}
         <NumberSettingControl
@@ -503,6 +571,9 @@
                     {onChoiceChange}
                     {onMultiChooseChange}
                     {onMutableListChange}
+                    {onFileChange}
+                    {onRegistryListChange}
+                    {onCurveChange}
                     {onNumberChange}
                     {onNumberRangeChange}
                     {onVector2Change}
@@ -510,7 +581,7 @@
                 />
             {/each}
         </div>
-    {:else if !isBooleanSetting(setting) && !isTextSetting(setting) && !isBindSetting(setting) && !isKeySetting(setting) && !isColorSetting(setting) && !isChoiceSetting(setting) && !isMutableListSetting(setting)}
+    {:else if !isBooleanSetting(setting) && !isTextSetting(setting) && !isBindSetting(setting) && !isKeySetting(setting) && !isColorSetting(setting) && !isChoiceSetting(setting) && !isMutableListSetting(setting) && !isFileSetting(setting) && !isRegistryListSetting(setting) && !isCurveSetting(setting)}
         <pre>{JSON.stringify(setting.value, null, 2)}</pre>
     {/if}
 </div>
