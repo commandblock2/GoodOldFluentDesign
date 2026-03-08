@@ -1,32 +1,23 @@
 <script lang="ts">
     import type {
         ConfigurableSetting,
-        CurveSetting,
         GroupedModules,
-        InputBind,
         Module,
-        ModuleSetting,
-        Range,
-        Vec2,
-        Vec3,
     } from "../../integration/types";
     import { onDestroy, onMount } from "svelte";
     import type {
         RevealContainerOptions,
         RevealItemOptions,
     } from "fluent-reveal-svelte";
-    import { revealContainer } from "fluent-reveal-svelte";
     import {
         getModuleSettings,
         getModules,
         setModuleSettings,
     } from "../../integration/rest";
     import { groupByCategory } from "../../integration/util";
-    import ClickGuiCategoryDetailView from "./views/ClickGuiCategoryDetailView.svelte";
-    import ClickGuiHomeView from "./views/ClickGuiHomeView.svelte";
-    import ClickGuiSearchView from "./views/ClickGuiSearchView.svelte";
-    import ClickGuiThemeDetailView from "./views/ClickGuiThemeDetailView.svelte";
-    import ClickGuiThemeSettingsContent from "./views/ClickGuiThemeSettingsContent.svelte";
+    import ClickGuiMainContent from "./ClickGuiMainContent.svelte";
+    import ClickGuiSidebar from "./ClickGuiSidebar.svelte";
+    import { createSettingHeightTracker } from "./clickGuiActions";
     import {
         getPersistedClickGuiState,
         setPersistedClickGuiState,
@@ -42,37 +33,32 @@
         type ClickGuiThemePreferences,
         type ClickGuiThemePreset,
     } from "./clickGuiThemePreferences";
-    import SettingEntry from "./setting/SettingEntry.svelte";
+    import type { ClickGuiSettingHandlers } from "./setting/clickGuiSettingHandlers";
     import {
-        assertChoiceExists,
-        getActiveChoiceTab,
-    } from "./setting/choiceSettingUtils";
+        applySettingMapperToConfigurable,
+        createBindSettingMapper,
+        createBooleanSettingMapper,
+        createChoiceSettingMapper,
+        createChooseSettingMapper,
+        createColorSettingMapper,
+        createCurveSettingMapper,
+        createFileSettingMapper,
+        createKeySettingMapper,
+        createMultiChooseSettingMapper,
+        createMutableListSettingMapper,
+        createNumberRangeSettingMapper,
+        createNumberSettingMapper,
+        createRegistryListSettingMapper,
+        createTextSettingMapper,
+        createVector2SettingMapper,
+        createVector3SettingMapper,
+        type SettingMapper,
+    } from "./setting/clickGuiSettingMutations";
     import {
-        getBounds,
-        normalizeRangeValue,
-        normalizeSingleValue,
-    } from "./setting/numericSettingUtils";
-    import {
-        isBooleanSetting,
-        isBindSetting,
-        isChoiceSetting,
-        isColorSetting,
-        isCurveSetting,
-        isChooseSetting,
-        isFileSetting,
-        isFloatRangeSetting,
-        isFloatSetting,
-        isIntRangeSetting,
-        isIntSetting,
-        isKeySetting,
-        isMultiChooseSetting,
-        isMutableListSetting,
-        isNestedSettingContainer,
-        isRegistryListSetting,
-        isTextSetting,
-        isVec2Setting,
-        isVec3Setting,
-    } from "./setting/settingTypeGuards";
+        buildSettingsColumns,
+        getModuleSettingsShapeSignature,
+        prioritizeModuleSettingsForDisplay,
+    } from "./setting/clickGuiSettingLayout";
 
     let categories = $state<GroupedModules>({});
     let modules = $state<Module[]>([]);
@@ -94,7 +80,6 @@
     let clickGuiThemeLoadError = $state<string | null>(null);
     let settingHeights = $state<Record<number, number>>({});
     let settingHeightsSignature = "";
-    const CURVE_ENDPOINT_EPSILON = 1e-9;
 
     const sortByName = (a: string, b: string) => a.localeCompare(b);
 
@@ -171,29 +156,6 @@
     const isDetailView = $derived(
         selectedCategory !== null || selectedThemeSettings,
     );
-    const activeConfigPayloadJson = $derived(
-        JSON.stringify(
-            activeConfigError !== null
-                ? {
-                      status: "error",
-                      page: activeConfigPage.type,
-                      moduleName: activeConfigPage.moduleName,
-                      message: activeConfigError,
-                  }
-                : activeConfigLoading
-                  ? {
-                        status: "loading",
-                        page: activeConfigPage.type,
-                        moduleName: activeConfigPage.moduleName,
-                    }
-                  : activeConfigurable ?? {
-                        page: activeConfigPage.type,
-                        moduleName: activeConfigPage.moduleName,
-                    },
-            null,
-            2,
-        ),
-    );
     const activeConfigTitle = $derived(
         activeConfigPage.type === "module" && activeConfigPage.moduleName !== null
             ? activeConfigPage.moduleName
@@ -223,15 +185,11 @@
             : null,
     );
     const activeModuleSettings = $derived(activeConfigurable?.value ?? []);
+    const orderedActiveModuleSettings = $derived(
+        prioritizeModuleSettingsForDisplay(activeModuleSettings),
+    );
     const activeModuleSettingsShapeSignature = $derived(
-        activeModuleSettings
-            .map((setting, settingIndex) => {
-                const maybeWithKey = setting as ModuleSetting & {
-                    key?: string;
-                };
-                return `${settingIndex}:${setting.valueType}:${setting.name}:${maybeWithKey.key ?? ""}`;
-            })
-            .join("|"),
+        getModuleSettingsShapeSignature(activeModuleSettings),
     );
     const allActiveSettingsMeasured = $derived(
         activeModuleSettings.length > 0 &&
@@ -242,33 +200,19 @@
     );
     const settingsColumnCount = $derived(Math.max(1, settingsSplitCount + 1));
     const settingsColumns = $derived(
-        (() => {
-            const heightSource = allActiveSettingsMeasured ? settingHeights : {};
-            const columns = Array.from(
-                { length: settingsColumnCount },
-                () => [] as { setting: ModuleSetting; settingIndex: number }[],
-            );
-            const columnHeights = Array.from(
-                { length: settingsColumnCount },
-                () => 0,
-            );
+        buildSettingsColumns(
+            orderedActiveModuleSettings,
+            settingsColumnCount,
+            settingHeights,
+            allActiveSettingsMeasured,
+        ),
+    );
 
-            activeModuleSettings.forEach((setting, settingIndex) => {
-                let targetColumn = 0;
-
-                for (let i = 1; i < settingsColumnCount; i++) {
-                    if (columnHeights[i] < columnHeights[targetColumn]) {
-                        targetColumn = i;
-                    }
-                }
-
-                columns[targetColumn].push({ setting, settingIndex });
-                columnHeights[targetColumn] +=
-                    heightSource[settingIndex] ?? estimateSettingHeight(setting);
-            });
-
-            return columns;
-        })(),
+    const trackSettingHeight = createSettingHeightTracker(
+        () => settingHeights,
+        (nextHeights) => {
+            settingHeights = nextHeights;
+        },
     );
 
     $effect(() => {
@@ -277,6 +221,7 @@
                 ? activeConfigPage.moduleName ?? ""
                 : "";
         const nextSignature = `${moduleName}|${activeModuleSettingsShapeSignature}`;
+
         if (nextSignature === settingHeightsSignature) {
             return;
         }
@@ -513,84 +458,6 @@
         await openModuleConfig(module);
     }
 
-    type SettingMapper = (setting: ModuleSetting) => ModuleSetting;
-
-    function mapSettingTree(
-        settings: ModuleSetting[],
-        path: number[],
-        mapper: SettingMapper,
-    ): ModuleSetting[] {
-        if (path.length === 0) {
-            return settings;
-        }
-
-        const [targetIndex, ...restPath] = path;
-        const targetSetting = settings[targetIndex];
-
-        if (targetSetting === undefined) {
-            return settings;
-        }
-
-        if (restPath.length === 0) {
-            const nextTargetSetting = mapper(targetSetting);
-
-            if (nextTargetSetting === targetSetting) {
-                return settings;
-            }
-
-            const nextSettings = [...settings];
-            nextSettings[targetIndex] = nextTargetSetting;
-            return nextSettings;
-        }
-
-        if (isChoiceSetting(targetSetting)) {
-            const activeChoiceTab = getActiveChoiceTab(targetSetting);
-            const nextChoiceSettings = mapSettingTree(
-                activeChoiceTab.setting.value,
-                restPath,
-                mapper,
-            );
-
-            if (nextChoiceSettings === activeChoiceTab.setting.value) {
-                return settings;
-            }
-
-            const nextSettings = [...settings];
-            nextSettings[targetIndex] = {
-                ...targetSetting,
-                choices: {
-                    ...targetSetting.choices,
-                    [activeChoiceTab.name]: {
-                        ...activeChoiceTab.setting,
-                        value: nextChoiceSettings,
-                    },
-                },
-            };
-            return nextSettings;
-        }
-
-        if (!isNestedSettingContainer(targetSetting)) {
-            return settings;
-        }
-
-        const nextNestedSettings = mapSettingTree(
-            targetSetting.value,
-            restPath,
-            mapper,
-        );
-
-        if (nextNestedSettings === targetSetting.value) {
-            return settings;
-        }
-
-        const nextSettings = [...settings];
-        nextSettings[targetIndex] = {
-            ...targetSetting,
-            value: nextNestedSettings,
-        };
-        return nextSettings;
-    }
-
     async function updateActiveModuleSettings(
         settingPath: number[],
         mapper: SettingMapper,
@@ -606,16 +473,13 @@
 
         const moduleName = activeConfigPage.moduleName;
         const previousConfigurable = activeConfigurable;
-        const nextConfigurable = {
-            ...previousConfigurable,
-            value: mapSettingTree(
-                previousConfigurable.value,
-                settingPath,
-                mapper,
-            ),
-        };
+        const nextConfigurable = applySettingMapperToConfigurable(
+            previousConfigurable,
+            settingPath,
+            mapper,
+        );
 
-        if (nextConfigurable.value === previousConfigurable.value) {
+        if (nextConfigurable === previousConfigurable) {
             return;
         }
 
@@ -640,1033 +504,156 @@
         }
     }
 
-    async function onBooleanSettingChange(
-        settingPath: number[],
-        checked: boolean,
+    function createSettingChangeHandler<Value>(
+        createMapper: (value: Value) => SettingMapper,
+        errorMessage: string,
     ) {
-        await updateActiveModuleSettings(
-            settingPath,
-            (setting) => {
-                if (!isBooleanSetting(setting) || setting.value === checked) {
-                    return setting;
-                }
+        return async (path: number[], value: Value) =>
+            updateActiveModuleSettings(
+                path,
+                createMapper(value),
+                errorMessage,
+            );
+    }
 
-                return {
-                    ...setting,
-                    value: checked,
-                };
-            },
+    const settingHandlers: ClickGuiSettingHandlers = {
+        onBooleanChange: createSettingChangeHandler(
+            createBooleanSettingMapper,
             "Failed to update boolean setting.",
-        );
-    }
-
-    async function onTextSettingChange(
-        settingPath: number[],
-        nextValue: string,
-    ) {
-        await updateActiveModuleSettings(
-            settingPath,
-            (setting) => {
-                if (!isTextSetting(setting) || setting.value === nextValue) {
-                    return setting;
-                }
-
-                return {
-                    ...setting,
-                    value: nextValue,
-                };
-            },
+        ),
+        onTextChange: createSettingChangeHandler(
+            createTextSettingMapper,
             "Failed to update text setting.",
-        );
-    }
-
-    async function onBindSettingChange(
-        settingPath: number[],
-        nextValue: InputBind,
-    ) {
-        await updateActiveModuleSettings(
-            settingPath,
-            (setting) => {
-                if (!isBindSetting(setting)) {
-                    return setting;
-                }
-
-                const current = setting.value;
-                const currentModifiers = Array.isArray(current.modifiers)
-                    ? current.modifiers
-                    : [];
-                const unchanged =
-                    current.boundKey === nextValue.boundKey &&
-                    current.action === nextValue.action &&
-                    currentModifiers.length === nextValue.modifiers.length &&
-                    currentModifiers.every(
-                        (modifier, index) =>
-                            modifier === nextValue.modifiers[index],
-                    );
-
-                if (unchanged) {
-                    return setting;
-                }
-
-                return {
-                    ...setting,
-                    value: nextValue,
-                };
-            },
+        ),
+        onBindChange: createSettingChangeHandler(
+            createBindSettingMapper,
             "Failed to update bind setting.",
-        );
-    }
-
-    async function onKeySettingChange(
-        settingPath: number[],
-        nextValue: string,
-    ) {
-        await updateActiveModuleSettings(
-            settingPath,
-            (setting) => {
-                if (!isKeySetting(setting) || setting.value === nextValue) {
-                    return setting;
-                }
-
-                return {
-                    ...setting,
-                    value: nextValue,
-                };
-            },
+        ),
+        onKeyChange: createSettingChangeHandler(
+            createKeySettingMapper,
             "Failed to update key setting.",
-        );
-    }
-
-    async function onColorSettingChange(
-        settingPath: number[],
-        nextValue: number,
-    ) {
-        await updateActiveModuleSettings(
-            settingPath,
-            (setting) => {
-                if (!isColorSetting(setting) || setting.value === nextValue) {
-                    return setting;
-                }
-
-                return {
-                    ...setting,
-                    value: nextValue,
-                };
-            },
+        ),
+        onColorChange: createSettingChangeHandler(
+            createColorSettingMapper,
             "Failed to update color setting.",
-        );
-    }
-
-    async function onChooseSettingChange(
-        settingPath: number[],
-        nextChoice: string,
-    ) {
-        await updateActiveModuleSettings(
-            settingPath,
-            (setting) => {
-                if (!isChooseSetting(setting)) {
-                    return setting;
-                }
-
-                if (setting.value === nextChoice) {
-                    return setting;
-                }
-
-                return {
-                    ...setting,
-                    value: nextChoice,
-                };
-            },
+        ),
+        onChooseChange: createSettingChangeHandler(
+            createChooseSettingMapper,
             "Failed to update choose setting.",
-        );
-    }
-
-    async function onChoiceSettingChange(
-        settingPath: number[],
-        nextChoice: string,
-    ) {
-        await updateActiveModuleSettings(
-            settingPath,
-            (setting) => {
-                if (!isChoiceSetting(setting)) {
-                    return setting;
-                }
-
-                if (setting.active === nextChoice) {
-                    return setting;
-                }
-
-                assertChoiceExists(setting, nextChoice);
-
-                return {
-                    ...setting,
-                    active: nextChoice,
-                };
-            },
+        ),
+        onChoiceChange: createSettingChangeHandler(
+            createChoiceSettingMapper,
             "Failed to update choice setting.",
-        );
-    }
-
-    async function onMultiChooseSettingChange(
-        settingPath: number[],
-        nextChoices: string[],
-    ) {
-        await updateActiveModuleSettings(
-            settingPath,
-            (setting) => {
-                if (!isMultiChooseSetting(setting)) {
-                    return setting;
-                }
-
-                return {
-                    ...setting,
-                    value: nextChoices,
-                };
-            },
+        ),
+        onMultiChooseChange: createSettingChangeHandler(
+            createMultiChooseSettingMapper,
             "Failed to update multi choose setting.",
-        );
-    }
-
-    async function onMutableListSettingChange(
-        settingPath: number[],
-        nextValues: string[],
-    ) {
-        await updateActiveModuleSettings(
-            settingPath,
-            (setting) => {
-                if (!isMutableListSetting(setting)) {
-                    return setting;
-                }
-
-                const unchanged =
-                    setting.value.length === nextValues.length &&
-                    setting.value.every(
-                        (value, index) => value === nextValues[index],
-                    );
-
-                if (unchanged) {
-                    return setting;
-                }
-
-                return {
-                    ...setting,
-                    value: [...nextValues],
-                };
-            },
+        ),
+        onMutableListChange: createSettingChangeHandler(
+            createMutableListSettingMapper,
             "Failed to update mutable list setting.",
-        );
-    }
-
-    async function onFileSettingChange(
-        settingPath: number[],
-        nextValue: string,
-    ) {
-        await updateActiveModuleSettings(
-            settingPath,
-            (setting) => {
-                if (!isFileSetting(setting) || setting.value === nextValue) {
-                    return setting;
-                }
-
-                return {
-                    ...setting,
-                    value: nextValue,
-                };
-            },
+        ),
+        onFileChange: createSettingChangeHandler(
+            createFileSettingMapper,
             "Failed to update file setting.",
-        );
-    }
-
-    async function onRegistryListSettingChange(
-        settingPath: number[],
-        nextValues: string[],
-    ) {
-        await updateActiveModuleSettings(
-            settingPath,
-            (setting) => {
-                if (!isRegistryListSetting(setting)) {
-                    return setting;
-                }
-
-                const unchanged =
-                    setting.value.length === nextValues.length &&
-                    setting.value.every(
-                        (value, index) => value === nextValues[index],
-                    );
-
-                if (unchanged) {
-                    return setting;
-                }
-
-                return {
-                    ...setting,
-                    value: [...nextValues],
-                };
-            },
+        ),
+        onRegistryListChange: createSettingChangeHandler(
+            createRegistryListSettingMapper,
             "Failed to update registry list setting.",
-        );
-    }
-
-    async function onNumberSettingChange(
-        settingPath: number[],
-        nextValue: number,
-    ) {
-        await updateActiveModuleSettings(
-            settingPath,
-            (setting) => {
-                if (isFloatSetting(setting)) {
-                    const normalized = normalizeSingleValue(
-                        nextValue,
-                        getBounds(setting.range),
-                        false,
-                    );
-
-                    if (normalized === setting.value) {
-                        return setting;
-                    }
-
-                    return {
-                        ...setting,
-                        value: normalized,
-                    };
-                }
-
-                if (isIntSetting(setting)) {
-                    const normalized = normalizeSingleValue(
-                        nextValue,
-                        getBounds(setting.range),
-                        true,
-                    );
-
-                    if (normalized === setting.value) {
-                        return setting;
-                    }
-
-                    return {
-                        ...setting,
-                        value: normalized,
-                    };
-                }
-
-                return setting;
-            },
-            "Failed to update numeric setting.",
-        );
-    }
-
-    async function onNumberRangeSettingChange(
-        settingPath: number[],
-        nextValue: Range,
-    ) {
-        await updateActiveModuleSettings(
-            settingPath,
-            (setting) => {
-                if (isFloatRangeSetting(setting)) {
-                    const normalized = normalizeRangeValue(
-                        nextValue,
-                        getBounds(setting.range),
-                        false,
-                    );
-
-                    if (
-                        normalized.from === setting.value.from &&
-                        normalized.to === setting.value.to
-                    ) {
-                        return setting;
-                    }
-
-                    return {
-                        ...setting,
-                        value: normalized,
-                    };
-                }
-
-                if (isIntRangeSetting(setting)) {
-                    const normalized = normalizeRangeValue(
-                        nextValue,
-                        getBounds(setting.range),
-                        true,
-                    );
-
-                    if (
-                        normalized.from === setting.value.from &&
-                        normalized.to === setting.value.to
-                    ) {
-                        return setting;
-                    }
-
-                    return {
-                        ...setting,
-                        value: normalized,
-                    };
-                }
-
-                return setting;
-            },
-            "Failed to update numeric range setting.",
-        );
-    }
-
-    function normalizeVectorComponent(
-        value: number,
-        integer: boolean,
-        axis: "x" | "y" | "z",
-    ): number {
-        if (!Number.isFinite(value)) {
-            throw new Error(
-                `VECTOR3 setting update received a non-finite "${axis}" component: ${value}.`,
-            );
-        }
-
-        return integer ? Math.round(value) : value;
-    }
-
-    function normalizeVectorValue(value: Vec3, integer: boolean): Vec3 {
-        return {
-            x: normalizeVectorComponent(value.x, integer, "x"),
-            y: normalizeVectorComponent(value.y, integer, "y"),
-            z: normalizeVectorComponent(value.z, integer, "z"),
-        };
-    }
-
-    function normalizeVec2Value(value: Vec2): Vec2 {
-        return {
-            x: normalizeVectorComponent(value.x, false, "x"),
-            y: normalizeVectorComponent(value.y, false, "y"),
-        };
-    }
-
-    function normalizeCurvePoints(
-        value: Vec2[],
-        setting: CurveSetting,
-    ): Vec2[] {
-        const xBounds = getBounds(setting.xAxis.range);
-        const yBounds = getBounds(setting.yAxis.range);
-        const midpointY = yBounds.min + (yBounds.max - yBounds.min) / 2;
-        const normalized = value.map((point, pointIndex) => {
-            if (!Number.isFinite(point.x) || !Number.isFinite(point.y)) {
-                throw new Error(
-                    `CURVE setting "${setting.name}" update has non-finite point at index ${pointIndex}: (${point.x}, ${point.y}).`,
-                );
-            }
-
-            return {
-                x: normalizeSingleValue(point.x, xBounds, false),
-                y: normalizeSingleValue(point.y, yBounds, false),
-            };
-        });
-
-        let hasMinEndpoint = false;
-        let hasMaxEndpoint = false;
-
-        for (const point of normalized) {
-            if (Math.abs(point.x - xBounds.min) <= CURVE_ENDPOINT_EPSILON) {
-                point.x = xBounds.min;
-                hasMinEndpoint = true;
-            }
-
-            if (Math.abs(point.x - xBounds.max) <= CURVE_ENDPOINT_EPSILON) {
-                point.x = xBounds.max;
-                hasMaxEndpoint = true;
-            }
-        }
-
-        if (!hasMinEndpoint) {
-            normalized.push({
-                x: xBounds.min,
-                y: midpointY,
-            });
-        }
-
-        if (!hasMaxEndpoint) {
-            normalized.push({
-                x: xBounds.max,
-                y: midpointY,
-            });
-        }
-
-        return normalized.sort((left, right) => left.x - right.x);
-    }
-
-    async function onVector2SettingChange(
-        settingPath: number[],
-        nextValue: Vec2,
-    ) {
-        await updateActiveModuleSettings(
-            settingPath,
-            (setting) => {
-                if (!isVec2Setting(setting)) {
-                    return setting;
-                }
-
-                const normalized = normalizeVec2Value(nextValue);
-                const unchanged =
-                    setting.value.x === normalized.x &&
-                    setting.value.y === normalized.y;
-
-                if (unchanged) {
-                    return setting;
-                }
-
-                return {
-                    ...setting,
-                    value: normalized,
-                };
-            },
-            "Failed to update vector setting.",
-        );
-    }
-
-    async function onVector3SettingChange(
-        settingPath: number[],
-        nextValue: Vec3,
-    ) {
-        await updateActiveModuleSettings(
-            settingPath,
-            (setting) => {
-                if (!isVec3Setting(setting)) {
-                    return setting;
-                }
-
-                const normalized = normalizeVectorValue(
-                    nextValue,
-                    setting.valueType === "VECTOR3_I",
-                );
-                const unchanged =
-                    setting.value.x === normalized.x &&
-                    setting.value.y === normalized.y &&
-                    setting.value.z === normalized.z;
-
-                if (unchanged) {
-                    return setting;
-                }
-
-                return {
-                    ...setting,
-                    value: normalized,
-                };
-            },
-            "Failed to update vector setting.",
-        );
-    }
-
-    async function onCurveSettingChange(
-        settingPath: number[],
-        nextValue: Vec2[],
-    ) {
-        await updateActiveModuleSettings(
-            settingPath,
-            (setting) => {
-                if (!isCurveSetting(setting)) {
-                    return setting;
-                }
-
-                const normalized = normalizeCurvePoints(nextValue, setting);
-                const unchanged =
-                    setting.value.length === normalized.length &&
-                    setting.value.every(
-                        (point, index) =>
-                            point.x === normalized[index].x &&
-                            point.y === normalized[index].y,
-                    );
-
-                if (unchanged) {
-                    return setting;
-                }
-
-                return {
-                    ...setting,
-                    value: normalized,
-                };
-            },
+        ),
+        onCurveChange: createSettingChangeHandler(
+            createCurveSettingMapper,
             "Failed to update curve setting.",
-        );
-    }
-
-    function estimateSettingHeight(setting: ModuleSetting): number {
-        if (isBooleanSetting(setting)) {
-            return 64;
-        }
-
-        if (isTextSetting(setting)) {
-            return 88;
-        }
-
-        if (isBindSetting(setting)) {
-            return 64;
-        }
-
-        if (isKeySetting(setting)) {
-            return 64;
-        }
-
-        if (isColorSetting(setting)) {
-            return 64;
-        }
-
-        if (isChoiceSetting(setting)) {
-            const activeChoiceTab = getActiveChoiceTab(setting);
-            const nestedHeights = activeChoiceTab.setting.value.reduce<number>(
-                (height, nestedSetting) =>
-                    height + estimateSettingHeight(nestedSetting),
-                0,
-            );
-
-            return (
-                110 +
-                nestedHeights +
-                Math.max(0, activeChoiceTab.setting.value.length - 1) * 10
-            );
-        }
-
-        if (isChooseSetting(setting)) {
-            return 126;
-        }
-
-        if (isMultiChooseSetting(setting)) {
-            return 136 + Math.ceil(setting.choices.length / 4) * 28;
-        }
-
-        if (isMutableListSetting(setting)) {
-            return 92 + Math.max(1, setting.value.length) * 36;
-        }
-
-        if (isFileSetting(setting)) {
-            return 88;
-        }
-
-        if (isRegistryListSetting(setting)) {
-            return 322;
-        }
-
-        if (isCurveSetting(setting)) {
-            return 248;
-        }
-
-        if (isFloatSetting(setting) || isIntSetting(setting)) {
-            return 108;
-        }
-
-        if (isFloatRangeSetting(setting) || isIntRangeSetting(setting)) {
-            return 136;
-        }
-
-        if (isVec2Setting(setting)) {
-            return 84;
-        }
-
-        if (isVec3Setting(setting)) {
-            return 84;
-        }
-
-        if (isNestedSettingContainer(setting)) {
-            const nestedHeights = setting.value.reduce<number>(
-                (height, nestedSetting) =>
-                    height + estimateSettingHeight(nestedSetting),
-                0,
-            );
-
-            return (
-                54 +
-                nestedHeights +
-                Math.max(0, setting.value.length - 1) * 10
-            );
-        }
-
-        const valueLength = JSON.stringify(setting.value).length;
-        return 90 + Math.min(240, Math.ceil(valueLength / 42) * 18);
-    }
-
-    function readObservedBlockSize(
-        entry: ResizeObserverEntry,
-    ): number | null {
-        const borderBoxSize = entry.borderBoxSize as
-            | ResizeObserverSize
-            | readonly ResizeObserverSize[]
-            | undefined;
-
-        if (Array.isArray(borderBoxSize)) {
-            return borderBoxSize[0]?.blockSize ?? null;
-        }
-
-        const singleBorderBoxSize = borderBoxSize as
-            | ResizeObserverSize
-            | undefined;
-        if (singleBorderBoxSize !== undefined) {
-            return singleBorderBoxSize.blockSize;
-        }
-
-        return null;
-    }
-
-    function trackSettingHeight(node: HTMLElement, settingIndex: number) {
-        let activeIndex = settingIndex;
-        let resizeObserver: ResizeObserver | null = null;
-        let scheduledWriteFrame = 0;
-        let pendingHeight: number | null = null;
-
-        const commitHeight = (nextHeight: number) => {
-            if (settingHeights[activeIndex] === nextHeight) {
-                return;
-            }
-
-            settingHeights = {
-                ...settingHeights,
-                [activeIndex]: nextHeight,
-            };
-        };
-
-        const flushPendingHeight = () => {
-            scheduledWriteFrame = 0;
-            if (pendingHeight === null) {
-                return;
-            }
-
-            const nextHeight = pendingHeight;
-            pendingHeight = null;
-            commitHeight(nextHeight);
-        };
-
-        const scheduleWriteHeight = (nextHeight: number) => {
-            pendingHeight = nextHeight;
-
-            if (scheduledWriteFrame !== 0) {
-                return;
-            }
-
-            scheduledWriteFrame = requestAnimationFrame(flushPendingHeight);
-        };
-
-        const measureHeight = () => {
-            scheduleWriteHeight(Math.ceil(node.offsetHeight));
-        };
-
-        if (typeof ResizeObserver !== "undefined") {
-            resizeObserver = new ResizeObserver((entries) => {
-                const entry = entries[0];
-                const observedBlockSize =
-                    entry === undefined ? null : readObservedBlockSize(entry);
-
-                if (observedBlockSize === null) {
-                    measureHeight();
-                    return;
-                }
-
-                scheduleWriteHeight(Math.ceil(observedBlockSize));
-            });
-            resizeObserver.observe(node);
-        }
-
-        measureHeight();
-
-        return {
-            update(nextIndex: number) {
-                activeIndex = nextIndex;
-                measureHeight();
-            },
-            destroy() {
-                resizeObserver?.disconnect();
-                if (scheduledWriteFrame !== 0) {
-                    cancelAnimationFrame(scheduledWriteFrame);
-                    scheduledWriteFrame = 0;
-                }
-            },
-        };
-    }
-
-    function scrollbarHoverSurface(node: HTMLElement) {
-        const scrollbarAreaWidth = 14;
-
-        let lastPointerX = 0;
-        let pointerInsideSurface = false;
-        let rafId = 0;
-        let rectLeft = 0;
-        let rectRight = 0;
-        let rectDirty = true;
-
-        const hasVerticalOverflow = () => node.scrollHeight > node.clientHeight + 1;
-        const applyScrollState = () => {
-            node.classList.toggle("surface-scrolled", node.scrollTop > 0);
-        };
-        const refreshRect = () => {
-            const rect = node.getBoundingClientRect();
-            rectLeft = rect.left;
-            rectRight = rect.right;
-            rectDirty = false;
-        };
-
-        const applyState = () => {
-            rafId = 0;
-            applyScrollState();
-
-            if (!hasVerticalOverflow() || !pointerInsideSurface) {
-                node.classList.remove("scrollbar-strong");
-                return;
-            }
-
-            if (rectDirty) {
-                refreshRect();
-            }
-
-            const isInScrollbarArea =
-                lastPointerX >= rectRight - scrollbarAreaWidth &&
-                lastPointerX >= rectLeft &&
-                lastPointerX <= rectRight;
-
-            node.classList.toggle("scrollbar-strong", isInScrollbarArea);
-        };
-
-        const scheduleApplyState = () => {
-            if (rafId !== 0) {
-                return;
-            }
-
-            rafId = requestAnimationFrame(applyState);
-        };
-
-        const invalidateRect = () => {
-            rectDirty = true;
-            scheduleApplyState();
-        };
-
-        const onPointerEnter = (event: PointerEvent) => {
-            pointerInsideSurface = true;
-            lastPointerX = event.clientX;
-            invalidateRect();
-        };
-
-        const onPointerMove = (event: PointerEvent) => {
-            pointerInsideSurface = true;
-            lastPointerX = event.clientX;
-            scheduleApplyState();
-        };
-
-        const onPointerLeave = () => {
-            pointerInsideSurface = false;
-            node.classList.remove("scrollbar-strong");
-        };
-
-        const onScroll = () => {
-            applyScrollState();
-            scheduleApplyState();
-        };
-
-        const resizeObserver = new ResizeObserver(() => {
-            applyScrollState();
-            invalidateRect();
-        });
-        resizeObserver.observe(node);
-
-        applyScrollState();
-        scheduleApplyState();
-
-        window.addEventListener("resize", invalidateRect, { passive: true });
-        window.addEventListener("scroll", invalidateRect, {
-            passive: true,
-            capture: true,
-        });
-        node.addEventListener("pointerenter", onPointerEnter);
-        node.addEventListener("pointermove", onPointerMove);
-        node.addEventListener("pointerleave", onPointerLeave);
-        node.addEventListener("scroll", onScroll);
-
-        return {
-            destroy() {
-                resizeObserver.disconnect();
-                window.removeEventListener("resize", invalidateRect);
-                window.removeEventListener("scroll", invalidateRect, true);
-                node.removeEventListener("pointerenter", onPointerEnter);
-                node.removeEventListener("pointermove", onPointerMove);
-                node.removeEventListener("pointerleave", onPointerLeave);
-                node.removeEventListener("scroll", onScroll);
-
-                if (rafId !== 0) {
-                    cancelAnimationFrame(rafId);
-                }
-
-                node.classList.remove("scrollbar-strong");
-                node.classList.remove("surface-scrolled");
-            },
-        };
-    }
+        ),
+        onNumberChange: createSettingChangeHandler(
+            createNumberSettingMapper,
+            "Failed to update numeric setting.",
+        ),
+        onNumberRangeChange: createSettingChangeHandler(
+            createNumberRangeSettingMapper,
+            "Failed to update numeric range setting.",
+        ),
+        onVector2Change: createSettingChangeHandler(
+            createVector2SettingMapper,
+            "Failed to update vector setting.",
+        ),
+        onVector3Change: createSettingChangeHandler(
+            createVector3SettingMapper,
+            "Failed to update vector setting.",
+        ),
+    };
 </script>
 
 <div class="clickgui" style={clickGuiInlineStyle}>
-    <aside class="sidebar scroll-surface" use:scrollbarHoverSurface>
-        {#if !isDetailView}
-            <div class="search">
-                <input
-                    class="search-input"
-                    type="text"
-                    placeholder="Search"
-                    bind:value={searchQuery}
-                />
-            </div>
-        {/if}
+    <ClickGuiSidebar
+        {isDetailView}
+        bind:searchQuery
+        {selectedCategory}
+        {selectedCategoryModules}
+        {selectedThemeSettings}
+        {isSearching}
+        {filteredCategoryNames}
+        {filteredGrouped}
+        {categoryNames}
+        themeAccentColor={clickGuiThemePreferences.accentColor}
+        themeBaseColor={clickGuiThemePreferences.baseColor}
+        themeBackgroundColor={clickGuiThemePreferences.backgroundColor}
+        themeTextColor={clickGuiThemePreferences.textColor}
+        themeDimmedTextColor={clickGuiThemePreferences.dimmedTextColor}
+        themeSettingsColumnCount={settingsColumnCount}
+        {subsectionRevealOptions}
+        {moduleRevealItemOptions}
+        onOpenCategory={openCategory}
+        onOpenQuickSettings={openQuickSettings}
+        onOpenThemeSettings={openThemeSettings}
+        onCloseDetailView={closeDetailView}
+        onOpenModuleConfig={openModuleConfig}
+    />
 
-        {#if selectedCategory !== null}
-            <ClickGuiCategoryDetailView
-                {selectedCategory}
-                {selectedCategoryModules}
-                {subsectionRevealOptions}
-                {moduleRevealItemOptions}
-                onCloseDetailView={closeDetailView}
-                onOpenModuleConfig={openModuleConfig}
-            />
-        {:else if selectedThemeSettings}
-            <ClickGuiThemeDetailView
-                accentColor={clickGuiThemePreferences.accentColor}
-                baseColor={clickGuiThemePreferences.baseColor}
-                backgroundColor={clickGuiThemePreferences.backgroundColor}
-                textColor={clickGuiThemePreferences.textColor}
-                dimmedTextColor={clickGuiThemePreferences.dimmedTextColor}
-                settingsColumnCount={settingsSplitCount + 1}
-                {subsectionRevealOptions}
-                {moduleRevealItemOptions}
-                onCloseDetailView={closeDetailView}
-            />
-        {:else if isSearching}
-            <ClickGuiSearchView
-                {filteredCategoryNames}
-                {filteredGrouped}
-                {subsectionRevealOptions}
-                {moduleRevealItemOptions}
-                onOpenThemeSettings={openThemeSettings}
-                onOpenModuleConfig={openModuleConfig}
-            />
-        {:else}
-            <ClickGuiHomeView
-                {categoryNames}
-                {subsectionRevealOptions}
-                {moduleRevealItemOptions}
-                onOpenCategory={openCategory}
-                onOpenThemeSettings={openThemeSettings}
-                onOpenQuickSettings={openQuickSettings}
-            />
-        {/if}
-    </aside>
-
-    <section
-        class="main-content scroll-surface"
-        use:scrollbarHoverSurface
-        use:revealContainer={subsectionRevealOptions}
-    >
-        <div class="main-content-header">
-            <h2 class="main-content-title">{activeConfigTitle}</h2>
-
-            {#if activeConfigDescription.trim().length > 0}
-                <p class="main-content-description">
-                    {activeConfigDescription}
-                </p>
-            {/if}
-        </div>
-
-        {#if activeConfigPage.type === "module"}
-            <div class="main-content-search">
-                <input
-                    class="settings-search-input"
-                    type="text"
-                    placeholder="Search settings..."
-                />
-            </div>
-        {/if}
-
-        {#if activeConfigPage.type === "module" && activeConfigurable !== null}
-            <div class="settings-split-layout">
-                {#each settingsColumns as column, columnIndex (columnIndex)}
-                    <div class="settings-column">
-                        {#each column as item (item.settingIndex)}
-                            <div
-                                class="setting-entry-shell"
-                                use:trackSettingHeight={item.settingIndex}
-                            >
-                                <SettingEntry
-                                    setting={item.setting}
-                                    path={[item.settingIndex]}
-                                    revealItemOptions={moduleRevealItemOptions}
-                                    textInputRevealItemOptions={textInputRevealItemOptions}
-                                    onBooleanChange={onBooleanSettingChange}
-                                    onTextChange={onTextSettingChange}
-                                    onBindChange={onBindSettingChange}
-                                    onKeyChange={onKeySettingChange}
-                                    onColorChange={onColorSettingChange}
-                                    onChooseChange={onChooseSettingChange}
-                                    onChoiceChange={onChoiceSettingChange}
-                                    onMultiChooseChange={onMultiChooseSettingChange}
-                                    onMutableListChange={onMutableListSettingChange}
-                                    onFileChange={onFileSettingChange}
-                                    onRegistryListChange={onRegistryListSettingChange}
-                                    onCurveChange={onCurveSettingChange}
-                                    onNumberChange={onNumberSettingChange}
-                                    onNumberRangeChange={onNumberRangeSettingChange}
-                                    onVector2Change={onVector2SettingChange}
-                                    onVector3Change={onVector3SettingChange}
-                                />
-                            </div>
-                        {/each}
-                    </div>
-
-                    {#if columnIndex < settingsColumns.length - 1}
-                        <div class="settings-split" aria-hidden="true"></div>
-                    {/if}
-                {/each}
-            </div>
-        {:else if activeConfigPage.type === "theme-settings"}
-            <ClickGuiThemeSettingsContent
-                themePreferences={clickGuiThemePreferences}
-                themeLoadError={clickGuiThemeLoadError}
-                revealItemOptions={moduleRevealItemOptions}
-                {textInputRevealItemOptions}
-                onAccentColorChange={(accentColor) =>
-                    updateClickGuiThemePreference({ accentColor })}
-                onBaseColorChange={(baseColor) =>
-                    updateClickGuiThemePreference({ baseColor })}
-                onBackgroundColorChange={(backgroundColor) =>
-                    updateClickGuiThemePreference({ backgroundColor })}
-                onTextColorChange={(textColor) =>
-                    updateClickGuiThemePreference({ textColor })}
-                onDimmedTextColorChange={(dimmedTextColor) =>
-                    updateClickGuiThemePreference({ dimmedTextColor })}
-                onSettingsSplitCountChange={(nextSplitCount) =>
-                    updateClickGuiThemePreference({
-                        settingsSplitCount: nextSplitCount,
-                    })}
-                onApplyPreset={applyClickGuiThemePreset}
-                onResetToDefaults={resetClickGuiThemePreferences}
-            />
-        {:else if activeModuleLoadError !== null}
-            <div class="settings-error-state" role="alert" aria-live="polite">
-                <div class="settings-error-card">
-                    <h3 class="settings-error-title">Failed To Load Module Settings</h3>
-                    <p class="settings-error-message">{activeModuleLoadError}</p>
-                    <div class="settings-error-actions">
-                        <button
-                            class="setting-input-control settings-error-retry"
-                            type="button"
-                            onclick={retryActiveModuleConfigLoad}
-                        >
-                            <span class="reveal-press-content">Retry</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        {:else}
-            <pre>{activeConfigPayloadJson}</pre>
-        {/if}
-    </section>
+    <ClickGuiMainContent
+        {activeConfigPage}
+        {activeConfigTitle}
+        {activeConfigDescription}
+        {activeConfigLoading}
+        {activeConfigurable}
+        {activeModuleLoadError}
+        {settingsColumns}
+        {subsectionRevealOptions}
+        revealItemOptions={moduleRevealItemOptions}
+        {textInputRevealItemOptions}
+        {trackSettingHeight}
+        {settingHandlers}
+        {clickGuiThemePreferences}
+        clickGuiThemeLoadError={clickGuiThemeLoadError}
+        onRetryActiveModuleConfigLoad={retryActiveModuleConfigLoad}
+        onAccentColorChange={(accentColor) =>
+            updateClickGuiThemePreference({ accentColor })}
+        onBaseColorChange={(baseColor) =>
+            updateClickGuiThemePreference({ baseColor })}
+        onBackgroundColorChange={(backgroundColor) =>
+            updateClickGuiThemePreference({ backgroundColor })}
+        onTextColorChange={(textColor) =>
+            updateClickGuiThemePreference({ textColor })}
+        onDimmedTextColorChange={(dimmedTextColor) =>
+            updateClickGuiThemePreference({ dimmedTextColor })}
+        onSettingsSplitCountChange={(nextSplitCount) =>
+            updateClickGuiThemePreference({
+                settingsSplitCount: nextSplitCount,
+            })}
+        onApplyThemePreset={applyClickGuiThemePreset}
+        onResetThemeDefaults={resetClickGuiThemePreferences}
+    />
 </div>
 
 <style lang="scss">
-    @use "../../colors.scss" as *;
-
-    :global(.clickgui) {
-        --clickgui-accent-color: #{$accent-color};
+    .clickgui {
+        --clickgui-accent-color: #4677ff;
         --clickgui-accent-rgb: 70 119 255;
-        --clickgui-base-color: #{$clickgui-base-color};
+        --clickgui-base-color: #000000;
         --clickgui-base-rgb: 0 0 0;
-        --clickgui-text-color: #{$clickgui-text-color};
+        --clickgui-text-color: #ffffff;
         --clickgui-text-rgb: 255 255 255;
-        --clickgui-text-dimmed-color: #{$clickgui-text-dimmed-color};
+        --clickgui-text-dimmed-color: #d3d3d3;
         --clickgui-text-dimmed-rgb: 211 211 211;
         --clickgui-backdrop-color: rgb(var(--clickgui-base-rgb, 0 0 0) / 0.15);
         --clickgui-surface-color: rgb(var(--clickgui-base-rgb, 0 0 0) / 0.7);
@@ -1683,376 +670,17 @@
         background-color: var(--clickgui-backdrop-color);
     }
 
-    :global(.clickgui > .sidebar) {
-        display: flex;
-        flex-direction: column;
-        flex-shrink: 0;
-        height: 100%;
-        min-height: 0;
-        width: 210px;
-        background-color: var(--clickgui-surface-color);
-        color: var(--clickgui-text-color);
-        border-radius: 0;
-        padding: 10px;
-        gap: 12px;
-        box-shadow: 0 0 12px var(--clickgui-shadow-color);
-        overflow-x: hidden;
-        overflow-y: auto;
-    }
-
-    :global(.clickgui > .sidebar > .search) {
-        position: sticky;
-        top: 0;
-        z-index: 2;
-        background-color: transparent;
-        backdrop-filter: blur(0);
-        transition:
-            background-color 140ms ease,
-            backdrop-filter 140ms ease,
-            box-shadow 140ms ease;
-        padding-bottom: 8px;
-    }
-
-    :global(.clickgui > .sidebar > .search > .search-input) {
-        width: 100%;
-        padding: 8px 10px;
-        border-radius: 0;
-        border: 1px solid rgb(var(--clickgui-text-rgb, 255 255 255) / 0.2);
-        background-color: var(--clickgui-surface-strong-color);
-        color: var(--clickgui-text-color);
-        font-size: 13px;
-        outline: none;
-
-        &::placeholder {
-            color: var(--clickgui-text-dimmed-color);
-        }
-
-        &:focus {
-            border-color: var(--clickgui-accent-color);
-            box-shadow: 0 0 0 2px var(--clickgui-accent-color);
-        }
-    }
-
-    :global(.clickgui > .main-content) {
-        flex: 1;
-        min-width: 0;
-        height: 100%;
-        min-height: 0;
-        padding: 10px;
-        overflow-x: hidden;
-        overflow-y: auto;
-        color: var(--clickgui-text-color);
-    }
-
-    :global(.clickgui > .main-content .main-content-header) {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        margin-bottom: 10px;
-    }
-
-    :global(.clickgui > .main-content .main-content-search) {
-        position: sticky;
-        top: 0;
-        z-index: 2;
-        background-color: transparent;
-        backdrop-filter: blur(0);
-        transition:
-            background-color 140ms ease,
-            backdrop-filter 140ms ease,
-            box-shadow 140ms ease;
-        padding: 0 0 10px;
-        margin-bottom: 10px;
-    }
-
-    :global(.clickgui > .main-content .main-content-title) {
-        font-size: 20px;
-        font-weight: 600;
-        line-height: 1.1;
-    }
-
-    :global(.clickgui > .main-content .main-content-description) {
-        margin: 0;
-        font-size: 12px;
-        line-height: 1.4;
-        color: var(--clickgui-text-dimmed-color);
-    }
-
-    :global(.clickgui > .main-content .settings-search-input) {
-        width: 100%;
-        padding: 8px 10px;
-        border-radius: 0;
-        border: 1px solid rgb(var(--clickgui-text-rgb, 255 255 255) / 0.2);
-        background-color: var(--clickgui-surface-strong-color);
-        color: var(--clickgui-text-color);
-        font-size: 13px;
-        outline: none;
-
-        &::placeholder {
-            color: var(--clickgui-text-dimmed-color);
-        }
-
-        &:focus {
-            border-color: var(--clickgui-accent-color);
-            box-shadow: 0 0 0 2px var(--clickgui-accent-color);
-        }
-    }
-
-    :global(.clickgui > .sidebar.surface-scrolled > .search),
-    :global(.clickgui > .main-content.surface-scrolled .main-content-search) {
-        background-color: rgb(var(--clickgui-base-rgb, 0 0 0) / 0.72);
-        backdrop-filter: blur(12px) saturate(130%);
-        box-shadow: 0 8px 14px rgb(var(--clickgui-base-rgb, 0 0 0) / 0.35);
-    }
-
-    :global(.clickgui > .sidebar.surface-scrolled .category-back-shell) {
-        background:
-            linear-gradient(
-                180deg,
-                rgb(var(--clickgui-text-rgb, 255 255 255) / 0.18) 0%,
-                rgb(var(--clickgui-text-rgb, 255 255 255) / 0.07) 58%,
-                rgb(var(--clickgui-text-rgb, 255 255 255) / 0.03) 100%
-            ),
-            rgb(var(--clickgui-base-rgb, 0 0 0) / 0.94);
-        border-bottom-color: rgb(var(--clickgui-text-rgb, 255 255 255) / 0.34);
-        backdrop-filter: blur(14px) saturate(135%);
-        box-shadow: 0 12px 18px rgb(var(--clickgui-base-rgb, 0 0 0) / 0.52);
-    }
-
-    :global(.clickgui > .main-content .settings-split-layout) {
-        display: flex;
-        align-items: stretch;
-        gap: 10px;
-    }
-
-    :global(.clickgui > .main-content .settings-error-state) {
-        display: flex;
-        width: 100%;
-    }
-
-    :global(.clickgui > .main-content .settings-error-card) {
-        display: grid;
-        gap: 10px;
-        width: min(520px, 100%);
-        padding: 12px;
-        border: 1px solid rgb(var(--clickgui-text-rgb, 255 255 255) / 0.28);
-        background-color: rgb(var(--clickgui-base-rgb, 0 0 0) / 0.42);
-    }
-
-    :global(.clickgui > .main-content .settings-error-title) {
-        margin: 0;
-        font-size: 14px;
-        font-weight: 700;
-        letter-spacing: 0.03em;
-        color: var(--clickgui-text-color);
-    }
-
-    :global(.clickgui > .main-content .settings-error-message) {
-        margin: 0;
-        font-size: 12px;
-        line-height: 1.5;
-        color: rgb(var(--clickgui-text-dimmed-rgb, 211 211 211) / 0.96);
-        white-space: pre-wrap;
-    }
-
-    :global(.clickgui > .main-content .settings-error-actions) {
-        display: flex;
-    }
-
-    :global(.clickgui > .main-content .settings-error-retry) {
-        cursor: pointer;
-        --setting-control-padding-inline: 14px;
-        --setting-control-border-color: rgb(
-            var(--clickgui-text-rgb, 255 255 255) / 0.34
-        );
-        --setting-control-background-color: rgb(
-            var(--clickgui-text-rgb, 255 255 255) / 0.12
-        );
-    }
-
-    :global(.clickgui > .main-content .settings-error-retry > .reveal-press-content) {
-        font-size: 12px;
-        font-weight: 600;
-        letter-spacing: 0.03em;
-        color: rgb(var(--clickgui-text-dimmed-rgb, 211 211 211) / 0.96);
-    }
-
-    :global(.clickgui > .main-content .settings-error-retry:hover > .reveal-press-content) {
-        color: var(--clickgui-text-color);
-    }
-
-    :global(.clickgui > .main-content .settings-error-retry:focus-visible > .reveal-press-content) {
-        border-color: var(--clickgui-accent-color);
-        box-shadow: 0 0 0 1px var(--clickgui-accent-color);
-    }
-
-    :global(.clickgui > .main-content .settings-column) {
-        flex: 1;
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 0;
-    }
-
-    :global(.clickgui > .main-content .settings-split) {
-        width: 1px;
-        flex-shrink: 0;
-        background-color: rgb(var(--clickgui-text-rgb, 255 255 255) / 0.15);
-    }
-
-    :global(.clickgui > .main-content .settings-list) {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    :global(.clickgui > .main-content .setting-entry-shell) {
-        min-width: 0;
-        padding: 7px 0;
-    }
-
-    :global(.clickgui > .main-content .setting-entry-shell + .setting-entry-shell) {
-        border-top: 1px solid rgb(var(--clickgui-text-rgb, 255 255 255) / 0.16);
-    }
-
-    :global(.clickgui > .main-content .setting-entry) {
-        padding: 0;
-    }
-
-    :global(.clickgui > .main-content .setting-entry.setting-entry--configurable) {
-        border: 1px solid rgb(var(--clickgui-text-rgb, 255 255 255) / 0.14);
-        padding: 10px;
-        background-color: rgb(var(--clickgui-text-rgb, 255 255 255) / 0.05);
-    }
-
-    :global(.clickgui > .main-content .setting-header) {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 8px;
-        margin-bottom: 8px;
-        min-width: 0;
-    }
-
-    :global(.clickgui > .main-content .setting-entry.inline-control-setting-entry .setting-header) {
-        margin-bottom: 0;
-        padding-bottom: 0;
-        border-bottom: 0;
-    }
-
-    :global(.clickgui > .main-content .setting-entry.setting-entry--configurable .setting-children) {
-        display: flex;
-        flex-direction: column;
-        gap: 0;
-    }
-
-    :global(
-        .clickgui > .main-content .setting-entry.setting-entry--configurable .setting-children > .setting-entry:not(.setting-entry--configurable)
-    ) {
-        padding: 6px 0;
-    }
-
-    :global(
-        .clickgui > .main-content .setting-entry.setting-entry--configurable .setting-children > .setting-entry + .setting-entry
-    ) {
-        border-top: 1px solid rgb(var(--clickgui-text-rgb, 255 255 255) / 0.16);
-    }
-
-    :global(.clickgui > .main-content .setting-selection-summary) {
-        font-size: 11px;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
-        color: rgb(var(--clickgui-text-dimmed-rgb, 211 211 211) / 0.86);
-        white-space: nowrap;
-        flex-shrink: 0;
-    }
-
-    :global(.clickgui > .main-content .setting-input-shell) {
-        display: inline-flex;
-    }
-
-    :global(.clickgui > .main-content .setting-input-shell--block) {
-        display: flex;
-        width: 100%;
-    }
-
-    :global(.clickgui > .main-content :where(.setting-input-control)) {
-        display: inline-flex;
-        padding: 0;
-        border: 0;
-        background: transparent;
-        color: inherit;
-        min-width: 0;
-    }
-
-    :global(
-        .clickgui > .main-content :where(.setting-input-control) > :where(.reveal-press-content)
-    ) {
-        display: inline-flex;
-        align-items: center;
-        justify-content: var(--setting-control-justify-content, center);
-        width: var(--setting-control-content-width, auto);
-        min-width: var(--setting-control-min-width, 66px);
-        height: var(--setting-control-height, 24px);
-        padding: 0 var(--setting-control-padding-inline, 10px);
-        border: 1px solid
-            var(
-                --setting-control-border-color,
-                rgb(var(--clickgui-text-rgb, 255 255 255) / 0.32)
-            );
-        border-radius: var(--setting-control-border-radius, 0);
-        background-color: var(
-            --setting-control-background-color,
-            rgb(var(--clickgui-text-rgb, 255 255 255) / 0.14)
-        );
-        box-shadow: var(
-            --setting-control-box-shadow,
-            0 0 0 0 var(--clickgui-accent-color)
-        );
-        transition:
-            background-color 120ms ease,
-            border-color 120ms ease,
-            box-shadow 120ms ease;
-    }
-
-    :global(.clickgui > .main-content :where(.setting-input-control--block)) {
-        width: 100%;
-        --setting-control-content-width: 100%;
-        --setting-control-justify-content: flex-start;
-        --setting-control-padding-inline: 0;
-    }
-
-    :global(.clickgui > .main-content .setting-input-text) {
-        width: 100%;
-        min-width: 0;
-        height: 24px;
-        padding: 0 10px;
-        border: 0;
-        outline: none;
-        background: transparent;
-        color: var(--clickgui-text-color);
-        caret-color: currentColor;
-        font-family: inherit;
-        font-size: 12px;
-        line-height: 1;
-    }
-
-    :global(.clickgui > .main-content .setting-input-text::placeholder) {
-        color: rgb(var(--clickgui-text-dimmed-rgb, 211 211 211) / 0.9);
-    }
-
-    :global(.clickgui .scroll-surface) {
+    .clickgui :global(.scroll-surface) {
         scrollbar-gutter: stable;
         scrollbar-width: thin;
         scrollbar-color: transparent transparent;
     }
 
-    :global(.clickgui .scroll-surface:hover) {
+    .clickgui :global(.scroll-surface:hover) {
         scrollbar-color: rgb(var(--clickgui-text-rgb, 255 255 255) / 0.36) transparent;
     }
 
-    :global(.clickgui .scroll-surface.scrollbar-strong:hover) {
+    .clickgui :global(.scroll-surface.scrollbar-strong:hover) {
         scrollbar-color: rgb(var(--clickgui-text-rgb, 255 255 255) / 0.56) transparent;
     }
-
 </style>

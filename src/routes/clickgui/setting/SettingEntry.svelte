@@ -2,17 +2,13 @@
     import type {
         CurveSetting,
         FileSetting,
-        InputBind,
         BooleanSetting,
         FloatRangeSetting,
         FloatSetting,
         IntRangeSetting,
         IntSetting,
-        Range,
         ModuleSetting,
-        Vec2,
         Vec2Setting,
-        Vec3,
         Vec3Setting,
     } from "../../../integration/types";
     import type { RevealItemOptions } from "fluent-reveal-svelte";
@@ -33,6 +29,10 @@
     import TextSettingControl from "./TextSettingControl.svelte";
     import Vec2SettingControl from "./Vec2SettingControl.svelte";
     import Vector3SettingControl from "./Vector3SettingControl.svelte";
+    import {
+        resolveClickGuiSettingHandlers,
+        type ClickGuiSettingHandlers,
+    } from "./clickGuiSettingHandlers";
     import {
         getActiveChoiceTab,
         getChoiceContentKey,
@@ -67,111 +67,17 @@
         path?: number[];
         revealItemOptions: RevealItemOptions;
         textInputRevealItemOptions: RevealItemOptions;
-        onBooleanChange?: (
-            path: number[],
-            checked: boolean,
-        ) => void | Promise<void>;
-        onTextChange?: (
-            path: number[],
-            value: string,
-        ) => void | Promise<void>;
-        onBindChange?: (
-            path: number[],
-            value: InputBind,
-        ) => void | Promise<void>;
-        onKeyChange?: (
-            path: number[],
-            value: string,
-        ) => void | Promise<void>;
-        onColorChange?: (
-            path: number[],
-            value: number,
-        ) => void | Promise<void>;
-        onChooseChange?: (
-            path: number[],
-            value: string,
-        ) => void | Promise<void>;
-        onChoiceChange?: (
-            path: number[],
-            value: string,
-        ) => void | Promise<void>;
-        onMultiChooseChange?: (
-            path: number[],
-            values: string[],
-        ) => void | Promise<void>;
-        onMutableListChange?: (
-            path: number[],
-            values: string[],
-        ) => void | Promise<void>;
-        onFileChange?: (
-            path: number[],
-            value: string,
-        ) => void | Promise<void>;
-        onRegistryListChange?: (
-            path: number[],
-            values: string[],
-        ) => void | Promise<void>;
-        onCurveChange?: (
-            path: number[],
-            values: Vec2[],
-        ) => void | Promise<void>;
-        onNumberChange?: (
-            path: number[],
-            value: number,
-        ) => void | Promise<void>;
-        onNumberRangeChange?: (
-            path: number[],
-            value: Range,
-        ) => void | Promise<void>;
-        onVector2Change?: (
-            path: number[],
-            value: Vec2,
-        ) => void | Promise<void>;
-        onVector3Change?: (
-            path: number[],
-            value: Vec3,
-        ) => void | Promise<void>;
+        handlers?: ClickGuiSettingHandlers;
     }
-
-    const defaultBooleanChange = (_path: number[], _checked: boolean) => {};
-    const defaultTextChange = (_path: number[], _value: string) => {};
-    const defaultBindChange = (_path: number[], _value: InputBind) => {};
-    const defaultKeyChange = (_path: number[], _value: string) => {};
-    const defaultColorChange = (_path: number[], _value: number) => {};
-    const defaultChooseChange = (_path: number[], _value: string) => {};
-    const defaultChoiceChange = (_path: number[], _value: string) => {};
-    const defaultMultiChooseChange = (_path: number[], _values: string[]) => {};
-    const defaultMutableListChange = (_path: number[], _values: string[]) => {};
-    const defaultFileChange = (_path: number[], _value: string) => {};
-    const defaultRegistryListChange = (_path: number[], _values: string[]) => {};
-    const defaultCurveChange = (_path: number[], _values: Vec2[]) => {};
-    const defaultNumberChange = (_path: number[], _value: number) => {};
-    const defaultNumberRangeChange = (_path: number[], _value: Range) => {};
-    const defaultVector2Change = (_path: number[], _value: Vec2) => {};
-    const defaultVector3Change = (_path: number[], _value: Vec3) => {};
 
     let {
         setting,
         path = [],
         revealItemOptions,
         textInputRevealItemOptions,
-        onBooleanChange = defaultBooleanChange,
-        onTextChange = defaultTextChange,
-        onBindChange = defaultBindChange,
-        onKeyChange = defaultKeyChange,
-        onColorChange = defaultColorChange,
-        onChooseChange = defaultChooseChange,
-        onChoiceChange = defaultChoiceChange,
-        onMultiChooseChange = defaultMultiChooseChange,
-        onMutableListChange = defaultMutableListChange,
-        onFileChange = defaultFileChange,
-        onRegistryListChange = defaultRegistryListChange,
-        onCurveChange = defaultCurveChange,
-        onNumberChange = defaultNumberChange,
-        onNumberRangeChange = defaultNumberRangeChange,
-        onVector2Change = defaultVector2Change,
-        onVector3Change = defaultVector3Change,
+        handlers,
     }: Props = $props();
+    const resolvedHandlers = $derived(resolveClickGuiSettingHandlers(handlers));
 
     const childSettings = $derived(
         isNestedSettingContainer(setting) ? setting.value : [],
@@ -359,31 +265,36 @@
             <BooleanSettingControl
                 {setting}
                 revealItemOptions={revealItemOptions}
-                onChange={(checked) => onBooleanChange(path, checked)}
+                onChange={(checked) =>
+                    resolvedHandlers.onBooleanChange(path, checked)}
             />
         {:else if isTextSetting(setting)}
             <TextSettingControl
                 {setting}
                 revealItemOptions={textInputRevealItemOptions}
-                onChange={(nextValue) => onTextChange(path, nextValue)}
+                onChange={(nextValue) =>
+                    resolvedHandlers.onTextChange(path, nextValue)}
             />
         {:else if isBindSetting(setting)}
             <BindSettingControl
                 {setting}
                 revealItemOptions={revealItemOptions}
-                onChange={(nextValue) => onBindChange(path, nextValue)}
+                onChange={(nextValue) =>
+                    resolvedHandlers.onBindChange(path, nextValue)}
             />
         {:else if isKeySetting(setting)}
             <KeySettingControl
                 {setting}
                 revealItemOptions={revealItemOptions}
-                onChange={(nextValue) => onKeyChange(path, nextValue)}
+                onChange={(nextValue) =>
+                    resolvedHandlers.onKeyChange(path, nextValue)}
             />
         {:else if isColorSetting(setting)}
             <ColorSettingControl
                 {setting}
                 revealItemOptions={revealItemOptions}
-                onChange={(nextValue) => onColorChange(path, nextValue)}
+                onChange={(nextValue) =>
+                    resolvedHandlers.onColorChange(path, nextValue)}
             />
         {:else if isChoiceSetting(setting)}
             <span class="setting-selection-summary">
@@ -453,7 +364,7 @@
                         setting={enabledChildSetting.setting}
                         revealItemOptions={revealItemOptions}
                         onChange={(checked) =>
-                            onBooleanChange(
+                            resolvedHandlers.onBooleanChange(
                                 childPath(enabledChildSetting.childIndex),
                                 checked,
                             )}
@@ -469,7 +380,8 @@
         <ChoiceSettingControl
             setting={setting}
             revealItemOptions={revealItemOptions}
-            onChange={(nextChoice: string) => onChoiceChange(path, nextChoice)}
+            onChange={(nextChoice: string) =>
+                resolvedHandlers.onChoiceChange(path, nextChoice)}
         />
 
         {#if activeChoiceTab !== null}
@@ -501,7 +413,7 @@
                                     setting={choiceEnabledChildSetting.setting}
                                     revealItemOptions={revealItemOptions}
                                     onChange={(checked) =>
-                                        onBooleanChange(
+                                        resolvedHandlers.onBooleanChange(
                                             childPath(choiceEnabledChildSetting.childIndex),
                                             checked,
                                         )}
@@ -522,22 +434,7 @@
                                     path={childPath(childSetting.childIndex)}
                                     {revealItemOptions}
                                     {textInputRevealItemOptions}
-                                    {onBooleanChange}
-                                    {onTextChange}
-                                    {onBindChange}
-                                    {onKeyChange}
-                                    {onColorChange}
-                                    {onChooseChange}
-                                    {onChoiceChange}
-                                    {onMultiChooseChange}
-                                    {onMutableListChange}
-                                    {onFileChange}
-                                    {onRegistryListChange}
-                                    {onCurveChange}
-                                    {onNumberChange}
-                                    {onNumberRangeChange}
-                                    {onVector2Change}
-                                    {onVector3Change}
+                                    handlers={resolvedHandlers}
                                 />
                             {/each}
                         </div>
@@ -549,63 +446,73 @@
         <ChooseSettingControl
             {setting}
             revealItemOptions={revealItemOptions}
-            onChange={(nextChoice) => onChooseChange(path, nextChoice)}
+            onChange={(nextChoice) =>
+                resolvedHandlers.onChooseChange(path, nextChoice)}
         />
     {:else if isMultiChooseSetting(setting)}
         <MultiChooseSettingControl
             {setting}
             revealItemOptions={revealItemOptions}
-            onChange={(nextChoices) => onMultiChooseChange(path, nextChoices)}
+            onChange={(nextChoices) =>
+                resolvedHandlers.onMultiChooseChange(path, nextChoices)}
         />
     {:else if isMutableListSetting(setting)}
         <MutableListSettingControl
             {setting}
             textInputRevealItemOptions={textInputRevealItemOptions}
             actionRevealItemOptions={revealItemOptions}
-            onChange={(nextValues) => onMutableListChange(path, nextValues)}
+            onChange={(nextValues) =>
+                resolvedHandlers.onMutableListChange(path, nextValues)}
         />
     {:else if isFileSetting(setting)}
         <FileSettingControl
             {setting}
             revealItemOptions={revealItemOptions}
-            onChange={(nextValue) => onFileChange(path, nextValue)}
+            onChange={(nextValue) =>
+                resolvedHandlers.onFileChange(path, nextValue)}
         />
     {:else if isRegistryListSetting(setting)}
         <RegistryListSettingControl
             {setting}
             revealItemOptions={revealItemOptions}
             textInputRevealItemOptions={textInputRevealItemOptions}
-            onChange={(nextValues) => onRegistryListChange(path, nextValues)}
+            onChange={(nextValues) =>
+                resolvedHandlers.onRegistryListChange(path, nextValues)}
         />
     {:else if isCurveSetting(setting)}
         <CurveSettingControl
             {setting}
             revealItemOptions={revealItemOptions}
-            onChange={(nextValues) => onCurveChange(path, nextValues)}
+            onChange={(nextValues) =>
+                resolvedHandlers.onCurveChange(path, nextValues)}
         />
     {:else if isFloatSetting(setting) || isIntSetting(setting)}
         <NumberSettingControl
             setting={setting}
             textInputRevealItemOptions={textInputRevealItemOptions}
-            onChange={(nextValue) => onNumberChange(path, nextValue)}
+            onChange={(nextValue) =>
+                resolvedHandlers.onNumberChange(path, nextValue)}
         />
     {:else if isFloatRangeSetting(setting) || isIntRangeSetting(setting)}
         <NumberRangeSettingControl
             setting={setting}
             textInputRevealItemOptions={textInputRevealItemOptions}
-            onChange={(nextValue) => onNumberRangeChange(path, nextValue)}
+            onChange={(nextValue) =>
+                resolvedHandlers.onNumberRangeChange(path, nextValue)}
         />
     {:else if isVec2Setting(setting)}
         <Vec2SettingControl
             {setting}
             textInputRevealItemOptions={textInputRevealItemOptions}
-            onChange={(nextValue) => onVector2Change(path, nextValue)}
+            onChange={(nextValue) =>
+                resolvedHandlers.onVector2Change(path, nextValue)}
         />
     {:else if isVec3Setting(setting)}
         <Vector3SettingControl
             {setting}
             textInputRevealItemOptions={textInputRevealItemOptions}
-            onChange={(nextValue) => onVector3Change(path, nextValue)}
+            onChange={(nextValue) =>
+                resolvedHandlers.onVector3Change(path, nextValue)}
         />
     {:else if hasConfigurableChildContent}
         <div class="setting-children">
@@ -615,22 +522,7 @@
                     path={childPath(childSetting.childIndex)}
                     {revealItemOptions}
                     {textInputRevealItemOptions}
-                    {onBooleanChange}
-                    {onTextChange}
-                    {onBindChange}
-                    {onKeyChange}
-                    {onColorChange}
-                    {onChooseChange}
-                    {onChoiceChange}
-                    {onMultiChooseChange}
-                    {onMutableListChange}
-                    {onFileChange}
-                    {onRegistryListChange}
-                    {onCurveChange}
-                    {onNumberChange}
-                    {onNumberRangeChange}
-                    {onVector2Change}
-                    {onVector3Change}
+                    handlers={resolvedHandlers}
                 />
             {/each}
         </div>

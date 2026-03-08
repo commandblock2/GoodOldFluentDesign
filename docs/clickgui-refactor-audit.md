@@ -4,7 +4,7 @@
 
 1. Scope is `src/routes/clickgui` and direct style dependencies.
 2. Current goal is a clean, debt-free style baseline before adding more controls.
-3. `Theme Settings` implementation is intentionally deferred.
+3. `Theme Settings` is implemented. The main incomplete UX items are settings search filtering and full row-action parity with `docs/clickgui-ux.md`.
 
 ## Why Priority Changed
 
@@ -53,52 +53,44 @@
 ## How CSS Is Applied
 
 1. Global app reset and base font are from `src/app.scss`.
-2. ClickGUI layout/state styles are written via many `:global(.clickgui ...)` selectors in `src/routes/clickgui/ClickGui.svelte`.
-3. View-level styles (`src/routes/clickgui/views/*.svelte`) are mostly scoped via Svelte style hashing.
-4. Shared mixins in `src/routes/clickgui/views/shared.scss` are scoped when included, except one deliberate global reveal overlay rule:
+2. `src/routes/clickgui/ClickGui.svelte` now owns only the root shell, theme variables, and shared scrollbar styling.
+3. Layout/state styles are split between:
+   - `src/routes/clickgui/ClickGuiSidebar.svelte`
+   - `src/routes/clickgui/ClickGuiMainContent.svelte`
+4. View-level styles (`src/routes/clickgui/views/*.svelte`) are mostly scoped via Svelte style hashing.
+5. Shared mixins in `src/routes/clickgui/views/shared.scss` are scoped when included, except one deliberate global reveal overlay rule:
    - `:global(.clickgui .item-list.reveal-container .reveal-item)::before`
 
 ## CSS Debt and Bleed Risk (Rechecked)
 
 ### Confirmed
 
-1. Parent-level global selector controls generic child internals:
-   - `.setting-input-control > .reveal-press-content` base styling in `ClickGui.svelte`.
-   - Child setting components must fight this with higher specificity.
-2. This is the exact pattern that caused the `!important` incident and follow-up specificity workaround.
-3. There is dead style surface that increases ambiguity:
-   - `.settings-list` selector exists but no active markup uses it.
+1. The main selector-breadth issue was the parent route owning generic child internals.
+2. That debt is now reduced:
+   - root shell styles stay in `ClickGui.svelte`
+   - setting-control base styles live under the main-content boundary in `ClickGuiMainContent.svelte`
+   - sidebar scroll/sticky styling lives in `ClickGuiSidebar.svelte`
+3. Dead `.settings-list` style surface has been removed.
 
 ### Current bleed assessment
 
 1. I do not see confirmed leakage to non-ClickGUI routes right now.
-2. The real issue is broad global selectors inside ClickGUI applying to more descendants than intended.
+2. Remaining risk is now mostly within ClickGUI itself:
+   - shared descendant styling in the main-content subtree still needs discipline
+   - the deliberate reveal overlay global in `views/shared.scss` should stay documented
 
 ## Re-Prioritized Backlog
 
-### P0 (Do first, debt-free baseline)
-
-1. CSS boundary cleanup:
-   - reduce broad `:global(.clickgui ... descendant ...)` usage
-   - move shared control base styles into explicit utility classes, not generic descendant selectors
-2. Remove parent-overrides-child styling pattern for setting controls.
-3. Delete dead selectors and unused style hooks.
-4. Keep current visuals, but make cascade predictable without `!important`.
-
-### P1 (After P0)
+### P1 (Next)
 
 1. Wire settings search input (currently visual only).
-2. Add explicit loading/error view state for initial module fetch.
-3. Split style-heavy concerns from `ClickGui.svelte` into clearer modules/files.
+2. Align module row actions fully with `docs/clickgui-ux.md`.
+3. Decide whether the current lightweight empty/loading state cards are sufficient or should be expanded further.
 
 ### P2 (Feature completion after clean baseline)
 
 1. Add deferred explanations for separated setting modules in documentation/UX copy (not implemented in this pass).
-2. Align module row actions fully with `docs/clickgui-ux.md`.
-
-### P3 (Intentionally deferred)
-
-1. `Theme Settings` implementation.
+2. Review whether unsupported `BLOCKS` / `ITEM_LIST` settings should stay on JSON fallback or get native controls.
 
 ## Definition of "Debt-Free Enough" Before New Controls
 
@@ -176,11 +168,35 @@
      - `onRegistryListSettingChange`
      - `onCurveSettingChange`
 
+## Recent Progress Update (2026-03-08)
+
+1. Split the old monolithic `ClickGui.svelte` route shell into focused boundaries:
+   - `ClickGuiSidebar.svelte`
+   - `ClickGuiMainContent.svelte`
+   - pure setting helpers under `src/routes/clickgui/setting/`
+2. Extracted pure setting mutation/layout logic:
+   - recursive setting tree updates
+   - numeric/vector/curve normalization
+   - balanced settings-column layout
+3. Simplified recursive setting rendering API:
+   - `SettingEntry.svelte` now receives one typed `handlers` object instead of threading many separate callbacks
+4. Added explicit main-content states in place of raw debug payload output:
+   - loading state for module fetch
+   - empty/select-a-module state
+   - quick-settings placeholder card
+5. Top-level module settings display now explicitly prioritizes `Enabled` and keybind-related controls near the top, instead of depending on backend order.
+
+## Confirmed Doc/Code Mismatches (2026-03-08)
+
+1. `docs/clickgui-refactor-audit.md` previously said `Theme Settings` was deferred, but the code already had a working theme detail/settings flow. This document now reflects the code.
+2. `docs/clickgui-ux.md` specifies dual row actions and a persistent row-click preference (`Open Config` vs `Toggle Module`). Current sidebar/search rows still only open config; there is no secondary quick-toggle control or stored preference yet.
+3. `docs/clickgui-ux.md` requires real settings search behavior. The main-content settings search input is still visual-only.
+
 ## Current Debt Notes After This Pass
 
-1. ClickGUI now has less vendor-specific style surface in core layout files.
-2. Main remaining debt is still selector breadth in `ClickGui.svelte` (global descendant style ownership).
-3. Behavior for settings search is still visual-only; filtering is not yet wired.
+1. ClickGUI now has a cleaner separation between shell, sidebar, main content, and pure setting logic.
+2. Behavior for settings search is still visual-only; filtering is not yet wired.
+3. Module row action UX is still behind the documented target.
 4. Reveal host/item sizing pitfalls are now documented in:
    - `docs/clickgui-reveal-border-alignment.md`
 
