@@ -140,9 +140,13 @@
     }
 
     .mutable-list-action {
-        --reveal-focus-color: #{$accent-color};
-        --setting-control-border-color: #{rgba($clickgui-text-color, 0.34)};
-        --setting-control-background-color: #{rgba($clickgui-text-color, 0.12)};
+        --reveal-focus-color: var(--clickgui-accent-color, #{$accent-color});
+        --setting-control-border-color: rgb(
+            var(--clickgui-text-rgb, 255 255 255) / 0.34
+        );
+        --setting-control-background-color: rgb(
+            var(--clickgui-text-rgb, 255 255 255) / 0.12
+        );
     }
 
     .mutable-list-item-action-shell,

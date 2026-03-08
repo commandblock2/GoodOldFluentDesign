@@ -414,16 +414,25 @@
 
     .bind-setting-control {
         cursor: pointer;
-        --reveal-focus-color: #{$accent-color};
-        --setting-control-border-color: #{rgba($clickgui-text-color, 0.36)};
-        --setting-control-background-color: #{rgba($clickgui-text-color, 0.18)};
+        --reveal-focus-color: var(--clickgui-accent-color, #{$accent-color});
+        --setting-control-border-color: rgb(
+            var(--clickgui-text-rgb, 255 255 255) / 0.36
+        );
+        --setting-control-background-color: rgb(
+            var(--clickgui-text-rgb, 255 255 255) / 0.18
+        );
         --setting-control-padding-inline: 10px;
         --setting-control-min-width: 108px;
     }
 
     .bind-setting-control.bind-setting-control--listening {
-        --setting-control-border-color: #{$accent-color};
-        --setting-control-background-color: #{rgba($accent-color, 0.2)};
+        --setting-control-border-color: var(
+            --clickgui-accent-color,
+            #{$accent-color}
+        );
+        --setting-control-background-color: rgb(
+            var(--clickgui-accent-rgb, 70 119 255) / 0.2
+        );
     }
 
     .bind-setting-display {

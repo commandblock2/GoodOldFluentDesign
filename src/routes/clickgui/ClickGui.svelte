@@ -26,11 +26,22 @@
     import ClickGuiHomeView from "./views/ClickGuiHomeView.svelte";
     import ClickGuiSearchView from "./views/ClickGuiSearchView.svelte";
     import ClickGuiThemeDetailView from "./views/ClickGuiThemeDetailView.svelte";
+    import ClickGuiThemeSettingsContent from "./views/ClickGuiThemeSettingsContent.svelte";
     import {
         getPersistedClickGuiState,
         setPersistedClickGuiState,
         type ClickGuiActivePageState,
     } from "./clickGuiSessionState";
+    import {
+        buildClickGuiThemeInlineStyle,
+        defaultClickGuiThemePreferences,
+        hexColorToRgbChannels,
+        persistClickGuiThemePreferences,
+        readStoredClickGuiThemePreferences,
+        validateClickGuiThemePreferences,
+        type ClickGuiThemePreferences,
+        type ClickGuiThemePreset,
+    } from "./clickGuiThemePreferences";
     import SettingEntry from "./setting/SettingEntry.svelte";
     import {
         assertChoiceExists,
@@ -76,40 +87,52 @@
     let activeConfigError = $state<string | null>(null);
     let activeConfigLoading = $state(false);
     let moduleSettingsRequestId = 0;
-    // TODO: wire this from theme settings.
     let settingsSplitCount = $state(1);
+    let clickGuiThemePreferences = $state<ClickGuiThemePreferences>({
+        ...defaultClickGuiThemePreferences,
+    });
+    let clickGuiThemeLoadError = $state<string | null>(null);
     let settingHeights = $state<Record<number, number>>({});
     let settingHeightsSignature = "";
     const CURVE_ENDPOINT_EPSILON = 1e-9;
 
     const sortByName = (a: string, b: string) => a.localeCompare(b);
 
-    const subsectionRevealOptions: RevealContainerOptions = {
+    const clickGuiTextRgbChannels = $derived(
+        hexColorToRgbChannels(clickGuiThemePreferences.textColor),
+    );
+    const clickGuiAccentRgbChannels = $derived(
+        hexColorToRgbChannels(clickGuiThemePreferences.accentColor),
+    );
+    const clickGuiInlineStyle = $derived(
+        buildClickGuiThemeInlineStyle(clickGuiThemePreferences),
+    );
+    const subsectionRevealOptions = $derived({
         border: {
             radius: 48,
-            color: "rgba(255,255,255,0.6)",
+            color: `rgb(${clickGuiTextRgbChannels} / 0.6)`,
             fadeStopPct: 100,
             transitionMs: 120,
         },
         hover: {
-            color: "rgba(255,255,255,0.3)",
+            color: `rgb(${clickGuiTextRgbChannels} / 0.3)`,
         },
         focus: {
             enabled: true,
-            color: "rgba(255,255,255,0.62)",
+            color: `rgb(${clickGuiAccentRgbChannels} / 0.76)`,
             widthPx: 1,
             offsetPx: 2,
             glowPx: 10,
         },
         click: {
-            color: "rgba(255,255,255,0.3)",
+            color: `rgb(${clickGuiTextRgbChannels} / 0.24)`,
             ripple: {
                 enabled: true,
                 durationMs: 1000,
                 sizePx: 48,
             },
         },
-    };
+    } satisfies RevealContainerOptions);
 
     const moduleRevealItemOptions: RevealItemOptions = {
         border: true,
@@ -180,12 +203,17 @@
                 ? "Theme Settings"
                 : "Click GUI",
     );
-    const activeModuleDescription = $derived(
-        activeConfigPage.type !== "module" || activeConfigPage.moduleName === null
-            ? ""
-            : modules.find(
-                  (module) => module.name === activeConfigPage.moduleName,
-              )?.description ?? "",
+    const activeConfigDescription = $derived(
+        activeConfigPage.type === "theme-settings"
+            ? "Adjust Click GUI accent, contrast, and module settings layout."
+            : activeConfigPage.type === "quick-settings"
+              ? "Quick settings are not wired yet."
+              : activeConfigPage.type !== "module" ||
+                  activeConfigPage.moduleName === null
+                ? ""
+                : modules.find(
+                      (module) => module.name === activeConfigPage.moduleName,
+                  )?.description ?? "",
     );
     const activeModuleLoadError = $derived(
         activeConfigPage.type === "module" &&
@@ -258,6 +286,7 @@
     });
 
     onMount(async () => {
+        restoreClickGuiThemePreferences();
         modules = await getModules();
         categories = groupByCategory(modules);
 
@@ -369,6 +398,65 @@
     function closeDetailView() {
         selectedCategory = null;
         selectedThemeSettings = false;
+    }
+
+    function restoreClickGuiThemePreferences() {
+        try {
+            const restoredPreferences = readStoredClickGuiThemePreferences();
+            clickGuiThemePreferences = restoredPreferences;
+            settingsSplitCount = restoredPreferences.settingsSplitCount;
+            clickGuiThemeLoadError = null;
+        } catch (error) {
+            clickGuiThemePreferences = { ...defaultClickGuiThemePreferences };
+            settingsSplitCount = defaultClickGuiThemePreferences.settingsSplitCount;
+            clickGuiThemeLoadError =
+                error instanceof Error
+                    ? error.message
+                    : "Failed to restore ClickGUI theme preferences.";
+        }
+    }
+
+    async function applyClickGuiThemePreferences(
+        nextPreferences: ClickGuiThemePreferences,
+    ) {
+        const validatedPreferences =
+            validateClickGuiThemePreferences(nextPreferences);
+        const previousPreferences = clickGuiThemePreferences;
+        const previousSplitCount = settingsSplitCount;
+
+        clickGuiThemePreferences = validatedPreferences;
+        settingsSplitCount = validatedPreferences.settingsSplitCount;
+        clickGuiThemeLoadError = null;
+
+        try {
+            await persistClickGuiThemePreferences(validatedPreferences);
+        } catch (error) {
+            clickGuiThemePreferences = previousPreferences;
+            settingsSplitCount = previousSplitCount;
+            clickGuiThemeLoadError =
+                error instanceof Error
+                    ? error.message
+                    : "Failed to persist ClickGUI theme preferences.";
+        }
+    }
+
+    async function updateClickGuiThemePreference(
+        patch: Partial<ClickGuiThemePreferences>,
+    ) {
+        await applyClickGuiThemePreferences({
+            ...clickGuiThemePreferences,
+            ...patch,
+        });
+    }
+
+    async function applyClickGuiThemePreset(preset: ClickGuiThemePreset) {
+        await applyClickGuiThemePreferences(preset);
+    }
+
+    async function resetClickGuiThemePreferences() {
+        await applyClickGuiThemePreferences({
+            ...defaultClickGuiThemePreferences,
+        });
     }
 
     async function openModuleConfig(module: Module) {
@@ -1403,7 +1491,7 @@
     }
 </script>
 
-<div class="clickgui">
+<div class="clickgui" style={clickGuiInlineStyle}>
     <aside class="sidebar scroll-surface" use:scrollbarHoverSurface>
         {#if !isDetailView}
             <div class="search">
@@ -1427,6 +1515,12 @@
             />
         {:else if selectedThemeSettings}
             <ClickGuiThemeDetailView
+                accentColor={clickGuiThemePreferences.accentColor}
+                baseColor={clickGuiThemePreferences.baseColor}
+                backgroundColor={clickGuiThemePreferences.backgroundColor}
+                textColor={clickGuiThemePreferences.textColor}
+                dimmedTextColor={clickGuiThemePreferences.dimmedTextColor}
+                settingsColumnCount={settingsSplitCount + 1}
                 {subsectionRevealOptions}
                 {moduleRevealItemOptions}
                 onCloseDetailView={closeDetailView}
@@ -1460,20 +1554,22 @@
         <div class="main-content-header">
             <h2 class="main-content-title">{activeConfigTitle}</h2>
 
-            {#if activeModuleDescription.trim().length > 0}
+            {#if activeConfigDescription.trim().length > 0}
                 <p class="main-content-description">
-                    {activeModuleDescription}
+                    {activeConfigDescription}
                 </p>
             {/if}
         </div>
 
-        <div class="main-content-search">
-            <input
-                class="settings-search-input"
-                type="text"
-                placeholder="Search settings..."
-            />
-        </div>
+        {#if activeConfigPage.type === "module"}
+            <div class="main-content-search">
+                <input
+                    class="settings-search-input"
+                    type="text"
+                    placeholder="Search settings..."
+                />
+            </div>
+        {/if}
 
         {#if activeConfigPage.type === "module" && activeConfigurable !== null}
             <div class="settings-split-layout">
@@ -1515,6 +1611,29 @@
                     {/if}
                 {/each}
             </div>
+        {:else if activeConfigPage.type === "theme-settings"}
+            <ClickGuiThemeSettingsContent
+                themePreferences={clickGuiThemePreferences}
+                themeLoadError={clickGuiThemeLoadError}
+                revealItemOptions={moduleRevealItemOptions}
+                {textInputRevealItemOptions}
+                onAccentColorChange={(accentColor) =>
+                    updateClickGuiThemePreference({ accentColor })}
+                onBaseColorChange={(baseColor) =>
+                    updateClickGuiThemePreference({ baseColor })}
+                onBackgroundColorChange={(backgroundColor) =>
+                    updateClickGuiThemePreference({ backgroundColor })}
+                onTextColorChange={(textColor) =>
+                    updateClickGuiThemePreference({ textColor })}
+                onDimmedTextColorChange={(dimmedTextColor) =>
+                    updateClickGuiThemePreference({ dimmedTextColor })}
+                onSettingsSplitCountChange={(nextSplitCount) =>
+                    updateClickGuiThemePreference({
+                        settingsSplitCount: nextSplitCount,
+                    })}
+                onApplyPreset={applyClickGuiThemePreset}
+                onResetToDefaults={resetClickGuiThemePreferences}
+            />
         {:else if activeModuleLoadError !== null}
             <div class="settings-error-state" role="alert" aria-live="polite">
                 <div class="settings-error-card">
@@ -1541,10 +1660,20 @@
     @use "../../colors.scss" as *;
 
     :global(.clickgui) {
-        --clickgui-backdrop-color: #{rgba($clickgui-base-color, 0.15)};
-        --clickgui-surface-color: #{rgba($clickgui-base-color, 0.7)};
-        --clickgui-surface-strong-color: #{rgba($clickgui-base-color, 0.85)};
-        --clickgui-shadow-color: #{rgba($clickgui-base-color, 0.5)};
+        --clickgui-accent-color: #{$accent-color};
+        --clickgui-accent-rgb: 70 119 255;
+        --clickgui-base-color: #{$clickgui-base-color};
+        --clickgui-base-rgb: 0 0 0;
+        --clickgui-text-color: #{$clickgui-text-color};
+        --clickgui-text-rgb: 255 255 255;
+        --clickgui-text-dimmed-color: #{$clickgui-text-dimmed-color};
+        --clickgui-text-dimmed-rgb: 211 211 211;
+        --clickgui-backdrop-color: rgb(var(--clickgui-base-rgb, 0 0 0) / 0.15);
+        --clickgui-surface-color: rgb(var(--clickgui-base-rgb, 0 0 0) / 0.7);
+        --clickgui-surface-strong-color: rgb(
+            var(--clickgui-base-rgb, 0 0 0) / 0.85
+        );
+        --clickgui-shadow-color: rgb(var(--clickgui-base-rgb, 0 0 0) / 0.5);
 
         display: flex;
         height: 100vh;
@@ -1562,7 +1691,7 @@
         min-height: 0;
         width: 210px;
         background-color: var(--clickgui-surface-color);
-        color: $clickgui-text-color;
+        color: var(--clickgui-text-color);
         border-radius: 0;
         padding: 10px;
         gap: 12px;
@@ -1588,19 +1717,19 @@
         width: 100%;
         padding: 8px 10px;
         border-radius: 0;
-        border: 1px solid rgba($clickgui-text-color, 0.2);
+        border: 1px solid rgb(var(--clickgui-text-rgb, 255 255 255) / 0.2);
         background-color: var(--clickgui-surface-strong-color);
-        color: $clickgui-text-color;
+        color: var(--clickgui-text-color);
         font-size: 13px;
         outline: none;
 
         &::placeholder {
-            color: $clickgui-text-dimmed-color;
+            color: var(--clickgui-text-dimmed-color);
         }
 
         &:focus {
-            border-color: $accent-color;
-            box-shadow: 0 0 0 2px $accent-color;
+            border-color: var(--clickgui-accent-color);
+            box-shadow: 0 0 0 2px var(--clickgui-accent-color);
         }
     }
 
@@ -1612,7 +1741,7 @@
         padding: 10px;
         overflow-x: hidden;
         overflow-y: auto;
-        color: $clickgui-text-color;
+        color: var(--clickgui-text-color);
     }
 
     :global(.clickgui > .main-content .main-content-header) {
@@ -1646,48 +1775,48 @@
         margin: 0;
         font-size: 12px;
         line-height: 1.4;
-        color: $clickgui-text-dimmed-color;
+        color: var(--clickgui-text-dimmed-color);
     }
 
     :global(.clickgui > .main-content .settings-search-input) {
         width: 100%;
         padding: 8px 10px;
         border-radius: 0;
-        border: 1px solid rgba($clickgui-text-color, 0.2);
+        border: 1px solid rgb(var(--clickgui-text-rgb, 255 255 255) / 0.2);
         background-color: var(--clickgui-surface-strong-color);
-        color: $clickgui-text-color;
+        color: var(--clickgui-text-color);
         font-size: 13px;
         outline: none;
 
         &::placeholder {
-            color: $clickgui-text-dimmed-color;
+            color: var(--clickgui-text-dimmed-color);
         }
 
         &:focus {
-            border-color: $accent-color;
-            box-shadow: 0 0 0 2px $accent-color;
+            border-color: var(--clickgui-accent-color);
+            box-shadow: 0 0 0 2px var(--clickgui-accent-color);
         }
     }
 
     :global(.clickgui > .sidebar.surface-scrolled > .search),
     :global(.clickgui > .main-content.surface-scrolled .main-content-search) {
-        background-color: rgba($clickgui-base-color, 0.72);
+        background-color: rgb(var(--clickgui-base-rgb, 0 0 0) / 0.72);
         backdrop-filter: blur(12px) saturate(130%);
-        box-shadow: 0 8px 14px rgba($clickgui-base-color, 0.35);
+        box-shadow: 0 8px 14px rgb(var(--clickgui-base-rgb, 0 0 0) / 0.35);
     }
 
     :global(.clickgui > .sidebar.surface-scrolled .category-back-shell) {
         background:
             linear-gradient(
                 180deg,
-                rgba($clickgui-text-color, 0.18) 0%,
-                rgba($clickgui-text-color, 0.07) 58%,
-            rgba($clickgui-text-color, 0.03) 100%
+                rgb(var(--clickgui-text-rgb, 255 255 255) / 0.18) 0%,
+                rgb(var(--clickgui-text-rgb, 255 255 255) / 0.07) 58%,
+                rgb(var(--clickgui-text-rgb, 255 255 255) / 0.03) 100%
             ),
-            rgba($clickgui-base-color, 0.94);
-        border-bottom-color: rgba($clickgui-text-color, 0.34);
+            rgb(var(--clickgui-base-rgb, 0 0 0) / 0.94);
+        border-bottom-color: rgb(var(--clickgui-text-rgb, 255 255 255) / 0.34);
         backdrop-filter: blur(14px) saturate(135%);
-        box-shadow: 0 12px 18px rgba($clickgui-base-color, 0.52);
+        box-shadow: 0 12px 18px rgb(var(--clickgui-base-rgb, 0 0 0) / 0.52);
     }
 
     :global(.clickgui > .main-content .settings-split-layout) {
@@ -1706,8 +1835,8 @@
         gap: 10px;
         width: min(520px, 100%);
         padding: 12px;
-        border: 1px solid rgba($clickgui-text-color, 0.28);
-        background-color: rgba($clickgui-base-color, 0.42);
+        border: 1px solid rgb(var(--clickgui-text-rgb, 255 255 255) / 0.28);
+        background-color: rgb(var(--clickgui-base-rgb, 0 0 0) / 0.42);
     }
 
     :global(.clickgui > .main-content .settings-error-title) {
@@ -1715,14 +1844,14 @@
         font-size: 14px;
         font-weight: 700;
         letter-spacing: 0.03em;
-        color: $clickgui-text-color;
+        color: var(--clickgui-text-color);
     }
 
     :global(.clickgui > .main-content .settings-error-message) {
         margin: 0;
         font-size: 12px;
         line-height: 1.5;
-        color: rgba($clickgui-text-dimmed-color, 0.96);
+        color: rgb(var(--clickgui-text-dimmed-rgb, 211 211 211) / 0.96);
         white-space: pre-wrap;
     }
 
@@ -1733,24 +1862,28 @@
     :global(.clickgui > .main-content .settings-error-retry) {
         cursor: pointer;
         --setting-control-padding-inline: 14px;
-        --setting-control-border-color: #{rgba($clickgui-text-color, 0.34)};
-        --setting-control-background-color: #{rgba($clickgui-text-color, 0.12)};
+        --setting-control-border-color: rgb(
+            var(--clickgui-text-rgb, 255 255 255) / 0.34
+        );
+        --setting-control-background-color: rgb(
+            var(--clickgui-text-rgb, 255 255 255) / 0.12
+        );
     }
 
     :global(.clickgui > .main-content .settings-error-retry > .reveal-press-content) {
         font-size: 12px;
         font-weight: 600;
         letter-spacing: 0.03em;
-        color: rgba($clickgui-text-dimmed-color, 0.96);
+        color: rgb(var(--clickgui-text-dimmed-rgb, 211 211 211) / 0.96);
     }
 
     :global(.clickgui > .main-content .settings-error-retry:hover > .reveal-press-content) {
-        color: $clickgui-text-color;
+        color: var(--clickgui-text-color);
     }
 
     :global(.clickgui > .main-content .settings-error-retry:focus-visible > .reveal-press-content) {
-        border-color: $accent-color;
-        box-shadow: 0 0 0 1px $accent-color;
+        border-color: var(--clickgui-accent-color);
+        box-shadow: 0 0 0 1px var(--clickgui-accent-color);
     }
 
     :global(.clickgui > .main-content .settings-column) {
@@ -1764,7 +1897,7 @@
     :global(.clickgui > .main-content .settings-split) {
         width: 1px;
         flex-shrink: 0;
-        background-color: rgba($clickgui-text-color, 0.15);
+        background-color: rgb(var(--clickgui-text-rgb, 255 255 255) / 0.15);
     }
 
     :global(.clickgui > .main-content .settings-list) {
@@ -1779,7 +1912,7 @@
     }
 
     :global(.clickgui > .main-content .setting-entry-shell + .setting-entry-shell) {
-        border-top: 1px solid rgba($clickgui-text-color, 0.16);
+        border-top: 1px solid rgb(var(--clickgui-text-rgb, 255 255 255) / 0.16);
     }
 
     :global(.clickgui > .main-content .setting-entry) {
@@ -1787,9 +1920,9 @@
     }
 
     :global(.clickgui > .main-content .setting-entry.setting-entry--configurable) {
-        border: 1px solid rgba($clickgui-text-color, 0.14);
+        border: 1px solid rgb(var(--clickgui-text-rgb, 255 255 255) / 0.14);
         padding: 10px;
-        background-color: rgba($clickgui-text-color, 0.05);
+        background-color: rgb(var(--clickgui-text-rgb, 255 255 255) / 0.05);
     }
 
     :global(.clickgui > .main-content .setting-header) {
@@ -1821,14 +1954,14 @@
     :global(
         .clickgui > .main-content .setting-entry.setting-entry--configurable .setting-children > .setting-entry + .setting-entry
     ) {
-        border-top: 1px solid rgba($clickgui-text-color, 0.16);
+        border-top: 1px solid rgb(var(--clickgui-text-rgb, 255 255 255) / 0.16);
     }
 
     :global(.clickgui > .main-content .setting-selection-summary) {
         font-size: 11px;
         letter-spacing: 0.05em;
         text-transform: uppercase;
-        color: rgba($clickgui-text-dimmed-color, 0.86);
+        color: rgb(var(--clickgui-text-dimmed-rgb, 211 211 211) / 0.86);
         white-space: nowrap;
         flex-shrink: 0;
     }
@@ -1864,14 +1997,17 @@
         border: 1px solid
             var(
                 --setting-control-border-color,
-                #{rgba($clickgui-text-color, 0.32)}
+                rgb(var(--clickgui-text-rgb, 255 255 255) / 0.32)
             );
         border-radius: var(--setting-control-border-radius, 0);
         background-color: var(
             --setting-control-background-color,
-            #{rgba($clickgui-text-color, 0.14)}
+            rgb(var(--clickgui-text-rgb, 255 255 255) / 0.14)
         );
-        box-shadow: var(--setting-control-box-shadow, 0 0 0 0 #{$accent-color});
+        box-shadow: var(
+            --setting-control-box-shadow,
+            0 0 0 0 var(--clickgui-accent-color)
+        );
         transition:
             background-color 120ms ease,
             border-color 120ms ease,
@@ -1893,7 +2029,7 @@
         border: 0;
         outline: none;
         background: transparent;
-        color: $clickgui-text-color;
+        color: var(--clickgui-text-color);
         caret-color: currentColor;
         font-family: inherit;
         font-size: 12px;
@@ -1901,7 +2037,7 @@
     }
 
     :global(.clickgui > .main-content .setting-input-text::placeholder) {
-        color: rgba($clickgui-text-dimmed-color, 0.9);
+        color: rgb(var(--clickgui-text-dimmed-rgb, 211 211 211) / 0.9);
     }
 
     :global(.clickgui .scroll-surface) {
@@ -1911,11 +2047,11 @@
     }
 
     :global(.clickgui .scroll-surface:hover) {
-        scrollbar-color: rgba($clickgui-text-color, 0.36) transparent;
+        scrollbar-color: rgb(var(--clickgui-text-rgb, 255 255 255) / 0.36) transparent;
     }
 
     :global(.clickgui .scroll-surface.scrollbar-strong:hover) {
-        scrollbar-color: rgba($clickgui-text-color, 0.56) transparent;
+        scrollbar-color: rgb(var(--clickgui-text-rgb, 255 255 255) / 0.56) transparent;
     }
 
 </style>

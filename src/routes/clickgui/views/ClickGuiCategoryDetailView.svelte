@@ -17,17 +17,19 @@
 </script>
 
 <div class="category-page" use:revealContainer={subsectionRevealOptions}>
-    <div class="item btn-border category-back-shell" use:revealBorder>
-        <button
-            class="btn category-back-btn"
-            type="button"
-            onclick={onCloseDetailView}
-            use:revealItem={moduleRevealItemOptions}
-        >
-            <span class="reveal-press-content">
-                &lt; {selectedCategory}
-            </span>
-        </button>
+    <div class="category-back-shell">
+        <div class="item btn-border category-back-control" use:revealBorder>
+            <button
+                class="btn category-back-btn"
+                type="button"
+                onclick={onCloseDetailView}
+                use:revealItem={moduleRevealItemOptions}
+            >
+                <span class="reveal-press-content">
+                    &lt; {selectedCategory}
+                </span>
+            </button>
+        </div>
     </div>
 
     {#if selectedCategoryModules.length === 0}
@@ -71,18 +73,22 @@
         background:
             linear-gradient(
                 180deg,
-                rgba(255, 255, 255, 0.12) 0%,
-                rgba(255, 255, 255, 0.05) 58%,
-                rgba(255, 255, 255, 0.02) 100%
+                rgb(var(--clickgui-text-rgb, 255 255 255) / 0.12) 0%,
+                rgb(var(--clickgui-text-rgb, 255 255 255) / 0.05) 58%,
+                rgb(var(--clickgui-text-rgb, 255 255 255) / 0.02) 100%
             ),
             var(--clickgui-surface-strong-color);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.24);
+        border-bottom: 1px solid rgb(var(--clickgui-text-rgb, 255 255 255) / 0.24);
         backdrop-filter: blur(8px) saturate(125%);
-        box-shadow: 0 10px 16px rgba(0, 0, 0, 0.32);
+        box-shadow: 0 10px 16px rgb(var(--clickgui-base-rgb, 0 0 0) / 0.32);
         transition:
             background 140ms ease,
             border-color 140ms ease,
             backdrop-filter 140ms ease,
             box-shadow 140ms ease;
+    }
+
+    .category-back-control {
+        display: flex;
     }
 </style>

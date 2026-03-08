@@ -54,15 +54,19 @@
 
     .toggle-btn {
         cursor: pointer;
-        --reveal-focus-color: #{$accent-color};
-        --setting-control-border-color: #{rgba($clickgui-text-color, 0.36)};
-        --setting-control-background-color: #{rgba($clickgui-text-color, 0.18)};
+        --reveal-focus-color: var(--clickgui-accent-color, #{$accent-color});
+        --setting-control-border-color: rgb(
+            var(--clickgui-text-rgb, 255 255 255) / 0.36
+        );
+        --setting-control-background-color: rgb(
+            var(--clickgui-text-rgb, 255 255 255) / 0.18
+        );
         --setting-control-border-radius: 0px;
         --setting-control-padding-inline: 12px;
     }
 
     .toggle-state {
-        color: rgba($clickgui-text-dimmed-color, 0.9);
+        color: rgb(var(--clickgui-text-dimmed-rgb, 211 211 211) / 0.9);
         font-size: 12px;
         letter-spacing: 0.03em;
         font-weight: 600;
@@ -70,12 +74,18 @@
     }
 
     .toggle-btn.setting-input-control--enabled {
-        --setting-control-border-color: #{$accent-color};
-        --setting-control-background-color: #{$accent-color};
+        --setting-control-border-color: var(
+            --clickgui-accent-color,
+            #{$accent-color}
+        );
+        --setting-control-background-color: var(
+            --clickgui-accent-color,
+            #{$accent-color}
+        );
     }
 
     .toggle-btn.setting-input-control--enabled .toggle-state {
-        color: $clickgui-text-color;
+        color: var(--clickgui-text-color, #{$clickgui-text-color});
     }
 
 </style>

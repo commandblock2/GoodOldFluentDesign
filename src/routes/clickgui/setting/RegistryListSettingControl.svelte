@@ -412,13 +412,17 @@
     }
 
     .registry-search-control {
-        --reveal-focus-color: #{$accent-color};
+        --reveal-focus-color: var(--clickgui-accent-color, #{$accent-color});
         --setting-control-content-width: 100%;
         --setting-control-min-width: 0;
         --setting-control-justify-content: flex-start;
         --setting-control-padding-inline: 0;
-        --setting-control-border-color: #{rgba($clickgui-text-color, 0.3)};
-        --setting-control-background-color: #{rgba($clickgui-text-color, 0.08)};
+        --setting-control-border-color: rgb(
+            var(--clickgui-text-rgb, 255 255 255) / 0.3
+        );
+        --setting-control-background-color: rgb(
+            var(--clickgui-text-rgb, 255 255 255) / 0.08
+        );
     }
 
     .registry-search-control > .reveal-press-content {
@@ -449,11 +453,11 @@
         font-size: 10px;
         letter-spacing: 0.04em;
         text-transform: uppercase;
-        color: rgba($clickgui-text-dimmed-color, 0.9);
+        color: rgb(var(--clickgui-text-dimmed-rgb, 211 211 211) / 0.9);
     }
 
     .registry-list-state--error {
-        color: rgba($clickgui-text-color, 0.92);
+        color: rgb(var(--clickgui-text-rgb, 255 255 255) / 0.92);
     }
 
     .registry-item-btn {
@@ -461,18 +465,27 @@
         cursor: pointer;
         --registry-item-row-height: 56px;
         --setting-control-height: var(--registry-item-row-height);
-        --reveal-focus-color: #{$accent-color};
+        --reveal-focus-color: var(--clickgui-accent-color, #{$accent-color});
         --setting-control-content-width: 100%;
         --setting-control-min-width: 0;
         --setting-control-justify-content: flex-start;
         --setting-control-padding-inline: 0;
-        --setting-control-border-color: #{rgba($clickgui-text-color, 0.28)};
-        --setting-control-background-color: #{rgba($clickgui-text-color, 0.08)};
+        --setting-control-border-color: rgb(
+            var(--clickgui-text-rgb, 255 255 255) / 0.28
+        );
+        --setting-control-background-color: rgb(
+            var(--clickgui-text-rgb, 255 255 255) / 0.08
+        );
     }
 
     .registry-item-btn.registry-item-btn--selected {
-        --setting-control-border-color: #{$accent-color};
-        --setting-control-background-color: #{rgba($accent-color, 0.26)};
+        --setting-control-border-color: var(
+            --clickgui-accent-color,
+            #{$accent-color}
+        );
+        --setting-control-background-color: rgb(
+            var(--clickgui-accent-rgb, 70 119 255) / 0.26
+        );
     }
 
     .registry-item-btn > .reveal-press-content {
@@ -502,7 +515,7 @@
         display: block;
         font-size: 11px;
         font-weight: 600;
-        color: rgba($clickgui-text-color, 0.96);
+        color: rgb(var(--clickgui-text-rgb, 255 255 255) / 0.96);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -511,7 +524,7 @@
     .registry-item-value {
         display: block;
         font-size: 10px;
-        color: rgba($clickgui-text-dimmed-color, 0.86);
+        color: rgb(var(--clickgui-text-dimmed-rgb, 211 211 211) / 0.86);
         font-family: monospace;
         white-space: nowrap;
         overflow: hidden;

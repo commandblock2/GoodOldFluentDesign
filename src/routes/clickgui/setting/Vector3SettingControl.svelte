@@ -187,13 +187,17 @@
 
     .vector3-axis-control {
         width: 100%;
-        --reveal-focus-color: #{$accent-color};
+        --reveal-focus-color: var(--clickgui-accent-color, #{$accent-color});
         --setting-control-content-width: 100%;
         --setting-control-min-width: 0;
         --setting-control-justify-content: flex-start;
         --setting-control-padding-inline: 0;
-        --setting-control-background-color: #{rgba($clickgui-text-color, 0.08)};
-        --setting-control-border-color: #{rgba($clickgui-text-color, 0.3)};
+        --setting-control-background-color: rgb(
+            var(--clickgui-text-rgb, 255 255 255) / 0.08
+        );
+        --setting-control-border-color: rgb(
+            var(--clickgui-text-rgb, 255 255 255) / 0.3
+        );
     }
 
     .vector3-axis-control > .reveal-press-content {

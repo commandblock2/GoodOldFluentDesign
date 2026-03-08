@@ -11,7 +11,7 @@
         font-size: 12px;
         text-transform: uppercase;
         letter-spacing: 0.08em;
-        color: $clickgui-text-dimmed-color;
+        color: var(--clickgui-text-dimmed-color, #{$clickgui-text-dimmed-color});
     }
 }
 
@@ -25,7 +25,7 @@
 
     .subsection-title {
         font-size: 12px;
-        color: $clickgui-text-color;
+        color: var(--clickgui-text-color, #{$clickgui-text-color});
         opacity: 0.85;
     }
 }
@@ -69,10 +69,10 @@
         padding: 6px 8px;
         border-radius: 0;
         cursor: pointer;
-        color: $clickgui-text-color;
+        color: var(--clickgui-text-color, #{$clickgui-text-color});
 
         &:hover {
-            background-color: rgba($clickgui-base-color, 0.85);
+            background-color: rgb(var(--clickgui-base-rgb, 0 0 0) / 0.85);
         }
     }
 
@@ -104,7 +104,7 @@
 @mixin module-item-block {
     .module-item {
         font-size: 12px;
-        color: $clickgui-text-dimmed-color;
+        color: var(--clickgui-text-dimmed-color, #{$clickgui-text-dimmed-color});
     }
 
     .module-item .btn {
@@ -115,7 +115,7 @@
 @mixin empty-block {
     .empty {
         font-size: 12px;
-        color: $clickgui-text-dimmed-color;
+        color: var(--clickgui-text-dimmed-color, #{$clickgui-text-dimmed-color});
         padding: 6px 4px;
     }
 }

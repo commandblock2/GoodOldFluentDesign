@@ -1,6 +1,7 @@
 <script lang="ts">
     import type { RevealItemOptions } from "fluent-reveal-svelte";
     import type { CurveSetting, Vec2 } from "../../../integration/types";
+    import { defaultClickGuiThemePreferences } from "../clickGuiThemePreferences";
     import { getBounds } from "./numericSettingUtils";
     import {
         Chart,
@@ -43,10 +44,13 @@
     }
 
     type CurveChart = ChartJS<"line", CurvePoint[], unknown>;
+    type CurveDataset = CurveChart["data"]["datasets"][number];
 
     const defaultChangeHandler = (_nextValue: Vec2[]) => {};
     const EPS = 1e-9;
     const EDGE_MARGIN = 1e-6;
+    const FALLBACK_CURVE_ACCENT_COLOR =
+        defaultClickGuiThemePreferences.accentColor;
 
     let {
         setting,
@@ -58,6 +62,7 @@
     let chart = $state<CurveChart | null>(null);
     let isDragging = $state(false);
     let chartErrorMessage = $state<string | null>(null);
+    let themeObserver: MutationObserver | null = null;
 
     const xBounds = $derived(getBounds(setting.xAxis.range));
     const yBounds = $derived(getBounds(setting.yAxis.range));
@@ -164,6 +169,7 @@
         }
         dataset.data = normalizedCurvePoints(setting.value);
         dataset.tension = setting.tension;
+        applyAccentColorToDataset(dataset);
 
         const scales = chart.options.scales;
         if (scales === undefined) {
@@ -198,6 +204,45 @@
             yScale.title.text = setting.yAxis.label;
         }
 
+        chart.update();
+    }
+
+    function resolveAccentColor(): string {
+        if (canvasElement === null) {
+            return FALLBACK_CURVE_ACCENT_COLOR;
+        }
+
+        const clickGuiRoot = canvasElement.closest(".clickgui");
+        if (!(clickGuiRoot instanceof HTMLElement)) {
+            return FALLBACK_CURVE_ACCENT_COLOR;
+        }
+
+        const accentColor = window
+            .getComputedStyle(clickGuiRoot)
+            .getPropertyValue("--clickgui-accent-color")
+            .trim();
+
+        return accentColor.length > 0 ? accentColor : FALLBACK_CURVE_ACCENT_COLOR;
+    }
+
+    function applyAccentColorToDataset(dataset: CurveDataset) {
+        const accentColor = resolveAccentColor();
+        dataset.borderColor = accentColor;
+        dataset.pointBackgroundColor = accentColor;
+        dataset.pointHoverBackgroundColor = accentColor;
+    }
+
+    function syncChartThemeColors() {
+        if (chart === null) {
+            return;
+        }
+
+        const dataset = chart.data.datasets[0];
+        if (dataset === undefined) {
+            return;
+        }
+
+        applyAccentColorToDataset(dataset);
         chart.update();
     }
 
@@ -323,6 +368,8 @@
                 );
             }
 
+            const accentColor = resolveAccentColor();
+
             chart = new Chart(context, {
                 type: "line",
                 data: {
@@ -333,12 +380,12 @@
                             showLine: true,
                             parsing: false,
                             borderWidth: 2,
-                            borderColor: "#4677ff",
+                            borderColor: accentColor,
                             pointRadius: 5,
-                            pointBackgroundColor: "#4677ff",
+                            pointBackgroundColor: accentColor,
                             pointBorderWidth: 0,
                             pointHoverRadius: 6,
-                            pointHoverBackgroundColor: "#4677ff",
+                            pointHoverBackgroundColor: accentColor,
                             tension: setting.tension,
                         },
                     ],
@@ -440,6 +487,16 @@
                     },
                 } as Record<string, unknown>,
             });
+            const clickGuiRoot = canvasElement.closest(".clickgui");
+            if (clickGuiRoot instanceof HTMLElement) {
+                themeObserver = new MutationObserver(() => {
+                    syncChartThemeColors();
+                });
+                themeObserver.observe(clickGuiRoot, {
+                    attributes: true,
+                    attributeFilter: ["style"],
+                });
+            }
             chartErrorMessage = null;
         } catch (error) {
             chart = null;
@@ -451,6 +508,8 @@
     });
 
     onDestroy(() => {
+        themeObserver?.disconnect();
+        themeObserver = null;
         chart?.destroy();
         chart = null;
     });

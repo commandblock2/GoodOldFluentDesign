@@ -346,15 +346,19 @@
     }
 
     .expandable-text-input-control {
-        --reveal-focus-color: #{$accent-color};
+        --reveal-focus-color: var(--clickgui-accent-color, #{$accent-color});
         --setting-control-content-width: clamp(150px, 34vw, 260px);
         --setting-control-justify-content: flex-start;
         --setting-control-padding-inline: 0;
-        --setting-control-border-color: #{rgba($clickgui-text-color, 0.4)};
-        --setting-control-background-color: #{rgba($clickgui-text-color, 0.08)};
+        --setting-control-border-color: rgb(
+            var(--clickgui-text-rgb, 255 255 255) / 0.4
+        );
+        --setting-control-background-color: rgb(
+            var(--clickgui-text-rgb, 255 255 255) / 0.08
+        );
         --setting-control-border-radius: 0px;
         --setting-control-box-shadow:
-            inset 0 0 0 1px #{rgba($clickgui-text-color, 0.08)};
+            inset 0 0 0 1px rgb(var(--clickgui-text-rgb, 255 255 255) / 0.08);
     }
 
     .expandable-text-input-control > .reveal-press-content {
@@ -382,7 +386,7 @@
         z-index: 1;
         width: 100%;
         overflow: hidden;
-        background-color: rgba(255, 255, 255, 0.1);
+        background-color: rgb(var(--clickgui-text-rgb, 255 255 255) / 0.1);
         backdrop-filter: blur(48px) saturate(120%);
     }
 
@@ -391,24 +395,28 @@
         inset: 0;
         z-index: -1;
         pointer-events: none;
-        background-color: rgba(0, 0, 0, 0.4);
+        background-color: rgb(var(--clickgui-base-rgb, 0 0 0) / 0.4);
     }
 
     .expandable-text-floating-control {
         position: relative;
         z-index: 1;
-        --reveal-focus-color: #{$accent-color};
+        --reveal-focus-color: var(--clickgui-accent-color, #{$accent-color});
         --setting-control-height: auto;
         --setting-control-content-width: 100%;
         --setting-control-min-width: 0;
         --setting-control-justify-content: flex-start;
         --setting-control-padding-inline: 0;
-        --setting-control-border-color: #{rgba($accent-color, 0.88)};
-        --setting-control-background-color: #{rgba($clickgui-base-color, 0.18)};
+        --setting-control-border-color: rgb(
+            var(--clickgui-accent-rgb, 70 119 255) / 0.88
+        );
+        --setting-control-background-color: rgb(
+            var(--clickgui-base-rgb, 0 0 0) / 0.18
+        );
         --setting-control-border-radius: 0px;
         --setting-control-box-shadow:
-            0 0 0 1px #{rgba($accent-color, 0.36)},
-            inset 0 0 0 1px #{rgba($clickgui-text-color, 0.2)};
+            0 0 0 1px rgb(var(--clickgui-accent-rgb, 70 119 255) / 0.36),
+            inset 0 0 0 1px rgb(var(--clickgui-text-rgb, 255 255 255) / 0.2);
     }
 
     .expandable-text-floating-control > .reveal-press-content {

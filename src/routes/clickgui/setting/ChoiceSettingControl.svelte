@@ -78,11 +78,15 @@
 
     .choice-tab-btn {
         width: 100%;
-        --reveal-focus-color: #{$accent-color};
+        --reveal-focus-color: var(--clickgui-accent-color, #{$accent-color});
         --setting-control-content-width: 100%;
         --setting-control-min-width: 0;
-        --setting-control-border-color: #{rgba($clickgui-text-color, 0.32)};
-        --setting-control-background-color: #{rgba($clickgui-text-color, 0.14)};
+        --setting-control-border-color: rgb(
+            var(--clickgui-text-rgb, 255 255 255) / 0.32
+        );
+        --setting-control-background-color: rgb(
+            var(--clickgui-text-rgb, 255 255 255) / 0.14
+        );
     }
 
     .choice-tab-label {
@@ -93,16 +97,22 @@
         white-space: nowrap;
         font-size: 12px;
         font-weight: 600;
-        color: rgba($clickgui-text-dimmed-color, 0.94);
+        color: rgb(var(--clickgui-text-dimmed-rgb, 211 211 211) / 0.94);
         transition: color 120ms ease;
     }
 
     .choice-tab-btn.choice-tab-btn--active {
-        --setting-control-border-color: #{$accent-color};
-        --setting-control-background-color: #{$accent-color};
+        --setting-control-border-color: var(
+            --clickgui-accent-color,
+            #{$accent-color}
+        );
+        --setting-control-background-color: var(
+            --clickgui-accent-color,
+            #{$accent-color}
+        );
     }
 
     .choice-tab-btn.choice-tab-btn--active .choice-tab-label {
-        color: $clickgui-text-color;
+        color: var(--clickgui-text-color, #{$clickgui-text-color});
     }
 </style>

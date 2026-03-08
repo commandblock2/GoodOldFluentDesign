@@ -170,13 +170,17 @@
 
     .file-select-btn {
         width: 100%;
-        --reveal-focus-color: #{$accent-color};
+        --reveal-focus-color: var(--clickgui-accent-color, #{$accent-color});
         --setting-control-content-width: 100%;
         --setting-control-min-width: 0;
         --setting-control-justify-content: flex-start;
         --setting-control-padding-inline: 0;
-        --setting-control-border-color: #{rgba($clickgui-text-color, 0.3)};
-        --setting-control-background-color: #{rgba($clickgui-text-color, 0.08)};
+        --setting-control-border-color: rgb(
+            var(--clickgui-text-rgb, 255 255 255) / 0.3
+        );
+        --setting-control-background-color: rgb(
+            var(--clickgui-text-rgb, 255 255 255) / 0.08
+        );
     }
 
     .file-select-btn > .reveal-press-content {
@@ -192,7 +196,7 @@
         padding: 0 10px;
         font-size: 11px;
         font-family: monospace;
-        color: rgba($clickgui-text-dimmed-color, 0.94);
+        color: rgb(var(--clickgui-text-dimmed-rgb, 211 211 211) / 0.94);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -200,9 +204,13 @@
     }
 
     .file-action-btn {
-        --reveal-focus-color: #{$accent-color};
-        --setting-control-border-color: #{rgba($clickgui-text-color, 0.32)};
-        --setting-control-background-color: #{rgba($clickgui-text-color, 0.12)};
+        --reveal-focus-color: var(--clickgui-accent-color, #{$accent-color});
+        --setting-control-border-color: rgb(
+            var(--clickgui-text-rgb, 255 255 255) / 0.32
+        );
+        --setting-control-background-color: rgb(
+            var(--clickgui-text-rgb, 255 255 255) / 0.12
+        );
         --setting-control-padding-inline: 10px;
         cursor: pointer;
     }
@@ -211,7 +219,7 @@
         font-size: 10px;
         letter-spacing: 0.04em;
         text-transform: uppercase;
-        color: rgba($clickgui-text-dimmed-color, 0.95);
+        color: rgb(var(--clickgui-text-dimmed-rgb, 211 211 211) / 0.95);
     }
 
     .file-status-hint {

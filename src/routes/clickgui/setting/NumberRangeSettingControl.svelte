@@ -610,21 +610,21 @@
         min-width: 0;
         height: 24px;
         padding: 0 8px;
-        border: 1px solid #{rgba($clickgui-text-color, 0.28)};
-        background-color: #{rgba($clickgui-text-color, 0.08)};
+        border: 1px solid rgb(var(--clickgui-text-rgb, 255 255 255) / 0.28);
+        background-color: rgb(var(--clickgui-text-rgb, 255 255 255) / 0.08);
         --slider-thumb-size: 10px;
         --slider-thumb-half-size: calc(var(--slider-thumb-size) / 2);
         --step-marker-size: 6px;
-        --step-marker-color: #{rgba($clickgui-text-color, 0.68)};
-        --step-marker-active-color: #{$accent-color};
+        --step-marker-color: rgb(var(--clickgui-text-rgb, 255 255 255) / 0.68);
+        --step-marker-active-color: var(--clickgui-accent-color, #{$accent-color});
         transition:
             border-color 120ms ease,
             box-shadow 120ms ease;
     }
 
     .numeric-range-slider-control:focus-within {
-        border-color: rgba($accent-color, 0.92);
-        box-shadow: 0 0 0 1px rgba($accent-color, 0.78);
+        border-color: rgb(var(--clickgui-accent-rgb, 70 119 255) / 0.92);
+        box-shadow: 0 0 0 1px rgb(var(--clickgui-accent-rgb, 70 119 255) / 0.78);
     }
 
     .numeric-range-slider-content {
@@ -650,20 +650,20 @@
     }
 
     .range-slider-track {
-        background-color: #{rgba($clickgui-text-color, 0.38)};
+        background-color: rgb(var(--clickgui-text-rgb, 255 255 255) / 0.38);
         z-index: 1;
     }
 
     .numeric-range-slider-control.numeric-range-slider-control--stepped
         .range-slider-track {
         border-radius: 0;
-        background-color: #{rgba($clickgui-text-color, 0.38)};
+        background-color: rgb(var(--clickgui-text-rgb, 255 255 255) / 0.38);
     }
 
     .range-slider-selected {
         left: var(--range-start);
         right: calc(100% - var(--range-end));
-        background-color: #{$accent-color};
+        background-color: var(--clickgui-accent-color, #{$accent-color});
         z-index: 2;
     }
 
@@ -730,7 +730,7 @@
         border: 0;
         border-radius: 0;
         margin-top: calc((2px - var(--slider-thumb-size)) / 2);
-        background-color: $accent-color;
+        background-color: var(--clickgui-accent-color, #{$accent-color});
         pointer-events: auto;
         cursor: pointer;
     }
@@ -740,7 +740,7 @@
         height: var(--slider-thumb-size);
         border: 0;
         border-radius: 0;
-        background-color: $accent-color;
+        background-color: var(--clickgui-accent-color, #{$accent-color});
         pointer-events: auto;
         cursor: pointer;
     }
@@ -778,13 +778,17 @@
 
     .numeric-range-value-control {
         width: 100%;
-        --reveal-focus-color: #{$accent-color};
+        --reveal-focus-color: var(--clickgui-accent-color, #{$accent-color});
         --setting-control-content-width: 100%;
         --setting-control-min-width: 0;
         --setting-control-justify-content: flex-start;
         --setting-control-padding-inline: 0;
-        --setting-control-background-color: #{rgba($clickgui-text-color, 0.08)};
-        --setting-control-border-color: #{rgba($clickgui-text-color, 0.3)};
+        --setting-control-background-color: rgb(
+            var(--clickgui-text-rgb, 255 255 255) / 0.08
+        );
+        --setting-control-border-color: rgb(
+            var(--clickgui-text-rgb, 255 255 255) / 0.3
+        );
     }
 
     .numeric-range-value-control > .reveal-press-content {
@@ -805,7 +809,7 @@
         font-size: 10px;
         letter-spacing: 0.06em;
         text-transform: uppercase;
-        color: rgba($clickgui-text-dimmed-color, 0.92);
+        color: rgb(var(--clickgui-text-dimmed-rgb, 211 211 211) / 0.92);
         white-space: nowrap;
         font-variant-numeric: tabular-nums;
     }
