@@ -206,6 +206,7 @@
     const childSettingsCountLabel = $derived(
         `${visibleChildSettingsCount} Setting${visibleChildSettingsCount === 1 ? "" : "s"}`,
     );
+    const showChildSettingsCount = $derived(visibleChildSettingsCount > 0);
     const isInlineControlSetting = $derived(
         isBooleanSetting(setting) ||
             isTextSetting(setting) ||
@@ -215,6 +216,12 @@
     );
     const isConfigurableGroupSetting = $derived(
         isNestedSettingContainer(setting),
+    );
+    const hasConfigurableChildContent = $derived(
+        isConfigurableGroupSetting && visibleChildSettings.length > 0,
+    );
+    const settingDescription = $derived(
+        typeof setting.description === "string" ? setting.description.trim() : "",
     );
     const choiceSetting = $derived(
         isChoiceSetting(setting) ? setting : null,
@@ -259,6 +266,9 @@
     const choiceSettingsCountLabel = $derived(
         `${choiceVisibleChildSettingsCount} Setting${choiceVisibleChildSettingsCount === 1 ? "" : "s"}`,
     );
+    const showChoiceSettingsCount = $derived(
+        choiceVisibleChildSettingsCount > 0,
+    );
     const choiceSelectionSummary = $derived(
         choiceSetting === null
             ? ""
@@ -266,6 +276,27 @@
     );
     const choiceContentKey = $derived(
         choiceSetting === null ? "" : getChoiceContentKey(choiceSetting),
+    );
+    const isKnownSetting = $derived(
+        isBooleanSetting(setting) ||
+            isTextSetting(setting) ||
+            isBindSetting(setting) ||
+            isKeySetting(setting) ||
+            isColorSetting(setting) ||
+            isChoiceSetting(setting) ||
+            isChooseSetting(setting) ||
+            isMultiChooseSetting(setting) ||
+            isMutableListSetting(setting) ||
+            isFileSetting(setting) ||
+            isRegistryListSetting(setting) ||
+            isCurveSetting(setting) ||
+            isFloatSetting(setting) ||
+            isIntSetting(setting) ||
+            isFloatRangeSetting(setting) ||
+            isIntRangeSetting(setting) ||
+            isVec2Setting(setting) ||
+            isVec3Setting(setting) ||
+            isConfigurableGroupSetting
     );
 
     function childPath(childIndex: number) {
@@ -313,10 +344,16 @@
 <div
     class="setting-entry"
     class:inline-control-setting-entry={isInlineControlSetting}
-    class:setting-entry--configurable={isConfigurableGroupSetting}
+    class:setting-entry--configurable={hasConfigurableChildContent}
 >
     <div class="setting-header">
-        <strong>{setting.name}</strong>
+        <div class="setting-title-block">
+            <strong class="setting-title">{setting.name}</strong>
+
+            {#if settingDescription.length > 0}
+                <span class="setting-description">{settingDescription}</span>
+            {/if}
+        </div>
 
         {#if isBooleanSetting(setting)}
             <BooleanSettingControl
@@ -402,12 +439,16 @@
             </span>
         {:else if isConfigurableGroupSetting}
             <div class="setting-group-meta">
-                <span class="setting-selection-summary">
-                    {childSettingsCountLabel}
-                </span>
+                {#if showChildSettingsCount}
+                    <span class="setting-selection-summary">
+                        {childSettingsCountLabel}
+                    </span>
+                {/if}
 
                 {#if enabledChildSetting !== null}
-                    <span class="setting-group-divider" aria-hidden="true">|</span>
+                    {#if showChildSettingsCount}
+                        <span class="setting-group-divider" aria-hidden="true">|</span>
+                    {/if}
                     <BooleanSettingControl
                         setting={enabledChildSetting.setting}
                         revealItemOptions={revealItemOptions}
@@ -435,15 +476,27 @@
             {#key choiceContentKey}
                 <div class="setting-entry setting-entry--configurable choice-setting-content">
                     <div class="setting-header">
-                        <strong>{activeChoiceTab.name}</strong>
+                        <div class="setting-title-block">
+                            <strong class="setting-title">{activeChoiceTab.name}</strong>
+
+                            {#if typeof activeChoiceTab.setting.description === "string" && activeChoiceTab.setting.description.trim().length > 0}
+                                <span class="setting-description">
+                                    {activeChoiceTab.setting.description.trim()}
+                                </span>
+                            {/if}
+                        </div>
 
                         <div class="setting-group-meta">
-                            <span class="setting-selection-summary">
-                                {choiceSettingsCountLabel}
-                            </span>
+                            {#if showChoiceSettingsCount}
+                                <span class="setting-selection-summary">
+                                    {choiceSettingsCountLabel}
+                                </span>
+                            {/if}
 
                             {#if choiceEnabledChildSetting !== null}
-                                <span class="setting-group-divider" aria-hidden="true">|</span>
+                                {#if showChoiceSettingsCount}
+                                    <span class="setting-group-divider" aria-hidden="true">|</span>
+                                {/if}
                                 <BooleanSettingControl
                                     setting={choiceEnabledChildSetting.setting}
                                     revealItemOptions={revealItemOptions}
@@ -554,7 +607,7 @@
             textInputRevealItemOptions={textInputRevealItemOptions}
             onChange={(nextValue) => onVector3Change(path, nextValue)}
         />
-    {:else if isConfigurableGroupSetting && visibleChildSettings.length > 0}
+    {:else if hasConfigurableChildContent}
         <div class="setting-children">
             {#each visibleChildSettings as childSetting (getSettingEntryRowKey(childSetting.setting, childSetting.childIndex))}
                 <Self
@@ -581,16 +634,39 @@
                 />
             {/each}
         </div>
-    {:else if !isBooleanSetting(setting) && !isTextSetting(setting) && !isBindSetting(setting) && !isKeySetting(setting) && !isColorSetting(setting) && !isChoiceSetting(setting) && !isMutableListSetting(setting) && !isFileSetting(setting) && !isRegistryListSetting(setting) && !isCurveSetting(setting)}
+    {:else if !isKnownSetting}
         <pre>{JSON.stringify(setting.value, null, 2)}</pre>
     {/if}
 </div>
 
 <style lang="scss">
+    .setting-title-block {
+        display: flex;
+        flex: 1 1 auto;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 4px 8px;
+        min-width: 0;
+    }
+
+    .setting-title {
+        flex-shrink: 0;
+    }
+
+    .setting-description {
+        min-width: 0;
+        font-size: 11px;
+        line-height: 1.45;
+        letter-spacing: 0.02em;
+        color: rgb(var(--clickgui-text-dimmed-rgb, 211 211 211) / 0.9);
+        overflow-wrap: anywhere;
+    }
+
     .setting-group-meta {
         display: inline-flex;
         align-items: center;
         gap: 8px;
+        flex-shrink: 0;
     }
 
     .setting-group-divider {

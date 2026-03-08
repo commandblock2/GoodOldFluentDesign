@@ -1927,10 +1927,11 @@
 
     :global(.clickgui > .main-content .setting-header) {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: space-between;
         gap: 8px;
         margin-bottom: 8px;
+        min-width: 0;
     }
 
     :global(.clickgui > .main-content .setting-entry.inline-control-setting-entry .setting-header) {
