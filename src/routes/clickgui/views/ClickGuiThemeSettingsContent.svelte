@@ -12,6 +12,8 @@
     import {
         clickGuiThemePresets,
         matchesClickGuiThemePreset,
+        type ClickGuiModuleAccentMode,
+        type ClickGuiModulePrimaryInteraction,
         type ClickGuiThemePreferences,
         type ClickGuiThemePreset,
     } from "../clickGuiThemePreferences";
@@ -32,6 +34,13 @@
         onTextColorChange?: (color: string) => void;
         onDimmedTextColorChange?: (color: string) => void;
         onSettingsSplitCountChange?: (count: number) => void;
+        onModulePrimaryInteractionChange?: (
+            interaction: ClickGuiModulePrimaryInteraction,
+        ) => void;
+        onShowModuleRowActionsChange?: (showModuleRowActions: boolean) => void;
+        onModuleAccentModeChange?: (
+            accentMode: ClickGuiModuleAccentMode,
+        ) => void;
         onApplyPreset?: (preset: ClickGuiThemePreset) => void;
         onResetToDefaults?: () => void;
     }
@@ -39,9 +48,76 @@
     const defaultColorChangeHandler = (_color: string) => {};
     const defaultBackgroundColorChangeHandler = (_color: RgbaColor) => {};
     const defaultSplitCountHandler = (_count: number) => {};
+    const defaultModulePrimaryInteractionHandler = (
+        _interaction: ClickGuiModulePrimaryInteraction,
+    ) => {};
+    const defaultModuleRowActionsHandler = (_showModuleRowActions: boolean) => {};
+    const defaultModuleAccentModeHandler = (
+        _accentMode: ClickGuiModuleAccentMode,
+    ) => {};
     const defaultPresetHandler = (_preset: ClickGuiThemePreset) => {};
     const defaultResetHandler = () => {};
     const settingsSplitOptions = [0, 1, 2] as const;
+    const modulePrimaryInteractionOptions = [
+        {
+            value: "open-config",
+            title: "Open Config",
+            description:
+                "Left click opens settings. Right click toggles the module.",
+        },
+        {
+            value: "toggle-module",
+            title: "Toggle Module",
+            description:
+                "Left click toggles the module. Right click opens settings.",
+        },
+    ] as const satisfies readonly {
+        value: ClickGuiModulePrimaryInteraction;
+        title: string;
+        description: string;
+    }[];
+    const moduleRowActionVisibilityOptions = [
+        {
+            value: true,
+            title: "Show Actions",
+            description:
+                "Keep the inline Toggle and Config buttons visible on each module row.",
+        },
+        {
+            value: false,
+            title: "Hide Actions",
+            description:
+                "Remove the small row buttons and rely on row click plus right click instead.",
+        },
+    ] as const satisfies readonly {
+        value: boolean;
+        title: string;
+        description: string;
+    }[];
+    const moduleAccentModeOptions = [
+        {
+            value: "tile-background",
+            title: "All Tiles",
+            description:
+                "Enabled rows tint the main tile and inline action cells with the accent color.",
+        },
+        {
+            value: "action-toggle",
+            title: "Action Toggle",
+            description:
+                "Only the inline toggle action gets accent fill when the module is enabled.",
+        },
+        {
+            value: "text-only",
+            title: "Accent Text",
+            description:
+                "Enabled rows use accent-colored text instead of accent-filled backgrounds.",
+        },
+    ] as const satisfies readonly {
+        value: ClickGuiModuleAccentMode;
+        title: string;
+        description: string;
+    }[];
 
     let {
         themePreferences,
@@ -54,6 +130,9 @@
         onTextColorChange = defaultColorChangeHandler,
         onDimmedTextColorChange = defaultColorChangeHandler,
         onSettingsSplitCountChange = defaultSplitCountHandler,
+        onModulePrimaryInteractionChange = defaultModulePrimaryInteractionHandler,
+        onShowModuleRowActionsChange = defaultModuleRowActionsHandler,
+        onModuleAccentModeChange = defaultModuleAccentModeHandler,
         onApplyPreset = defaultPresetHandler,
         onResetToDefaults = defaultResetHandler,
     }: Props = $props();
@@ -422,6 +501,116 @@
         </div>
     </section>
 
+    <section class="theme-section">
+        <div class="theme-section-header">
+            <div>
+                <h3 class="theme-section-title">Module Rows</h3>
+                <p class="theme-section-description">
+                    Configure row click behavior, whether the small action buttons
+                    stay visible, and how enabled modules use the accent color.
+                </p>
+            </div>
+        </div>
+
+        <div class="theme-option-stack">
+            <div class="theme-option-group">
+                <div class="theme-option-group-title">Main Row Click</div>
+                <div class="theme-layout-grid">
+                    {#each modulePrimaryInteractionOptions as option (option.value)}
+                        {@const isActive =
+                            themePreferences.modulePrimaryInteraction === option.value}
+
+                        <div class="theme-layout-shell" use:revealBorder>
+                            <button
+                                class="setting-input-control theme-layout-btn"
+                                class:theme-layout-btn--active={isActive}
+                                type="button"
+                                onclick={() =>
+                                    onModulePrimaryInteractionChange(option.value)}
+                                use:revealItem={revealItemOptions}
+                            >
+                                <span class="reveal-press-content">
+                                    <span class="theme-layout-copy">
+                                        <span class="theme-layout-title">
+                                            {option.title}
+                                        </span>
+                                        <span class="theme-layout-description">
+                                            {option.description}
+                                        </span>
+                                    </span>
+                                </span>
+                            </button>
+                        </div>
+                    {/each}
+                </div>
+            </div>
+
+            <div class="theme-option-group">
+                <div class="theme-option-group-title">Inline Actions</div>
+                <div class="theme-layout-grid">
+                    {#each moduleRowActionVisibilityOptions as option (option.value)}
+                        {@const isActive =
+                            themePreferences.showModuleRowActions === option.value}
+
+                        <div class="theme-layout-shell" use:revealBorder>
+                            <button
+                                class="setting-input-control theme-layout-btn"
+                                class:theme-layout-btn--active={isActive}
+                                type="button"
+                                onclick={() =>
+                                    onShowModuleRowActionsChange(option.value)}
+                                use:revealItem={revealItemOptions}
+                            >
+                                <span class="reveal-press-content">
+                                    <span class="theme-layout-copy">
+                                        <span class="theme-layout-title">
+                                            {option.title}
+                                        </span>
+                                        <span class="theme-layout-description">
+                                            {option.description}
+                                        </span>
+                                    </span>
+                                </span>
+                            </button>
+                        </div>
+                    {/each}
+                </div>
+            </div>
+
+            <div class="theme-option-group">
+                <div class="theme-option-group-title">Enabled Row Accent</div>
+                <div class="theme-layout-grid">
+                    {#each moduleAccentModeOptions as option (option.value)}
+                        {@const isActive =
+                            themePreferences.moduleAccentMode === option.value}
+
+                        <div class="theme-layout-shell" use:revealBorder>
+                            <button
+                                class="setting-input-control theme-layout-btn"
+                                class:theme-layout-btn--active={isActive}
+                                type="button"
+                                onclick={() =>
+                                    onModuleAccentModeChange(option.value)}
+                                use:revealItem={revealItemOptions}
+                            >
+                                <span class="reveal-press-content">
+                                    <span class="theme-layout-copy">
+                                        <span class="theme-layout-title">
+                                            {option.title}
+                                        </span>
+                                        <span class="theme-layout-description">
+                                            {option.description}
+                                        </span>
+                                    </span>
+                                </span>
+                            </button>
+                        </div>
+                    {/each}
+                </div>
+            </div>
+        </div>
+    </section>
+
     <div class="theme-actions">
         <div class="theme-settings-action-shell" use:revealBorder>
             <button
@@ -512,6 +701,26 @@
 
     .theme-preview-stage {
         display: flex;
+    }
+
+    .theme-option-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .theme-option-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .theme-option-group-title {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgb(var(--clickgui-text-dimmed-rgb) / 0.9);
     }
 
     .theme-preview-panel {

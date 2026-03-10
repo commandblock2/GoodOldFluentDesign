@@ -7,16 +7,67 @@
         type RevealContainerOptions,
         type RevealItemOptions,
     } from "fluent-reveal-svelte";
+    import type {
+        ClickGuiModuleAccentMode,
+        ClickGuiModulePrimaryInteraction,
+    } from "../clickGuiThemePreferences";
 
     export let filteredCategoryNames: string[] = [];
     export let filteredGrouped: GroupedModules = {};
     export let subsectionRevealOptions: RevealContainerOptions;
     export let moduleRevealItemOptions: RevealItemOptions;
+    export let modulePrimaryInteraction: ClickGuiModulePrimaryInteraction =
+        "open-config";
+    export let showModuleRowActions = true;
+    export let moduleAccentMode: ClickGuiModuleAccentMode = "action-toggle";
+    export let togglePendingByName: Record<string, boolean> = {};
     export let onOpenModuleConfig: (module: Module) => void = () => {};
+    export let onToggleModule: (module: Module) => void = () => {};
     export let onOpenThemeSettings: () => void = () => {};
+
+    const configIconPath = "/img/menu/icon-options.svg";
+    const moduleActionRevealItemOptions: RevealItemOptions = {
+        ...moduleRevealItemOptions,
+        border: true,
+    };
 
     function modulesForCategory(categoryName: string): Module[] {
         return filteredGrouped[categoryName] ?? [];
+    }
+
+    function getModuleRowTitle(): string {
+        return modulePrimaryInteraction === "open-config"
+            ? "Left click opens settings. Right click toggles the module."
+            : "Left click toggles the module. Right click opens settings.";
+    }
+
+    function getToggleIconPath(module: Module): string {
+        return module.enabled
+            ? "/img/clickgui/icon-tick-checked.svg"
+            : "/img/clickgui/icon-tick.svg";
+    }
+
+    function handleModuleRowClick(module: Module): void {
+        if (modulePrimaryInteraction === "open-config") {
+            onOpenModuleConfig(module);
+            return;
+        }
+
+        onToggleModule(module);
+    }
+
+    function handleModuleRowContextMenu(
+        event: MouseEvent,
+        module: Module,
+    ): void {
+        event.preventDefault();
+
+        if (modulePrimaryInteraction === "open-config") {
+            onToggleModule(module);
+            return;
+        }
+
+        onOpenModuleConfig(module);
     }
 </script>
 
@@ -34,17 +85,81 @@
                     use:revealContainer={subsectionRevealOptions}
                 >
                     {#each modulesForCategory(categoryName) as module}
-                        <li class="item module-item btn-border" use:revealBorder>
+                        <li
+                            class="item module-item btn-border module-row-shell"
+                            class:module-row-shell--enabled={module.enabled}
+                            class:module-row-shell--accent-tile={moduleAccentMode ===
+                                "tile-background"}
+                            class:module-row-shell--accent-toggle={moduleAccentMode ===
+                                "action-toggle"}
+                            class:module-row-shell--accent-text={moduleAccentMode ===
+                                "text-only"}
+                            class:module-row-shell--actions-hidden={!showModuleRowActions}
+                            use:revealBorder
+                        >
                             <button
-                                class="btn"
+                                class="btn module-row-main"
                                 type="button"
-                                onclick={() => onOpenModuleConfig(module)}
+                                title={getModuleRowTitle()}
+                                onclick={() => handleModuleRowClick(module)}
+                                oncontextmenu={(event) =>
+                                    handleModuleRowContextMenu(event, module)}
                                 use:revealItem={moduleRevealItemOptions}
                             >
                                 <span class="reveal-press-content">
                                     {module.name}
                                 </span>
                             </button>
+
+                            {#if showModuleRowActions}
+                                <div class="module-row-actions">
+                                    <div class="module-row-action-shell" use:revealBorder>
+                                        <button
+                                            class="module-row-action"
+                                            class:module-row-action--toggle-active={module.enabled}
+                                            type="button"
+                                            title={module.enabled
+                                                ? "Disable module"
+                                                : "Enable module"}
+                                            aria-label={module.enabled
+                                                ? `Disable ${module.name}`
+                                                : `Enable ${module.name}`}
+                                            disabled={togglePendingByName[module.name] === true}
+                                            onclick={() => onToggleModule(module)}
+                                            use:revealItem={moduleActionRevealItemOptions}
+                                        >
+                                            <span class="reveal-press-content">
+                                                <img
+                                                    class="module-row-action-icon"
+                                                    src={getToggleIconPath(module)}
+                                                    alt=""
+                                                    aria-hidden="true"
+                                                />
+                                            </span>
+                                        </button>
+                                    </div>
+
+                                    <div class="module-row-action-shell" use:revealBorder>
+                                        <button
+                                            class="module-row-action"
+                                            type="button"
+                                            title="Open settings"
+                                            aria-label={`Open ${module.name} settings`}
+                                            onclick={() => onOpenModuleConfig(module)}
+                                            use:revealItem={moduleActionRevealItemOptions}
+                                        >
+                                            <span class="reveal-press-content">
+                                                <img
+                                                    class="module-row-action-icon"
+                                                    src={configIconPath}
+                                                    alt=""
+                                                    aria-hidden="true"
+                                                />
+                                            </span>
+                                        </button>
+                                    </div>
+                                </div>
+                            {/if}
                         </li>
                     {/each}
                 </ul>
@@ -78,6 +193,7 @@
     @include shared.subsection-block;
     @include shared.interactive-list-block;
     @include shared.module-item-block;
+    @include shared.module-row-block;
     @include shared.empty-block;
     @include shared.reveal-hover-overlay-block;
 </style>

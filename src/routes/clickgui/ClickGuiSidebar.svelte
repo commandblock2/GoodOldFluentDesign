@@ -8,6 +8,10 @@
         Module,
     } from "../../integration/types";
     import type { RgbaColor } from "./clickGuiColorUtils";
+    import type {
+        ClickGuiModuleAccentMode,
+        ClickGuiModulePrimaryInteraction,
+    } from "./clickGuiThemePreferences";
     import { scrollbarHoverSurface } from "./clickGuiActions";
     import ClickGuiCategoryDetailView from "./views/ClickGuiCategoryDetailView.svelte";
     import ClickGuiHomeView from "./views/ClickGuiHomeView.svelte";
@@ -30,6 +34,10 @@
         themeTextColor: string;
         themeDimmedTextColor: string;
         themeSettingsColumnCount: number;
+        modulePrimaryInteraction: ClickGuiModulePrimaryInteraction;
+        showModuleRowActions: boolean;
+        moduleAccentMode: ClickGuiModuleAccentMode;
+        togglePendingByName?: Record<string, boolean>;
         subsectionRevealOptions: RevealContainerOptions;
         moduleRevealItemOptions: RevealItemOptions;
         onOpenCategory?: (categoryName: string) => void;
@@ -37,11 +45,13 @@
         onOpenThemeSettings?: () => void;
         onCloseDetailView?: () => void;
         onOpenModuleConfig?: (module: Module) => void | Promise<void>;
+        onToggleModule?: (module: Module) => void | Promise<void>;
     }
 
     const noopOpenCategory = (_categoryName: string) => {};
     const noop = () => {};
     const noopOpenModuleConfig = (_module: Module) => {};
+    const noopToggleModule = (_module: Module) => {};
     let sidebarScrolled = $state(false);
 
     let {
@@ -60,6 +70,10 @@
         themeTextColor,
         themeDimmedTextColor,
         themeSettingsColumnCount,
+        modulePrimaryInteraction,
+        showModuleRowActions,
+        moduleAccentMode,
+        togglePendingByName = {},
         subsectionRevealOptions,
         moduleRevealItemOptions,
         onOpenCategory = noopOpenCategory,
@@ -67,6 +81,7 @@
         onOpenThemeSettings = noop,
         onCloseDetailView = noop,
         onOpenModuleConfig = noopOpenModuleConfig,
+        onToggleModule = noopToggleModule,
     }: Props = $props();
 
     function handleSidebarScroll(event: Event) {
@@ -100,10 +115,15 @@
         <ClickGuiCategoryDetailView
             {selectedCategory}
             {selectedCategoryModules}
+            {modulePrimaryInteraction}
+            {showModuleRowActions}
+            {moduleAccentMode}
+            {togglePendingByName}
             {subsectionRevealOptions}
             {moduleRevealItemOptions}
             onCloseDetailView={onCloseDetailView}
             onOpenModuleConfig={onOpenModuleConfig}
+            onToggleModule={onToggleModule}
         />
     {:else if selectedThemeSettings}
         <ClickGuiThemeDetailView
@@ -113,6 +133,9 @@
             textColor={themeTextColor}
             dimmedTextColor={themeDimmedTextColor}
             settingsColumnCount={themeSettingsColumnCount}
+            {modulePrimaryInteraction}
+            {showModuleRowActions}
+            {moduleAccentMode}
             {subsectionRevealOptions}
             {moduleRevealItemOptions}
             onCloseDetailView={onCloseDetailView}
@@ -121,10 +144,15 @@
         <ClickGuiSearchView
             {filteredCategoryNames}
             {filteredGrouped}
+            {modulePrimaryInteraction}
+            {showModuleRowActions}
+            {moduleAccentMode}
+            {togglePendingByName}
             {subsectionRevealOptions}
             {moduleRevealItemOptions}
             onOpenThemeSettings={onOpenThemeSettings}
             onOpenModuleConfig={onOpenModuleConfig}
+            onToggleModule={onToggleModule}
         />
     {:else}
         <ClickGuiHomeView

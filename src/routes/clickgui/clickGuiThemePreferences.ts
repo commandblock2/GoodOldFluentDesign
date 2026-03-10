@@ -6,10 +6,25 @@ import {
     type RgbaColor,
 } from "./clickGuiColorUtils";
 
-const CLICKGUI_THEME_STORAGE_KEY = "clickgui.theme.preferences.v2";
-const LEGACY_CLICKGUI_THEME_STORAGE_KEY = "clickgui.theme.preferences.v1";
+const CLICKGUI_THEME_STORAGE_KEY = "clickgui.theme.preferences.v4";
+const LEGACY_CLICKGUI_THEME_STORAGE_KEY = "clickgui.theme.preferences.v3";
+const OLDER_CLICKGUI_THEME_STORAGE_KEY = "clickgui.theme.preferences.v2";
+const OLDEST_CLICKGUI_THEME_STORAGE_KEY = "clickgui.theme.preferences.v1";
 const HEX_COLOR_PATTERN = /^#[0-9a-fA-F]{6}$/;
 const MAX_SETTINGS_SPLIT_COUNT = 2;
+const MODULE_PRIMARY_INTERACTIONS = [
+    "open-config",
+    "toggle-module",
+] as const;
+const MODULE_ACCENT_MODES = [
+    "tile-background",
+    "action-toggle",
+    "text-only",
+] as const;
+
+export type ClickGuiModulePrimaryInteraction =
+    (typeof MODULE_PRIMARY_INTERACTIONS)[number];
+export type ClickGuiModuleAccentMode = (typeof MODULE_ACCENT_MODES)[number];
 
 export interface ClickGuiThemePreferences {
     accentColor: string;
@@ -18,9 +33,16 @@ export interface ClickGuiThemePreferences {
     textColor: string;
     dimmedTextColor: string;
     settingsSplitCount: number;
+    modulePrimaryInteraction: ClickGuiModulePrimaryInteraction;
+    showModuleRowActions: boolean;
+    moduleAccentMode: ClickGuiModuleAccentMode;
 }
 
-export interface ClickGuiThemePreset extends ClickGuiThemePreferences {
+export interface ClickGuiThemePreset
+    extends Omit<
+        ClickGuiThemePreferences,
+        "modulePrimaryInteraction" | "showModuleRowActions" | "moduleAccentMode"
+    > {
     id: string;
     label: string;
     description: string;
@@ -38,6 +60,9 @@ export const defaultClickGuiThemePreferences: ClickGuiThemePreferences = {
     textColor: "#ffffff",
     dimmedTextColor: "#d3d3d3",
     settingsSplitCount: 1,
+    modulePrimaryInteraction: "open-config",
+    showModuleRowActions: true,
+    moduleAccentMode: "action-toggle",
 };
 
 export const clickGuiThemePresets = [
@@ -149,6 +174,32 @@ function normalizeSettingsSplitCount(value: number): number {
     return value;
 }
 
+function normalizeModulePrimaryInteraction(
+    value: string,
+): ClickGuiModulePrimaryInteraction {
+    if (
+        !MODULE_PRIMARY_INTERACTIONS.includes(
+            value as ClickGuiModulePrimaryInteraction,
+        )
+    ) {
+        throw new Error(
+            `ClickGUI theme preference "modulePrimaryInteraction" must be one of: ${MODULE_PRIMARY_INTERACTIONS.join(", ")}. Received: ${value}`,
+        );
+    }
+
+    return value as ClickGuiModulePrimaryInteraction;
+}
+
+function normalizeModuleAccentMode(value: string): ClickGuiModuleAccentMode {
+    if (!MODULE_ACCENT_MODES.includes(value as ClickGuiModuleAccentMode)) {
+        throw new Error(
+            `ClickGUI theme preference "moduleAccentMode" must be one of: ${MODULE_ACCENT_MODES.join(", ")}. Received: ${value}`,
+        );
+    }
+
+    return value as ClickGuiModuleAccentMode;
+}
+
 function isPlainObject(
     value: unknown,
 ): value is Record<string, unknown> {
@@ -170,6 +221,9 @@ export function validateClickGuiThemePreferences(
     const textColor = value.textColor;
     const dimmedTextColor = value.dimmedTextColor;
     const settingsSplitCount = value.settingsSplitCount;
+    const modulePrimaryInteraction = value.modulePrimaryInteraction;
+    const showModuleRowActions = value.showModuleRowActions;
+    const moduleAccentMode = value.moduleAccentMode;
 
     if (typeof accentColor !== "string") {
         throw new Error(
@@ -206,6 +260,24 @@ export function validateClickGuiThemePreferences(
         );
     }
 
+    if (typeof modulePrimaryInteraction !== "string") {
+        throw new Error(
+            `ClickGUI theme preference "modulePrimaryInteraction" must be a string. Received: ${typeof modulePrimaryInteraction}`,
+        );
+    }
+
+    if (typeof showModuleRowActions !== "boolean") {
+        throw new Error(
+            `ClickGUI theme preference "showModuleRowActions" must be a boolean. Received: ${typeof showModuleRowActions}`,
+        );
+    }
+
+    if (typeof moduleAccentMode !== "string") {
+        throw new Error(
+            `ClickGUI theme preference "moduleAccentMode" must be a string. Received: ${typeof moduleAccentMode}`,
+        );
+    }
+
     return {
         accentColor: normalizeHexColor(accentColor, "accentColor"),
         baseColor: normalizeHexColor(baseColor, "baseColor"),
@@ -216,6 +288,11 @@ export function validateClickGuiThemePreferences(
             "dimmedTextColor",
         ),
         settingsSplitCount: normalizeSettingsSplitCount(settingsSplitCount),
+        modulePrimaryInteraction: normalizeModulePrimaryInteraction(
+            modulePrimaryInteraction,
+        ),
+        showModuleRowActions,
+        moduleAccentMode: normalizeModuleAccentMode(moduleAccentMode),
     };
 }
 
@@ -246,7 +323,51 @@ function tryParseStoredThemePreferences(
 
         const legacyPreferences = validateClickGuiThemePreferences({
             ...parsedValue,
+            modulePrimaryInteraction:
+                defaultClickGuiThemePreferences.modulePrimaryInteraction,
+            showModuleRowActions:
+                defaultClickGuiThemePreferences.showModuleRowActions,
+            moduleAccentMode: defaultClickGuiThemePreferences.moduleAccentMode,
+        });
+
+        return legacyPreferences;
+    }
+
+    if (storageKey === OLDER_CLICKGUI_THEME_STORAGE_KEY) {
+        if (!isPlainObject(parsedValue)) {
+            throw new Error(
+                `ClickGUI legacy theme preferences must be a plain object payload. Storage key: ${storageKey}.`,
+            );
+        }
+
+        const legacyPreferences = validateClickGuiThemePreferences({
+            ...parsedValue,
             backgroundColor: defaultClickGuiThemePreferences.backgroundColor,
+            modulePrimaryInteraction:
+                defaultClickGuiThemePreferences.modulePrimaryInteraction,
+            showModuleRowActions:
+                defaultClickGuiThemePreferences.showModuleRowActions,
+            moduleAccentMode: defaultClickGuiThemePreferences.moduleAccentMode,
+        });
+
+        return legacyPreferences;
+    }
+
+    if (storageKey === OLDEST_CLICKGUI_THEME_STORAGE_KEY) {
+        if (!isPlainObject(parsedValue)) {
+            throw new Error(
+                `ClickGUI legacy theme preferences must be a plain object payload. Storage key: ${storageKey}.`,
+            );
+        }
+
+        const legacyPreferences = validateClickGuiThemePreferences({
+            ...parsedValue,
+            backgroundColor: defaultClickGuiThemePreferences.backgroundColor,
+            modulePrimaryInteraction:
+                defaultClickGuiThemePreferences.modulePrimaryInteraction,
+            showModuleRowActions:
+                defaultClickGuiThemePreferences.showModuleRowActions,
+            moduleAccentMode: defaultClickGuiThemePreferences.moduleAccentMode,
         });
 
         return legacyPreferences;
@@ -268,6 +389,20 @@ export function readStoredClickGuiThemePreferences(): ClickGuiThemePreferences {
     );
     if (legacyPreferences !== null) {
         return legacyPreferences;
+    }
+
+    const olderPreferences = tryParseStoredThemePreferences(
+        OLDER_CLICKGUI_THEME_STORAGE_KEY,
+    );
+    if (olderPreferences !== null) {
+        return olderPreferences;
+    }
+
+    const oldestPreferences = tryParseStoredThemePreferences(
+        OLDEST_CLICKGUI_THEME_STORAGE_KEY,
+    );
+    if (oldestPreferences !== null) {
+        return oldestPreferences;
     }
 
     return {

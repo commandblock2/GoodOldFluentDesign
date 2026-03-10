@@ -49,6 +49,16 @@
         onSettingsSplitCountChange?: (
             settingsSplitCount: number,
         ) => void | Promise<void>;
+        settingsSearchQuery?: string;
+        onModulePrimaryInteractionChange?: (
+            interaction: ClickGuiThemePreferences["modulePrimaryInteraction"],
+        ) => void | Promise<void>;
+        onShowModuleRowActionsChange?: (
+            showModuleRowActions: ClickGuiThemePreferences["showModuleRowActions"],
+        ) => void | Promise<void>;
+        onModuleAccentModeChange?: (
+            accentMode: ClickGuiThemePreferences["moduleAccentMode"],
+        ) => void | Promise<void>;
         onApplyThemePreset?: (
             preset: ClickGuiThemePreset,
         ) => void | Promise<void>;
@@ -61,6 +71,15 @@
         _backgroundColor: ClickGuiThemePreferences["backgroundColor"],
     ) => {};
     const noopNumberChange = (_value: number) => {};
+    const noopModulePrimaryInteractionChange = (
+        _interaction: ClickGuiThemePreferences["modulePrimaryInteraction"],
+    ) => {};
+    const noopModuleRowActionsChange = (
+        _showModuleRowActions: ClickGuiThemePreferences["showModuleRowActions"],
+    ) => {};
+    const noopModuleAccentModeChange = (
+        _accentMode: ClickGuiThemePreferences["moduleAccentMode"],
+    ) => {};
     const noopPresetChange = (_preset: ClickGuiThemePreset) => {};
     let mainContentScrolled = $state(false);
 
@@ -86,6 +105,10 @@
         onTextColorChange = noopStringChange,
         onDimmedTextColorChange = noopStringChange,
         onSettingsSplitCountChange = noopNumberChange,
+        settingsSearchQuery = $bindable(""),
+        onModulePrimaryInteractionChange = noopModulePrimaryInteractionChange,
+        onShowModuleRowActionsChange = noopModuleRowActionsChange,
+        onModuleAccentModeChange = noopModuleAccentModeChange,
         onApplyThemePreset = noopPresetChange,
         onResetThemeDefaults = noop,
     }: Props = $props();
@@ -104,6 +127,17 @@
     );
     const showQuickSettingsState = $derived(
         activeConfigPage.type === "quick-settings",
+    );
+    const hasVisibleModuleSettings = $derived(
+        settingsColumns.some((column) => column.length > 0),
+    );
+    const showVisibleModuleSettings = $derived(
+        showModuleSettings && hasVisibleModuleSettings,
+    );
+    const showModuleSearchEmptyState = $derived(
+        showModuleSettings &&
+            !hasVisibleModuleSettings &&
+            settingsSearchQuery.trim().length > 0,
     );
 
     function handleMainContentScroll(event: Event) {
@@ -139,11 +173,12 @@
                 class="settings-search-input"
                 type="text"
                 placeholder="Search settings..."
+                bind:value={settingsSearchQuery}
             />
         </div>
     {/if}
 
-    {#if showModuleSettings}
+    {#if showVisibleModuleSettings}
         <div class="settings-split-layout">
             {#each settingsColumns as column, columnIndex (columnIndex)}
                 <div class="settings-column">
@@ -168,6 +203,14 @@
                 {/if}
             {/each}
         </div>
+    {:else if showModuleSearchEmptyState}
+        <div class="state-card">
+            <h3 class="state-card-title">No Matching Settings</h3>
+            <p class="state-card-message">
+                Try a different search term or clear the filter to see every
+                setting for this module.
+            </p>
+        </div>
     {:else if activeConfigPage.type === "theme-settings"}
         <ClickGuiThemeSettingsContent
             themePreferences={clickGuiThemePreferences}
@@ -180,6 +223,9 @@
             onTextColorChange={onTextColorChange}
             onDimmedTextColorChange={onDimmedTextColorChange}
             onSettingsSplitCountChange={onSettingsSplitCountChange}
+            onModulePrimaryInteractionChange={onModulePrimaryInteractionChange}
+            onShowModuleRowActionsChange={onShowModuleRowActionsChange}
+            onModuleAccentModeChange={onModuleAccentModeChange}
             onApplyPreset={onApplyThemePreset}
             onResetToDefaults={onResetThemeDefaults}
         />

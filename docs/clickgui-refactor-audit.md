@@ -4,7 +4,7 @@
 
 1. Scope is `src/routes/clickgui` and direct style dependencies.
 2. Current goal is a clean, debt-free style baseline before adding more controls.
-3. `Theme Settings` is implemented. The main incomplete UX items are settings search filtering and full row-action parity with `docs/clickgui-ux.md`.
+3. `Theme Settings` is implemented, and the row-action/settings-search UX from `docs/clickgui-ux.md` is now wired into the current ClickGUI flow.
 
 ## Why Priority Changed
 
@@ -83,9 +83,8 @@
 
 ### P1 (Next)
 
-1. Wire settings search input (currently visual only).
-2. Align module row actions fully with `docs/clickgui-ux.md`.
-3. Decide whether the current lightweight empty/loading state cards are sufficient or should be expanded further.
+1. Decide whether the current lightweight empty/loading state cards are sufficient or should be expanded further.
+2. Manual-QA the new row-action behavior against dense categories and search-heavy flows.
 
 ### P2 (Feature completion after clean baseline)
 
@@ -185,19 +184,28 @@
    - empty/select-a-module state
    - quick-settings placeholder card
 5. Top-level module settings display now explicitly prioritizes `Enabled` and keybind-related controls near the top, instead of depending on backend order.
+6. Wired real settings search behavior in main content:
+   - filters top-level setting sections by name/description/key and nested matches
+   - auto-selects the first matching `CHOICE` tab when needed
+7. Implemented documented module row actions while preserving the older slim list aesthetic:
+   - optional inline `Toggle` and `Config` controls inside the row
+   - persistent row-click preference (`Open Config` vs `Toggle Module`)
+   - right click on the main row area performs the opposite action
+8. Kept module enabled state synchronized between:
+   - sidebar/search row toggles
+   - the top-level `Enabled` setting in module config
+9. Added row-style preferences in theme settings:
+   - show/hide inline action buttons
+   - enabled-row accent mode (`All Tiles`, `Action Toggle`, `Accent Text`)
 
 ## Confirmed Doc/Code Mismatches (2026-03-08)
 
-1. `docs/clickgui-refactor-audit.md` previously said `Theme Settings` was deferred, but the code already had a working theme detail/settings flow. This document now reflects the code.
-2. `docs/clickgui-ux.md` specifies dual row actions and a persistent row-click preference (`Open Config` vs `Toggle Module`). Current sidebar/search rows still only open config; there is no secondary quick-toggle control or stored preference yet.
-3. `docs/clickgui-ux.md` requires real settings search behavior. The main-content settings search input is still visual-only.
+1. No confirmed doc/code mismatches remain in the implemented ClickGUI scope after this pass.
 
 ## Current Debt Notes After This Pass
 
 1. ClickGUI now has a cleaner separation between shell, sidebar, main content, and pure setting logic.
-2. Behavior for settings search is still visual-only; filtering is not yet wired.
-3. Module row action UX is still behind the documented target.
-4. Reveal host/item sizing pitfalls are now documented in:
+2. Reveal host/item sizing pitfalls are now documented in:
    - `docs/clickgui-reveal-border-alignment.md`
 
 ## Setting Coverage Snapshot (2026-03-04)

@@ -1,4 +1,7 @@
-import type { ModuleSetting } from "../../../integration/types";
+import type {
+    BooleanSetting,
+    ModuleSetting,
+} from "../../../integration/types";
 import { getActiveChoiceTab } from "./choiceSettingUtils";
 import {
     isBindSetting,
@@ -35,7 +38,9 @@ function getSettingKeySignature(setting: ModuleSetting): string {
     return maybeWithKey.key ?? "";
 }
 
-function isEnabledSetting(setting: ModuleSetting): boolean {
+export function isModuleEnabledSetting(
+    setting: ModuleSetting,
+): setting is BooleanSetting {
     if (!isBooleanSetting(setting)) {
         return false;
     }
@@ -65,7 +70,7 @@ function isKeybindSetting(setting: ModuleSetting): boolean {
 }
 
 function getDisplayPriority(setting: ModuleSetting): number {
-    if (isEnabledSetting(setting)) {
+    if (isModuleEnabledSetting(setting)) {
         return 0;
     }
 

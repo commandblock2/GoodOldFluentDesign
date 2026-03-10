@@ -1,7 +1,6 @@
 <script lang="ts">
     import type {
         ConfigurableSetting,
-        GroupedModules,
         Module,
     } from "../../integration/types";
     import { onDestroy, onMount } from "svelte";
@@ -12,6 +11,7 @@
     import {
         getModuleSettings,
         getModules,
+        setModuleEnabled,
         setModuleSettings,
     } from "../../integration/rest";
     import { groupByCategory } from "../../integration/util";
@@ -57,12 +57,14 @@
     import {
         buildSettingsColumns,
         getModuleSettingsShapeSignature,
+        isModuleEnabledSetting,
         prioritizeModuleSettingsForDisplay,
     } from "./setting/clickGuiSettingLayout";
+    import { filterModuleSettingsForSearch } from "./setting/clickGuiSettingSearch";
 
-    let categories = $state<GroupedModules>({});
     let modules = $state<Module[]>([]);
     let searchQuery = $state("");
+    let settingsSearchQuery = $state("");
     let selectedCategory = $state<string | null>(null);
     let selectedThemeSettings = $state(false);
     let activeConfigPage = $state<ClickGuiActivePageState>({
@@ -80,6 +82,7 @@
     let clickGuiThemeLoadError = $state<string | null>(null);
     let settingHeights = $state<Record<number, number>>({});
     let settingHeightsSignature = "";
+    let moduleTogglePendingByName = $state<Record<string, boolean>>({});
 
     const sortByName = (a: string, b: string) => a.localeCompare(b);
 
@@ -131,7 +134,11 @@
     };
 
     const normalizedQuery = $derived(searchQuery.trim().toLowerCase());
+    const normalizedSettingsSearchQuery = $derived(
+        settingsSearchQuery.trim().toLowerCase(),
+    );
     const isSearching = $derived(normalizedQuery.length > 0);
+    const categories = $derived(groupByCategory(modules));
     const categoryNames = $derived(Object.keys(categories).sort(sortByName));
     const filteredModules = $derived(
         isSearching
@@ -167,7 +174,7 @@
     );
     const activeConfigDescription = $derived(
         activeConfigPage.type === "theme-settings"
-            ? "Adjust Click GUI accent, contrast, and module settings layout."
+            ? "Adjust Click GUI accent, contrast, module settings layout, and module row behavior."
             : activeConfigPage.type === "quick-settings"
               ? "Quick settings are not wired yet."
               : activeConfigPage.type !== "module" ||
@@ -185,8 +192,14 @@
             : null,
     );
     const activeModuleSettings = $derived(activeConfigurable?.value ?? []);
+    const visibleActiveModuleSettings = $derived(
+        filterModuleSettingsForSearch(
+            activeModuleSettings,
+            normalizedSettingsSearchQuery,
+        ),
+    );
     const orderedActiveModuleSettings = $derived(
-        prioritizeModuleSettingsForDisplay(activeModuleSettings),
+        prioritizeModuleSettingsForDisplay(visibleActiveModuleSettings),
     );
     const activeModuleSettingsShapeSignature = $derived(
         getModuleSettingsShapeSignature(activeModuleSettings),
@@ -233,7 +246,6 @@
     onMount(async () => {
         restoreClickGuiThemePreferences();
         modules = await getModules();
-        categories = groupByCategory(modules);
 
         await restorePersistedState();
     });
@@ -318,6 +330,7 @@
     function openQuickSettings() {
         selectedCategory = null;
         selectedThemeSettings = false;
+        settingsSearchQuery = "";
         activeConfigPage = {
             type: "quick-settings",
             moduleName: null,
@@ -331,6 +344,7 @@
         selectedCategory = null;
         selectedThemeSettings = true;
         searchQuery = "";
+        settingsSearchQuery = "";
         activeConfigPage = {
             type: "theme-settings",
             moduleName: null,
@@ -395,7 +409,14 @@
     }
 
     async function applyClickGuiThemePreset(preset: ClickGuiThemePreset) {
-        await applyClickGuiThemePreferences(preset);
+        await applyClickGuiThemePreferences({
+            ...preset,
+            modulePrimaryInteraction:
+                clickGuiThemePreferences.modulePrimaryInteraction,
+            showModuleRowActions:
+                clickGuiThemePreferences.showModuleRowActions,
+            moduleAccentMode: clickGuiThemePreferences.moduleAccentMode,
+        });
     }
 
     async function resetClickGuiThemePreferences() {
@@ -406,6 +427,14 @@
 
     async function openModuleConfig(module: Module) {
         const requestId = ++moduleSettingsRequestId;
+        const currentModuleName =
+            activeConfigPage.type === "module"
+                ? activeConfigPage.moduleName
+                : null;
+
+        if (currentModuleName !== module.name) {
+            settingsSearchQuery = "";
+        }
 
         activeConfigPage = {
             type: "module",
@@ -437,6 +466,79 @@
         }
     }
 
+    function applyModuleEnabledStateLocally(
+        moduleName: string,
+        enabled: boolean,
+    ) {
+        modules = modules.map((module) =>
+            module.name === moduleName ? { ...module, enabled } : module,
+        );
+
+        if (
+            activeConfigPage.type !== "module" ||
+            activeConfigPage.moduleName !== moduleName ||
+            activeConfigurable === null
+        ) {
+            return;
+        }
+
+        const enabledSettingIndex = activeConfigurable.value.findIndex(
+            isModuleEnabledSetting,
+        );
+
+        if (enabledSettingIndex === -1) {
+            return;
+        }
+
+        activeConfigurable = applySettingMapperToConfigurable(
+            activeConfigurable,
+            [enabledSettingIndex],
+            createBooleanSettingMapper(enabled),
+        );
+    }
+
+    async function toggleModule(module: Module) {
+        if (moduleTogglePendingByName[module.name] === true) {
+            return;
+        }
+
+        const previousEnabled = module.enabled;
+        const nextEnabled = !previousEnabled;
+        const isActiveModule =
+            activeConfigPage.type === "module" &&
+            activeConfigPage.moduleName === module.name;
+        const previousConfigurable = isActiveModule ? activeConfigurable : null;
+
+        moduleTogglePendingByName = {
+            ...moduleTogglePendingByName,
+            [module.name]: true,
+        };
+        applyModuleEnabledStateLocally(module.name, nextEnabled);
+
+        if (isActiveModule) {
+            activeConfigError = null;
+        }
+
+        try {
+            await setModuleEnabled(module.name, nextEnabled);
+        } catch (error) {
+            applyModuleEnabledStateLocally(module.name, previousEnabled);
+
+            if (isActiveModule) {
+                activeConfigurable = previousConfigurable;
+                activeConfigError =
+                    error instanceof Error
+                        ? error.message
+                        : "Failed to update module enabled state.";
+            }
+        } finally {
+            moduleTogglePendingByName = {
+                ...moduleTogglePendingByName,
+                [module.name]: false,
+            };
+        }
+    }
+
     async function retryActiveModuleConfigLoad() {
         if (
             activeConfigPage.type !== "module" ||
@@ -456,6 +558,23 @@
         }
 
         await openModuleConfig(module);
+    }
+
+    function getTopLevelModuleEnabledValue(
+        configurable: ConfigurableSetting,
+        settingPath: number[],
+    ): boolean | null {
+        if (settingPath.length !== 1) {
+            return null;
+        }
+
+        const targetSetting = configurable.value[settingPath[0]];
+
+        if (targetSetting === undefined || !isModuleEnabledSetting(targetSetting)) {
+            return null;
+        }
+
+        return targetSetting.value;
     }
 
     async function updateActiveModuleSettings(
@@ -478,6 +597,14 @@
             settingPath,
             mapper,
         );
+        const previousModuleEnabled = getTopLevelModuleEnabledValue(
+            previousConfigurable,
+            settingPath,
+        );
+        const nextModuleEnabled = getTopLevelModuleEnabledValue(
+            nextConfigurable,
+            settingPath,
+        );
 
         if (nextConfigurable === previousConfigurable) {
             return;
@@ -485,6 +612,10 @@
 
         activeConfigurable = nextConfigurable;
         activeConfigError = null;
+
+        if (nextModuleEnabled !== null) {
+            applyModuleEnabledStateLocally(moduleName, nextModuleEnabled);
+        }
 
         try {
             await setModuleSettings(moduleName, nextConfigurable);
@@ -497,6 +628,11 @@
             }
 
             activeConfigurable = previousConfigurable;
+
+            if (previousModuleEnabled !== null) {
+                applyModuleEnabledStateLocally(moduleName, previousModuleEnabled);
+            }
+
             activeConfigError =
                 error instanceof Error
                     ? error.message
@@ -601,6 +737,10 @@
         themeTextColor={clickGuiThemePreferences.textColor}
         themeDimmedTextColor={clickGuiThemePreferences.dimmedTextColor}
         themeSettingsColumnCount={settingsColumnCount}
+        modulePrimaryInteraction={clickGuiThemePreferences.modulePrimaryInteraction}
+        showModuleRowActions={clickGuiThemePreferences.showModuleRowActions}
+        moduleAccentMode={clickGuiThemePreferences.moduleAccentMode}
+        togglePendingByName={moduleTogglePendingByName}
         {subsectionRevealOptions}
         {moduleRevealItemOptions}
         onOpenCategory={openCategory}
@@ -608,6 +748,7 @@
         onOpenThemeSettings={openThemeSettings}
         onCloseDetailView={closeDetailView}
         onOpenModuleConfig={openModuleConfig}
+        onToggleModule={toggleModule}
     />
 
     <ClickGuiMainContent
@@ -618,6 +759,7 @@
         {activeConfigurable}
         {activeModuleLoadError}
         {settingsColumns}
+        bind:settingsSearchQuery
         {subsectionRevealOptions}
         revealItemOptions={moduleRevealItemOptions}
         {textInputRevealItemOptions}
@@ -639,6 +781,18 @@
         onSettingsSplitCountChange={(nextSplitCount) =>
             updateClickGuiThemePreference({
                 settingsSplitCount: nextSplitCount,
+            })}
+        onModulePrimaryInteractionChange={(modulePrimaryInteraction) =>
+            updateClickGuiThemePreference({
+                modulePrimaryInteraction,
+            })}
+        onShowModuleRowActionsChange={(showModuleRowActions) =>
+            updateClickGuiThemePreference({
+                showModuleRowActions,
+            })}
+        onModuleAccentModeChange={(moduleAccentMode) =>
+            updateClickGuiThemePreference({
+                moduleAccentMode,
             })}
         onApplyThemePreset={applyClickGuiThemePreset}
         onResetThemeDefaults={resetClickGuiThemePreferences}

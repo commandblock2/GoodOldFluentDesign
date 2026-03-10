@@ -26,15 +26,23 @@ This document defines interaction goals for the ClickGUI module browser and sett
 ## Interaction model
 
 1. Module row has two clear actions:
-   - Primary action: row click.
-   - Secondary action: explicit quick toggle control.
-2. Primary action is configurable by preference:
+   - Main row area: configurable primary click target.
+   - Optional inline controls: `Toggle` and `Config` actions inside the row.
+2. Inline controls are configurable by preference:
+   - Shown by default.
+   - Can be hidden for a slimmer legacy-style list.
+3. Primary action is configurable by preference:
    - `Open Config` (recommended default).
    - `Toggle Module` (legacy compatibility).
-3. Secondary controls stay consistent in both modes:
+4. Right click on the main row area performs the opposite action of the configured primary click.
+5. Secondary controls stay consistent when visible:
    - Toggle control always toggles.
-   - Config control (gear/chevron) always opens module settings.
-4. Module settings page should always expose:
+   - Config control always opens module settings.
+6. Enabled-module accent styling is configurable:
+   - Accent across the full row.
+   - Accent only on the inline toggle action.
+   - Accent-colored text instead of accent-filled backgrounds.
+7. Module settings page should always expose:
    - `Enabled` state.
    - `Keybind` control near the top.
 
@@ -68,6 +76,14 @@ For repeated on/off behavior, promote keybind assignment as the intended path.
 3. Main content keeps title/description in normal flow, while only the settings search bar is sticky.
 4. Module description is shown between module title and settings search bar when available.
 5. Sticky surfaces now gain stronger visual treatment when scrolled (`surface-scrolled` state class).
+6. Module rows keep the old slim list rhythm while supporting optional inline `Toggle` and `Config` controls inside the row.
+7. Main row click behavior is configurable:
+   - Left click follows the stored primary interaction preference.
+   - Right click performs the opposite action.
+8. Module row appearance is configurable:
+   - Inline action buttons can be shown or hidden.
+   - Enabled-row accent can target the whole row, only the toggle action, or accent-colored text.
+9. Settings search filters visible top-level module setting sections and switches `CHOICE` tabs to the first matching tab when needed.
 
 ### Visual system currently applied
 
@@ -120,10 +136,9 @@ For repeated on/off behavior, promote keybind assignment as the intended path.
 
 ## Open UX Follow-Ups
 
-1. Wire settings search input to real filtering behavior.
-2. Add explicit loading/empty/error states in main content panel for non-module pages.
-3. Decide whether sticky surface intensity should be user-theme-configurable.
-4. Show short explanation/description snippets for separate modules in sidebar module lists (deferred, not part of this implementation pass).
+1. Add explicit loading/empty/error states in main content panel for non-module pages.
+2. Decide whether sticky surface intensity should be user-theme-configurable.
+3. Show short explanation/description snippets for separate modules in sidebar module lists (deferred, not part of this implementation pass).
 
 ## Design Principles Used During Refactor
 

@@ -112,6 +112,174 @@
     }
 }
 
+@mixin module-row-block {
+    .module-row-shell {
+        display: flex;
+        align-items: stretch;
+        min-width: 0;
+    }
+
+    .module-row-main {
+        flex: 1;
+        min-width: 0;
+        padding-right: 6px;
+    }
+
+    .module-row-shell--actions-hidden > .module-row-main {
+        padding-right: 8px;
+    }
+
+    .module-row-main > .reveal-press-content {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .module-row-actions {
+        display: flex;
+        align-items: stretch;
+        flex-shrink: 0;
+        gap: 2px;
+        padding: 3px 2px 3px 0;
+        box-sizing: border-box;
+    }
+
+    .module-row-action-shell {
+        display: inline-flex;
+        width: 19px;
+        min-width: 19px;
+        overflow: hidden;
+        flex-shrink: 0;
+        box-sizing: border-box;
+        --reveal-focus-color: var(--clickgui-accent-color, #{$accent-color});
+    }
+
+    .module-row-action {
+        position: relative;
+        overflow: hidden;
+        display: inline-flex;
+        align-items: stretch;
+        justify-content: stretch;
+        flex-shrink: 0;
+        width: 100%;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: inherit;
+        cursor: pointer;
+    }
+
+    .module-row-action > .reveal-press-content {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        background-color: rgb(var(--clickgui-base-rgb, 0 0 0) / 0.14);
+        box-shadow:
+            inset 1px 0 0 rgb(var(--clickgui-text-rgb, 255 255 255) / 0.12),
+            inset 0 1px 0 rgb(var(--clickgui-text-rgb, 255 255 255) / 0.12),
+            inset 0 -1px 0 rgb(var(--clickgui-text-rgb, 255 255 255) / 0.12),
+            inset -1px 0 0 rgb(var(--clickgui-text-rgb, 255 255 255) / 0.12);
+        transition:
+            background-color 120ms ease,
+            box-shadow 120ms ease,
+            opacity 120ms ease;
+    }
+
+    .module-row-shell--enabled.module-row-shell--accent-toggle
+        .module-row-action--toggle-active
+        > .reveal-press-content {
+        background-color: rgb(var(--clickgui-accent-rgb, 70 119 255) / 0.16);
+        box-shadow:
+            inset 1px 0 0 rgb(var(--clickgui-accent-rgb, 70 119 255) / 0.32),
+            inset 0 1px 0 rgb(var(--clickgui-accent-rgb, 70 119 255) / 0.32),
+            inset 0 -1px 0 rgb(var(--clickgui-accent-rgb, 70 119 255) / 0.32),
+            inset -1px 0 0 rgb(var(--clickgui-accent-rgb, 70 119 255) / 0.32);
+    }
+
+    .module-row-shell--enabled.module-row-shell--accent-tile > .module-row-main {
+        background-color: rgb(var(--clickgui-accent-rgb, 70 119 255) / 0.18);
+        box-shadow:
+            inset 0 1px 0 rgb(var(--clickgui-accent-rgb, 70 119 255) / 0.28),
+            inset 0 -1px 0 rgb(var(--clickgui-accent-rgb, 70 119 255) / 0.28);
+    }
+
+    .module-row-shell--enabled.module-row-shell--accent-tile .module-row-actions {
+        background-color: rgb(var(--clickgui-accent-rgb, 70 119 255) / 0.16);
+        box-shadow:
+            inset 1px 0 0 rgb(var(--clickgui-accent-rgb, 70 119 255) / 0.28),
+            inset 0 1px 0 rgb(var(--clickgui-accent-rgb, 70 119 255) / 0.28),
+            inset 0 -1px 0 rgb(var(--clickgui-accent-rgb, 70 119 255) / 0.28),
+            inset -1px 0 0 rgb(var(--clickgui-accent-rgb, 70 119 255) / 0.28);
+    }
+
+    .module-row-shell--enabled.module-row-shell--accent-tile
+        > .module-row-main
+        > .reveal-press-content {
+        color: var(--clickgui-text-color, #{$clickgui-text-color});
+    }
+
+    .module-row-shell--enabled.module-row-shell--accent-tile
+        .module-row-action
+        > .reveal-press-content {
+        background-color: rgb(var(--clickgui-accent-rgb, 70 119 255) / 0.14);
+        box-shadow:
+            inset 1px 0 0 rgb(var(--clickgui-accent-rgb, 70 119 255) / 0.28),
+            inset 0 1px 0 rgb(var(--clickgui-accent-rgb, 70 119 255) / 0.28),
+            inset 0 -1px 0 rgb(var(--clickgui-accent-rgb, 70 119 255) / 0.28),
+            inset -1px 0 0 rgb(var(--clickgui-accent-rgb, 70 119 255) / 0.28);
+    }
+
+    .module-row-shell--enabled.module-row-shell--accent-tile
+        .module-row-action-icon,
+    .module-row-shell--enabled.module-row-shell--accent-text
+        .module-row-action--toggle-active
+        .module-row-action-icon {
+        opacity: 1;
+    }
+
+    .module-row-shell--enabled.module-row-shell--accent-text
+        > .module-row-main
+        > .reveal-press-content {
+        color: var(--clickgui-accent-color, #{$accent-color});
+        text-shadow: 0 0 10px rgb(var(--clickgui-accent-rgb, 70 119 255) / 0.18);
+    }
+
+    .module-row-shell--enabled.module-row-shell--accent-text
+        .module-row-action--toggle-active
+        > .reveal-press-content {
+        box-shadow:
+            inset 1px 0 0 rgb(var(--clickgui-accent-rgb, 70 119 255) / 0.34),
+            inset 0 1px 0 rgb(var(--clickgui-accent-rgb, 70 119 255) / 0.34),
+            inset 0 -1px 0 rgb(var(--clickgui-accent-rgb, 70 119 255) / 0.34),
+            inset -1px 0 0 rgb(var(--clickgui-accent-rgb, 70 119 255) / 0.34);
+    }
+
+    .module-row-action:disabled {
+        cursor: wait;
+    }
+
+    .module-row-action:disabled > .reveal-press-content {
+        opacity: 0.58;
+    }
+
+    .module-row-action-icon {
+        width: 10px;
+        height: 10px;
+        object-fit: contain;
+        pointer-events: none;
+        opacity: 0.82;
+    }
+
+    .module-row-shell--enabled.module-row-shell--accent-toggle
+        .module-row-action--toggle-active
+        .module-row-action-icon {
+        opacity: 1;
+    }
+}
+
 @mixin empty-block {
     .empty {
         font-size: 12px;

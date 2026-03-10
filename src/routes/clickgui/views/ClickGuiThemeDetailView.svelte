@@ -7,6 +7,10 @@
         type RevealItemOptions,
     } from "fluent-reveal-svelte";
     import { rgbaColorToCssString, type RgbaColor } from "../clickGuiColorUtils";
+    import type {
+        ClickGuiModuleAccentMode,
+        ClickGuiModulePrimaryInteraction,
+    } from "../clickGuiThemePreferences";
 
     export let accentColor = "#4677ff";
     export let baseColor = "#000000";
@@ -19,9 +23,25 @@
     export let textColor = "#ffffff";
     export let dimmedTextColor = "#d3d3d3";
     export let settingsColumnCount = 2;
+    export let modulePrimaryInteraction: ClickGuiModulePrimaryInteraction =
+        "open-config";
+    export let showModuleRowActions = true;
+    export let moduleAccentMode: ClickGuiModuleAccentMode = "action-toggle";
     export let subsectionRevealOptions: RevealContainerOptions;
     export let moduleRevealItemOptions: RevealItemOptions;
     export let onCloseDetailView: () => void = () => {};
+
+    function getModuleAccentModeLabel(mode: ClickGuiModuleAccentMode): string {
+        if (mode === "tile-background") {
+            return "Enabled rows tint the full tile.";
+        }
+
+        if (mode === "text-only") {
+            return "Enabled rows use accent-colored text.";
+        }
+
+        return "Only enabled toggle actions use accent fill.";
+    }
 </script>
 
 <div class="category-page" use:revealContainer={subsectionRevealOptions}>
@@ -87,7 +107,26 @@
         <div class="theme-summary-section">
             <div class="theme-summary-title">Behavior</div>
             <div class="theme-summary-note">
-                Changes apply to the current Click GUI immediately.
+                Row click defaults to
+                {modulePrimaryInteraction === "open-config"
+                    ? " opening settings"
+                    : " toggling the module"}.
+            </div>
+        </div>
+
+        <div class="theme-summary-section">
+            <div class="theme-summary-title">Row Actions</div>
+            <div class="theme-summary-note">
+                {showModuleRowActions
+                    ? "Inline Toggle and Config buttons are visible."
+                    : "Inline Toggle and Config buttons are hidden."}
+            </div>
+        </div>
+
+        <div class="theme-summary-section">
+            <div class="theme-summary-title">Row Accent</div>
+            <div class="theme-summary-note">
+                {getModuleAccentModeLabel(moduleAccentMode)}
             </div>
         </div>
     </div>
