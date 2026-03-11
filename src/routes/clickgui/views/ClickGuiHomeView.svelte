@@ -13,6 +13,14 @@
     export let onOpenCategory: (categoryName: string) => void = () => {};
     export let onOpenQuickSettings: () => void = () => {};
     export let onOpenThemeSettings: () => void = () => {};
+
+    function handleCategoryContextMenu(
+        event: MouseEvent,
+        categoryName: string,
+    ): void {
+        event.preventDefault();
+        onOpenCategory(categoryName);
+    }
 </script>
 
 <div class="non-search-group" use:revealContainer={subsectionRevealOptions}>
@@ -43,6 +51,8 @@
                             class="btn"
                             type="button"
                             onclick={() => onOpenCategory(categoryName)}
+                            oncontextmenu={(event) =>
+                                handleCategoryContextMenu(event, categoryName)}
                             use:revealItem={moduleRevealItemOptions}
                         >
                             <span class="reveal-press-content">

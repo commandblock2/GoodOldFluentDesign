@@ -119,6 +119,10 @@
         min-width: 0;
     }
 
+    .click-gui-list > .module-row-shell {
+        margin: 0 2px;
+    }
+
     .module-row-main {
         flex: 1;
         min-width: 0;
@@ -202,6 +206,16 @@
     .module-row-shell--enabled.module-row-shell--accent-tile > .module-row-main {
         background-color: rgb(var(--clickgui-accent-rgb, 70 119 255) / 0.18);
         box-shadow:
+            inset 1px 0 0 rgb(var(--clickgui-accent-rgb, 70 119 255) / 0.28),
+            inset 0 1px 0 rgb(var(--clickgui-accent-rgb, 70 119 255) / 0.28),
+            inset 0 -1px 0 rgb(var(--clickgui-accent-rgb, 70 119 255) / 0.28);
+    }
+
+    .module-row-shell--enabled.module-row-shell--accent-tile.module-row-shell--actions-hidden
+        > .module-row-main {
+        box-shadow:
+            inset 1px 0 0 rgb(var(--clickgui-accent-rgb, 70 119 255) / 0.28),
+            inset -1px 0 0 rgb(var(--clickgui-accent-rgb, 70 119 255) / 0.28),
             inset 0 1px 0 rgb(var(--clickgui-accent-rgb, 70 119 255) / 0.28),
             inset 0 -1px 0 rgb(var(--clickgui-accent-rgb, 70 119 255) / 0.28);
     }
