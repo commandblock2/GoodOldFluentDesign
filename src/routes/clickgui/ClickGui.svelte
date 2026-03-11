@@ -108,8 +108,8 @@
         focus: {
             enabled: true,
             color: `rgb(${clickGuiAccentRgbChannels} / 0.76)`,
-            widthPx: 1,
-            offsetPx: 2,
+            widthPx: 2,
+            offsetPx: 1,
             glowPx: 10,
         },
         click: {
@@ -502,7 +502,16 @@
             return;
         }
 
-        const previousEnabled = module.enabled;
+        const currentModule = modules.find(
+            (candidateModule) => candidateModule.name === module.name,
+        );
+        if (currentModule === undefined) {
+            throw new Error(
+                `Cannot toggle unknown module "${module.name}" from sidebar interaction.`,
+            );
+        }
+
+        const previousEnabled = currentModule.enabled;
         const nextEnabled = !previousEnabled;
         const isActiveModule =
             activeConfigPage.type === "module" &&

@@ -188,7 +188,7 @@
             opacity 120ms ease;
     }
 
-    .module-row-shell--enabled.module-row-shell--accent-toggle
+    .module-row-shell--accent-toggle
         .module-row-action--toggle-active
         > .reveal-press-content {
         background-color: rgb(var(--clickgui-accent-rgb, 70 119 255) / 0.16);
@@ -273,7 +273,7 @@
         opacity: 0.82;
     }
 
-    .module-row-shell--enabled.module-row-shell--accent-toggle
+    .module-row-shell--accent-toggle
         .module-row-action--toggle-active
         .module-row-action-icon {
         opacity: 1;

@@ -31,10 +31,6 @@
         border: true,
     };
 
-    function modulesForCategory(categoryName: string): Module[] {
-        return filteredGrouped[categoryName] ?? [];
-    }
-
     function getModuleRowTitle(): string {
         return modulePrimaryInteraction === "open-config"
             ? "Left click opens settings. Right click toggles the module."
@@ -84,7 +80,7 @@
                     class="item-list click-gui-list"
                     use:revealContainer={subsectionRevealOptions}
                 >
-                    {#each modulesForCategory(categoryName) as module}
+                    {#each filteredGrouped[categoryName] ?? [] as module (`${categoryName}:${module.name}`)}
                         <li
                             class="item module-item btn-border module-row-shell"
                             class:module-row-shell--enabled={module.enabled}
