@@ -85,6 +85,10 @@
 
 1. Decide whether the current lightweight empty/loading state cards are sufficient or should be expanded further.
 2. Manual-QA the new row-action behavior against dense categories and search-heavy flows.
+3. Implement Firefox-style module search ordering/visibility behavior:
+   - keep non-matching rows visible
+   - highlight matched text
+   - promote matching rows toward the top/front
 
 ### P2 (Feature completion after clean baseline)
 

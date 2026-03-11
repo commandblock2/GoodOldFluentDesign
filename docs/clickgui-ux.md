@@ -140,6 +140,13 @@ For repeated on/off behavior, promote keybind assignment as the intended path.
 2. Decide whether sticky surface intensity should be user-theme-configurable.
 3. Show short explanation/description snippets for separate modules in sidebar module lists (deferred, not part of this implementation pass).
 
+## New Feature Note
+
+1. Planned module-search behavior should follow a Firefox-like pattern:
+   - Keep non-matching modules visible instead of hiding them.
+   - Highlight matched text in module names (and secondary text when present).
+   - Re-order search results so matching modules are promoted toward the top/front while non-matching modules remain below.
+
 ## Design Principles Used During Refactor
 
 1. Keep primary navigation anchors persistent while scrolling.
