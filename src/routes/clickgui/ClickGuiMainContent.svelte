@@ -42,6 +42,15 @@
         onBackgroundColorChange?: (
             backgroundColor: ClickGuiThemePreferences["backgroundColor"],
         ) => void | Promise<void>;
+        onOffButtonColorChange?: (
+            offButtonColor: ClickGuiThemePreferences["offButtonColor"],
+        ) => void | Promise<void>;
+        onInputBackgroundColorChange?: (
+            inputBackgroundColor: ClickGuiThemePreferences["inputBackgroundColor"],
+        ) => void | Promise<void>;
+        onPanelBackgroundColorChange?: (
+            panelBackgroundColor: ClickGuiThemePreferences["panelBackgroundColor"],
+        ) => void | Promise<void>;
         onTextColorChange?: (textColor: string) => void | Promise<void>;
         onDimmedTextColorChange?: (
             dimmedTextColor: string,
@@ -69,6 +78,15 @@
     const noopStringChange = (_value: string) => {};
     const noopBackgroundColorChange = (
         _backgroundColor: ClickGuiThemePreferences["backgroundColor"],
+    ) => {};
+    const noopOffButtonColorChange = (
+        _offButtonColor: ClickGuiThemePreferences["offButtonColor"],
+    ) => {};
+    const noopInputBackgroundColorChange = (
+        _inputBackgroundColor: ClickGuiThemePreferences["inputBackgroundColor"],
+    ) => {};
+    const noopPanelBackgroundColorChange = (
+        _panelBackgroundColor: ClickGuiThemePreferences["panelBackgroundColor"],
     ) => {};
     const noopNumberChange = (_value: number) => {};
     const noopModulePrimaryInteractionChange = (
@@ -102,6 +120,9 @@
         onAccentColorChange = noopStringChange,
         onBaseColorChange = noopStringChange,
         onBackgroundColorChange = noopBackgroundColorChange,
+        onOffButtonColorChange = noopOffButtonColorChange,
+        onInputBackgroundColorChange = noopInputBackgroundColorChange,
+        onPanelBackgroundColorChange = noopPanelBackgroundColorChange,
         onTextColorChange = noopStringChange,
         onDimmedTextColorChange = noopStringChange,
         onSettingsSplitCountChange = noopNumberChange,
@@ -153,6 +174,7 @@
 <section
     class="main-content scroll-surface"
     class:main-content-scrolled={mainContentScrolled}
+    class:main-content--module={activeConfigPage.type === "module"}
     use:scrollbarHoverSurface
     use:revealContainer={subsectionRevealOptions}
     onscroll={handleMainContentScroll}
@@ -220,6 +242,9 @@
             onAccentColorChange={onAccentColorChange}
             onBaseColorChange={onBaseColorChange}
             onBackgroundColorChange={onBackgroundColorChange}
+            onOffButtonColorChange={onOffButtonColorChange}
+            onInputBackgroundColorChange={onInputBackgroundColorChange}
+            onPanelBackgroundColorChange={onPanelBackgroundColorChange}
             onTextColorChange={onTextColorChange}
             onDimmedTextColorChange={onDimmedTextColorChange}
             onSettingsSplitCountChange={onSettingsSplitCountChange}
@@ -282,6 +307,10 @@
         color: var(--clickgui-text-color);
     }
 
+    .main-content.main-content--module {
+        background-color: var(--clickgui-panel-background-color);
+    }
+
     .main-content-header {
         display: flex;
         flex-direction: column;
@@ -320,7 +349,7 @@
         width: 100%;
         padding: 8px 10px;
         border: 1px solid rgb(var(--clickgui-text-rgb, 255 255 255) / 0.2);
-        background-color: var(--clickgui-surface-strong-color);
+        background-color: var(--clickgui-input-background-color);
         color: var(--clickgui-text-color);
         font-size: 13px;
         outline: none;
@@ -353,6 +382,7 @@
         display: flex;
         flex-direction: column;
         gap: 0;
+        background-color: var(--clickgui-panel-background-color);
     }
 
     .settings-split {
@@ -382,7 +412,7 @@
         width: min(520px, 100%);
         padding: 12px;
         border: 1px solid rgb(var(--clickgui-text-rgb, 255 255 255) / 0.28);
-        background-color: rgb(var(--clickgui-base-rgb, 0 0 0) / 0.42);
+        background-color: var(--clickgui-panel-background-color);
     }
 
     .settings-error-title,
@@ -414,7 +444,7 @@
     .main-content :global(.setting-entry.setting-entry--configurable) {
         border: 1px solid rgb(var(--clickgui-text-rgb, 255 255 255) / 0.14);
         padding: 10px;
-        background-color: rgb(var(--clickgui-text-rgb, 255 255 255) / 0.05);
+        background-color: var(--clickgui-panel-background-color);
     }
 
     .main-content :global(.setting-header) {
@@ -488,7 +518,7 @@
             );
         background-color: var(
             --setting-control-background-color,
-            rgb(var(--clickgui-text-rgb, 255 255 255) / 0.14)
+            var(--clickgui-control-off-color)
         );
         box-shadow: var(
             --setting-control-box-shadow,
@@ -532,9 +562,7 @@
         --setting-control-border-color: rgb(
             var(--clickgui-text-rgb, 255 255 255) / 0.34
         );
-        --setting-control-background-color: rgb(
-            var(--clickgui-text-rgb, 255 255 255) / 0.12
-        );
+        --setting-control-background-color: var(--clickgui-control-off-color);
     }
 
     .settings-error-retry :global(.reveal-press-content) {

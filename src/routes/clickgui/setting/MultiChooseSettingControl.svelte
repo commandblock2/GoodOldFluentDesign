@@ -98,9 +98,7 @@
         --setting-control-border-color: rgb(
             var(--clickgui-text-rgb, 255 255 255) / 0.32
         );
-        --setting-control-background-color: rgb(
-            var(--clickgui-text-rgb, 255 255 255) / 0.14
-        );
+        --setting-control-background-color: var(--clickgui-control-off-color);
     }
 
     .setting-choice-label {

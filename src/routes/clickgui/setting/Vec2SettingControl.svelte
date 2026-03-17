@@ -162,9 +162,7 @@
         --setting-control-min-width: 0;
         --setting-control-justify-content: flex-start;
         --setting-control-padding-inline: 0;
-        --setting-control-background-color: rgb(
-            var(--clickgui-text-rgb, 255 255 255) / 0.08
-        );
+        --setting-control-background-color: var(--clickgui-input-background-color);
         --setting-control-border-color: rgb(
             var(--clickgui-text-rgb, 255 255 255) / 0.3
         );

@@ -178,9 +178,7 @@
         --setting-control-border-color: rgb(
             var(--clickgui-text-rgb, 255 255 255) / 0.3
         );
-        --setting-control-background-color: rgb(
-            var(--clickgui-text-rgb, 255 255 255) / 0.08
-        );
+        --setting-control-background-color: var(--clickgui-input-background-color);
     }
 
     .file-select-btn > .reveal-press-content {
@@ -208,9 +206,7 @@
         --setting-control-border-color: rgb(
             var(--clickgui-text-rgb, 255 255 255) / 0.32
         );
-        --setting-control-background-color: rgb(
-            var(--clickgui-text-rgb, 255 255 255) / 0.12
-        );
+        --setting-control-background-color: var(--clickgui-control-off-color);
         --setting-control-padding-inline: 10px;
         cursor: pointer;
     }

@@ -144,9 +144,7 @@
         --setting-control-border-color: rgb(
             var(--clickgui-text-rgb, 255 255 255) / 0.34
         );
-        --setting-control-background-color: rgb(
-            var(--clickgui-text-rgb, 255 255 255) / 0.12
-        );
+        --setting-control-background-color: var(--clickgui-control-off-color);
     }
 
     .mutable-list-item-action-shell,

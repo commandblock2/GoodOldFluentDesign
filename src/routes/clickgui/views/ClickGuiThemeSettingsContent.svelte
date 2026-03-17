@@ -31,6 +31,9 @@
         onAccentColorChange?: (color: string) => void;
         onBaseColorChange?: (color: string) => void;
         onBackgroundColorChange?: (color: RgbaColor) => void;
+        onOffButtonColorChange?: (color: RgbaColor) => void;
+        onInputBackgroundColorChange?: (color: RgbaColor) => void;
+        onPanelBackgroundColorChange?: (color: RgbaColor) => void;
         onTextColorChange?: (color: string) => void;
         onDimmedTextColorChange?: (color: string) => void;
         onSettingsSplitCountChange?: (count: number) => void;
@@ -47,6 +50,7 @@
 
     const defaultColorChangeHandler = (_color: string) => {};
     const defaultBackgroundColorChangeHandler = (_color: RgbaColor) => {};
+    const defaultRgbaColorChangeHandler = (_color: RgbaColor) => {};
     const defaultSplitCountHandler = (_count: number) => {};
     const defaultModulePrimaryInteractionHandler = (
         _interaction: ClickGuiModulePrimaryInteraction,
@@ -127,6 +131,9 @@
         onAccentColorChange = defaultColorChangeHandler,
         onBaseColorChange = defaultColorChangeHandler,
         onBackgroundColorChange = defaultBackgroundColorChangeHandler,
+        onOffButtonColorChange = defaultRgbaColorChangeHandler,
+        onInputBackgroundColorChange = defaultRgbaColorChangeHandler,
+        onPanelBackgroundColorChange = defaultRgbaColorChangeHandler,
         onTextColorChange = defaultColorChangeHandler,
         onDimmedTextColorChange = defaultColorChangeHandler,
         onSettingsSplitCountChange = defaultSplitCountHandler,
@@ -328,7 +335,8 @@
                 <h3 class="theme-section-title">Colors</h3>
                 <p class="theme-section-description">
                     Accent affects selected controls and focus states. Base, text,
-                    and dimmed text shape the overall Click GUI contrast.
+                    and dimmed text shape contrast; RGBA surfaces tune off-controls,
+                    text fields, and card fill intensity.
                 </p>
             </div>
         </div>
@@ -359,7 +367,7 @@
                 <span class="theme-color-copy">
                     <span class="theme-color-title">Base</span>
                     <span class="theme-color-description">
-                        Panel background, sticky surface tint, and shadow base.
+                        Shell tint, sticky surface tint, and shadow base.
                     </span>
                 </span>
 
@@ -381,7 +389,7 @@
                     <span class="theme-color-title">Background</span>
                     <span class="theme-color-description">
                         Outer Click GUI backdrop tint and scene transparency behind
-                        the panels.
+                        the cards.
                     </span>
                 </span>
 
@@ -413,6 +421,66 @@
                         {revealItemOptions}
                         ariaLabel="Pick Click GUI text color"
                         allowAlpha={false}
+                        liveUpdate={true}
+                    />
+                </span>
+            </div>
+
+            <div class="theme-color-card">
+                <span class="theme-color-copy">
+                    <span class="theme-color-title">Off Buttons</span>
+                    <span class="theme-color-description">
+                        Background color for neutral, non-active button controls.
+                    </span>
+                </span>
+
+                <span class="theme-color-control">
+                    <ClickGuiColorPicker
+                        value={themePreferences.offButtonColor}
+                        onChange={onOffButtonColorChange}
+                        {revealItemOptions}
+                        ariaLabel="Pick Click GUI off button background color"
+                        allowAlpha={true}
+                        liveUpdate={true}
+                    />
+                </span>
+            </div>
+
+            <div class="theme-color-card">
+                <span class="theme-color-copy">
+                    <span class="theme-color-title">Input Background</span>
+                    <span class="theme-color-description">
+                        Search fields and editable input control backgrounds.
+                    </span>
+                </span>
+
+                <span class="theme-color-control">
+                    <ClickGuiColorPicker
+                        value={themePreferences.inputBackgroundColor}
+                        onChange={onInputBackgroundColorChange}
+                        {revealItemOptions}
+                        ariaLabel="Pick Click GUI input background color"
+                        allowAlpha={true}
+                        liveUpdate={true}
+                    />
+                </span>
+            </div>
+
+            <div class="theme-color-card">
+                <span class="theme-color-copy">
+                    <span class="theme-color-title">Cards Background</span>
+                    <span class="theme-color-description">
+                        Primary surfaces for content cards.
+                    </span>
+                </span>
+
+                <span class="theme-color-control">
+                    <ClickGuiColorPicker
+                        value={themePreferences.panelBackgroundColor}
+                        onChange={onPanelBackgroundColorChange}
+                        {revealItemOptions}
+                        ariaLabel="Pick Click GUI cards background color"
+                        allowAlpha={true}
                         liveUpdate={true}
                     />
                 </span>
@@ -645,7 +713,7 @@
                 rgb(var(--clickgui-text-rgb) / 0.06) 0%,
                 rgb(var(--clickgui-text-rgb) / 0.03) 100%
             ),
-            rgb(var(--clickgui-base-rgb) / 0.36);
+            var(--clickgui-panel-background-color);
         box-shadow: 0 16px 30px rgb(var(--clickgui-base-rgb) / 0.2);
     }
 
@@ -737,7 +805,7 @@
                 rgb(var(--clickgui-text-rgb) / 0.08) 0%,
                 transparent 100%
             ),
-            rgb(var(--clickgui-base-rgb) / 0.62);
+            var(--clickgui-panel-background-color);
     }
 
     .theme-preview-control {
@@ -883,7 +951,7 @@
         min-width: 0;
         padding: 12px;
         border: 1px solid rgb(var(--clickgui-text-rgb) / 0.16);
-        background-color: rgb(var(--clickgui-text-rgb) / 0.05);
+        background-color: var(--clickgui-panel-background-color);
     }
 
     .theme-color-copy {

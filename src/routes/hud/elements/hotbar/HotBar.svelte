@@ -123,6 +123,7 @@
                             color="#FC4130"
                             alignRight={false}
                             icon="heart"
+                            glow={true}
                     />
                     <Status
                             max={20}
@@ -130,6 +131,7 @@
                             color="#B88458"
                             alignRight={true}
                             icon="food"
+                            glow={true}
                     />
                 </div>
             {/if}
@@ -139,6 +141,7 @@
                         color="#88C657"
                         alignRight={false}
                         label={playerData.experienceLevel.toString()}
+                        glow={true}
                 />
             {/if}
 
@@ -185,16 +188,45 @@
   .hotbar-elements {
     background-color: rgba($hotbar-base-color, 0.68);
     position: relative;
-    border-radius: 5px;
-    overflow: hidden;
+    overflow: visible;
 
     .slider {
-      border: solid 2px $accent-color;
+      border: 1px solid rgba($accent-color, 0.82);
+      background-color: rgba($accent-color, 0.1);
+      box-shadow:
+          0 0 0 1px rgba($accent-color, 0.24),
+          0 0 12px rgba($accent-color, 0.4),
+          0 0 20px rgba($accent-color, 0.24);
       height: 45px;
       width: 45px;
       position: absolute;
-      border-radius: 5px;
-      /* transition: linear left 0.05s; TODO: Animation is possible but annoying */
+      pointer-events: none;
+      transition: left 70ms linear;
+      overflow: hidden;
+      isolation: isolate;
+
+      &::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+            112deg,
+            transparent 15%,
+            rgba($accent-color, 0.36) 50%,
+            transparent 85%
+        );
+        opacity: 0.88;
+        transform: translateX(-135%);
+        animation: hotbar-reveal-focus 1.65s ease-in-out infinite;
+      }
+
+      &::after {
+        content: "";
+        position: absolute;
+        inset: -2px;
+        border: 1px solid rgba($accent-color, 0.42);
+        box-shadow: 0 0 14px rgba($accent-color, 0.28);
+      }
     }
 
     .slots {
@@ -207,10 +239,19 @@
     }
   }
 
+  @keyframes hotbar-reveal-focus {
+    from {
+      transform: translateX(-135%);
+    }
+
+    to {
+      transform: translateX(135%);
+    }
+  }
+
   .offhand-slot {
     height: 45px;
     width: 45px;
-    border-radius: 5px;
     background-color: rgba($hotbar-base-color, 0.68);
     position: absolute;
     bottom: 0;
@@ -224,7 +265,6 @@
     font-weight: 500;
     background-color: rgba($hotbar-base-color, .68);
     padding: 5px 8px;
-    border-radius: 5px;
     width: max-content;
   }
 

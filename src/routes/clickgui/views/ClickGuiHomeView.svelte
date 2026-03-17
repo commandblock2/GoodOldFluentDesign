@@ -21,6 +21,16 @@
         event.preventDefault();
         onOpenCategory(categoryName);
     }
+
+    function handleQuickSettingsContextMenu(event: MouseEvent): void {
+        event.preventDefault();
+        onOpenQuickSettings();
+    }
+
+    function handleThemeSettingsContextMenu(event: MouseEvent): void {
+        event.preventDefault();
+        onOpenThemeSettings();
+    }
 </script>
 
 <div class="non-search-group" use:revealContainer={subsectionRevealOptions}>
@@ -31,6 +41,7 @@
                     class="btn"
                     type="button"
                     onclick={onOpenQuickSettings}
+                    oncontextmenu={handleQuickSettingsContextMenu}
                     use:revealItem={moduleRevealItemOptions}
                 >
                     <span class="reveal-press-content">
@@ -72,6 +83,7 @@
                         class="btn"
                         type="button"
                         onclick={onOpenThemeSettings}
+                        oncontextmenu={handleThemeSettingsContextMenu}
                         use:revealItem={moduleRevealItemOptions}
                     >
                         <span class="reveal-press-content">

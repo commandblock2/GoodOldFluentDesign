@@ -65,6 +65,11 @@
 
         onOpenModuleConfig(module);
     }
+
+    function handleThemeSettingsContextMenu(event: MouseEvent): void {
+        event.preventDefault();
+        onOpenThemeSettings();
+    }
 </script>
 
 <div class="section">
@@ -172,6 +177,7 @@
                 class="btn"
                 type="button"
                 onclick={onOpenThemeSettings}
+                oncontextmenu={handleThemeSettingsContextMenu}
                 use:revealItem={moduleRevealItemOptions}
             >
                 <span class="reveal-press-content">

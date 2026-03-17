@@ -36,7 +36,6 @@
 <style lang="scss">
   .inventory {
     padding: 4px;
-    border-radius: 5px;
     display: grid;
     grid-template-columns: repeat(var(--row-length), 1fr);
   }

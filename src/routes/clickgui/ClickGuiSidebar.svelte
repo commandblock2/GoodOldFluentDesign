@@ -200,7 +200,7 @@
         width: 100%;
         padding: 8px 10px;
         border: 1px solid rgb(var(--clickgui-text-rgb, 255 255 255) / 0.2);
-        background-color: var(--clickgui-surface-strong-color);
+        background-color: var(--clickgui-input-background-color);
         color: var(--clickgui-text-color);
         font-size: 13px;
         outline: none;
@@ -222,14 +222,7 @@
     }
 
     .sidebar.sidebar-scrolled :global(.category-back-shell) {
-        background:
-            linear-gradient(
-                180deg,
-                rgb(var(--clickgui-text-rgb, 255 255 255) / 0.18) 0%,
-                rgb(var(--clickgui-text-rgb, 255 255 255) / 0.07) 58%,
-                rgb(var(--clickgui-text-rgb, 255 255 255) / 0.03) 100%
-            ),
-            rgb(var(--clickgui-base-rgb, 0 0 0) / 0.94);
+        background: rgb(var(--clickgui-base-rgb, 0 0 0) / 0.94);
         border-bottom-color: rgb(var(--clickgui-text-rgb, 255 255 255) / 0.34);
         backdrop-filter: blur(14px) saturate(135%);
         box-shadow: 0 12px 18px rgb(var(--clickgui-base-rgb, 0 0 0) / 0.52);

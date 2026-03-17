@@ -5,6 +5,7 @@
     export let alignRight: boolean;
     export let label: string | null = null;
     export let icon: string | null = null;
+    export let glow: boolean = false;
 </script>
 
 <div class="progress" class:align-right={alignRight}>
@@ -16,10 +17,11 @@
     {/if}
     <div
             class:align-right={alignRight}
+            class:glow={glow}
             class="progress-bar"
             style="width: {Math.floor(
             (value / max) * 100,
-        )}%; background-color: {color};"
+        )}%; background-color: {color}; --status-color: {color};"
     ></div>
 </div>
 
@@ -44,7 +46,6 @@
 
   .progress {
     position: relative;
-    border-radius: 5px;
     background-color: rgba($hotbar-base-color, .68);
 
     &.align-right {
@@ -61,13 +62,18 @@
   }
 
   .progress-bar {
-    border-radius: 5px;
     height: 20px;
     will-change: width;
     transition: ease width 0.2s;
 
     &.align-right {
       margin-left: auto;
+    }
+
+    &.glow {
+      box-shadow:
+          0 0 8px color-mix(in oklab, var(--status-color) 38%, transparent),
+          0 0 14px color-mix(in oklab, var(--status-color) 22%, transparent);
     }
   }
 </style>

@@ -783,6 +783,12 @@
             updateClickGuiThemePreference({ baseColor })}
         onBackgroundColorChange={(backgroundColor) =>
             updateClickGuiThemePreference({ backgroundColor })}
+        onOffButtonColorChange={(offButtonColor) =>
+            updateClickGuiThemePreference({ offButtonColor })}
+        onInputBackgroundColorChange={(inputBackgroundColor) =>
+            updateClickGuiThemePreference({ inputBackgroundColor })}
+        onPanelBackgroundColorChange={(panelBackgroundColor) =>
+            updateClickGuiThemePreference({ panelBackgroundColor })}
         onTextColorChange={(textColor) =>
             updateClickGuiThemePreference({ textColor })}
         onDimmedTextColorChange={(dimmedTextColor) =>
@@ -819,6 +825,9 @@
         --clickgui-text-dimmed-color: #d3d3d3;
         --clickgui-text-dimmed-rgb: 211 211 211;
         --clickgui-backdrop-color: rgb(var(--clickgui-base-rgb, 0 0 0) / 0.15);
+        --clickgui-control-off-color: rgb(var(--clickgui-text-rgb, 255 255 255) / 0.14);
+        --clickgui-input-background-color: rgb(var(--clickgui-text-rgb, 255 255 255) / 0.14);
+        --clickgui-panel-background-color: rgb(var(--clickgui-base-rgb, 0 0 0) / 0.7);
         --clickgui-surface-color: rgb(var(--clickgui-base-rgb, 0 0 0) / 0.7);
         --clickgui-surface-strong-color: rgb(
             var(--clickgui-base-rgb, 0 0 0) / 0.85

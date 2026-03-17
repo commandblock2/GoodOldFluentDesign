@@ -353,9 +353,7 @@
         --setting-control-border-color: rgb(
             var(--clickgui-text-rgb, 255 255 255) / 0.4
         );
-        --setting-control-background-color: rgb(
-            var(--clickgui-text-rgb, 255 255 255) / 0.08
-        );
+        --setting-control-background-color: var(--clickgui-input-background-color);
         --setting-control-border-radius: 0px;
         --setting-control-box-shadow:
             inset 0 0 0 1px rgb(var(--clickgui-text-rgb, 255 255 255) / 0.08);
@@ -386,7 +384,7 @@
         z-index: 1;
         width: 100%;
         overflow: hidden;
-        background-color: rgb(var(--clickgui-text-rgb, 255 255 255) / 0.1);
+        background-color: var(--clickgui-panel-background-color);
         backdrop-filter: blur(48px) saturate(120%);
     }
 
@@ -395,7 +393,7 @@
         inset: 0;
         z-index: -1;
         pointer-events: none;
-        background-color: rgb(var(--clickgui-base-rgb, 0 0 0) / 0.4);
+        background-color: var(--clickgui-panel-background-color);
     }
 
     .expandable-text-floating-control {
@@ -410,9 +408,7 @@
         --setting-control-border-color: rgb(
             var(--clickgui-accent-rgb, 70 119 255) / 0.88
         );
-        --setting-control-background-color: rgb(
-            var(--clickgui-base-rgb, 0 0 0) / 0.18
-        );
+        --setting-control-background-color: var(--clickgui-input-background-color);
         --setting-control-border-radius: 0px;
         --setting-control-box-shadow:
             0 0 0 1px rgb(var(--clickgui-accent-rgb, 70 119 255) / 0.36),

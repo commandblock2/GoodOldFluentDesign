@@ -43,7 +43,6 @@
 
   .scoreboard {
     width: max-content;
-    border-radius: 5px;
     overflow: hidden;
     font-size: 14px;
   }

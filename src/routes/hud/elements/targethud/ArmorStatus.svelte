@@ -2,10 +2,9 @@
     import type {ItemStack} from "../../../../integration/types";
     import {itemTextureUrl} from "../../../../integration/rest";
 
-    export let itemStack: ItemStack;
+    let {itemStack}: { itemStack: ItemStack } = $props();
 
-    let damage = Math.ceil(10 - (itemStack.damage / itemStack.maxDamage * 10));
-    $: damage = Math.ceil(10 - (itemStack.damage / itemStack.maxDamage * 10));
+    let damage = $derived(Math.ceil(10 - (itemStack.damage / itemStack.maxDamage * 10)));
 </script>
 
 <div class="armor-status">
@@ -41,7 +40,6 @@
             background-color: rgba($targethud-base-color, 0.3);
             height: 3px;
             width: 5px;
-            border-radius: 1px;
             transition: ease background-color 0.7s;
 
             &.active {

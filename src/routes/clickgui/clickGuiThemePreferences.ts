@@ -6,10 +6,11 @@ import {
     type RgbaColor,
 } from "./clickGuiColorUtils";
 
-const CLICKGUI_THEME_STORAGE_KEY = "clickgui.theme.preferences.v4";
-const LEGACY_CLICKGUI_THEME_STORAGE_KEY = "clickgui.theme.preferences.v3";
-const OLDER_CLICKGUI_THEME_STORAGE_KEY = "clickgui.theme.preferences.v2";
-const OLDEST_CLICKGUI_THEME_STORAGE_KEY = "clickgui.theme.preferences.v1";
+const CLICKGUI_THEME_STORAGE_KEY = "clickgui.theme.preferences.v5";
+const LEGACY_CLICKGUI_THEME_STORAGE_KEY = "clickgui.theme.preferences.v4";
+const OLDER_CLICKGUI_THEME_STORAGE_KEY = "clickgui.theme.preferences.v3";
+const OLDEST_CLICKGUI_THEME_STORAGE_KEY = "clickgui.theme.preferences.v2";
+const ANCIENT_CLICKGUI_THEME_STORAGE_KEY = "clickgui.theme.preferences.v1";
 const HEX_COLOR_PATTERN = /^#[0-9a-fA-F]{6}$/;
 const MAX_SETTINGS_SPLIT_COUNT = 2;
 const MODULE_PRIMARY_INTERACTIONS = [
@@ -30,6 +31,9 @@ export interface ClickGuiThemePreferences {
     accentColor: string;
     baseColor: string;
     backgroundColor: RgbaColor;
+    offButtonColor: RgbaColor;
+    inputBackgroundColor: RgbaColor;
+    panelBackgroundColor: RgbaColor;
     textColor: string;
     dimmedTextColor: string;
     settingsSplitCount: number;
@@ -57,6 +61,24 @@ export const defaultClickGuiThemePreferences: ClickGuiThemePreferences = {
         blue: 0,
         alpha: 0.15,
     },
+    offButtonColor: {
+        red: 255,
+        green: 255,
+        blue: 255,
+        alpha: 0.14,
+    },
+    inputBackgroundColor: {
+        red: 255,
+        green: 255,
+        blue: 255,
+        alpha: 0.14,
+    },
+    panelBackgroundColor: {
+        red: 0,
+        green: 0,
+        blue: 0,
+        alpha: 0.7,
+    },
     textColor: "#ffffff",
     dimmedTextColor: "#d3d3d3",
     settingsSplitCount: 1,
@@ -78,6 +100,24 @@ export const clickGuiThemePresets = [
             blue: 0,
             alpha: 0.38,
         },
+        offButtonColor: {
+            red: 255,
+            green: 255,
+            blue: 255,
+            alpha: 0.14,
+        },
+        inputBackgroundColor: {
+            red: 255,
+            green: 255,
+            blue: 255,
+            alpha: 0.14,
+        },
+        panelBackgroundColor: {
+            red: 0,
+            green: 0,
+            blue: 0,
+            alpha: 0.7,
+        },
         textColor: "#ffffff",
         dimmedTextColor: "#d3d3d3",
         settingsSplitCount: 1,
@@ -93,6 +133,24 @@ export const clickGuiThemePresets = [
             green: 5,
             blue: 2,
             alpha: 0.43,
+        },
+        offButtonColor: {
+            red: 255,
+            green: 243,
+            blue: 230,
+            alpha: 0.14,
+        },
+        inputBackgroundColor: {
+            red: 255,
+            green: 243,
+            blue: 230,
+            alpha: 0.14,
+        },
+        panelBackgroundColor: {
+            red: 10,
+            green: 5,
+            blue: 2,
+            alpha: 0.72,
         },
         textColor: "#fff3e6",
         dimmedTextColor: "#c7ad98",
@@ -110,6 +168,24 @@ export const clickGuiThemePresets = [
             blue: 11,
             alpha: 0.39,
         },
+        offButtonColor: {
+            red: 246,
+            green: 252,
+            blue: 255,
+            alpha: 0.15,
+        },
+        inputBackgroundColor: {
+            red: 246,
+            green: 252,
+            blue: 255,
+            alpha: 0.15,
+        },
+        panelBackgroundColor: {
+            red: 3,
+            green: 7,
+            blue: 11,
+            alpha: 0.72,
+        },
         textColor: "#f6fcff",
         dimmedTextColor: "#9db2bf",
         settingsSplitCount: 1,
@@ -126,6 +202,24 @@ export const clickGuiThemePresets = [
             blue: 4,
             alpha: 0.41,
         },
+        offButtonColor: {
+            red: 239,
+            green: 255,
+            blue: 237,
+            alpha: 0.14,
+        },
+        inputBackgroundColor: {
+            red: 239,
+            green: 255,
+            blue: 237,
+            alpha: 0.14,
+        },
+        panelBackgroundColor: {
+            red: 4,
+            green: 7,
+            blue: 4,
+            alpha: 0.72,
+        },
         textColor: "#efffed",
         dimmedTextColor: "#a7c2a2",
         settingsSplitCount: 2,
@@ -141,6 +235,24 @@ export const clickGuiThemePresets = [
             green: 6,
             blue: 8,
             alpha: 0.40,
+        },
+        offButtonColor: {
+            red: 255,
+            green: 242,
+            blue: 245,
+            alpha: 0.14,
+        },
+        inputBackgroundColor: {
+            red: 255,
+            green: 242,
+            blue: 245,
+            alpha: 0.14,
+        },
+        panelBackgroundColor: {
+            red: 13,
+            green: 6,
+            blue: 8,
+            alpha: 0.72,
         },
         textColor: "#fff2f5",
         dimmedTextColor: "#c4a7ae",
@@ -218,6 +330,9 @@ export function validateClickGuiThemePreferences(
     const accentColor = value.accentColor;
     const baseColor = value.baseColor;
     const backgroundColor = value.backgroundColor;
+    const offButtonColor = value.offButtonColor;
+    const inputBackgroundColor = value.inputBackgroundColor;
+    const panelBackgroundColor = value.panelBackgroundColor;
     const textColor = value.textColor;
     const dimmedTextColor = value.dimmedTextColor;
     const settingsSplitCount = value.settingsSplitCount;
@@ -240,6 +355,18 @@ export function validateClickGuiThemePreferences(
     const normalizedBackgroundColor = validateRgbaColor(
         backgroundColor,
         "backgroundColor",
+    );
+    const normalizedOffButtonColor = validateRgbaColor(
+        offButtonColor,
+        "offButtonColor",
+    );
+    const normalizedInputBackgroundColor = validateRgbaColor(
+        inputBackgroundColor,
+        "inputBackgroundColor",
+    );
+    const normalizedPanelBackgroundColor = validateRgbaColor(
+        panelBackgroundColor,
+        "panelBackgroundColor",
     );
 
     if (typeof textColor !== "string") {
@@ -282,6 +409,9 @@ export function validateClickGuiThemePreferences(
         accentColor: normalizeHexColor(accentColor, "accentColor"),
         baseColor: normalizeHexColor(baseColor, "baseColor"),
         backgroundColor: normalizedBackgroundColor,
+        offButtonColor: normalizedOffButtonColor,
+        inputBackgroundColor: normalizedInputBackgroundColor,
+        panelBackgroundColor: normalizedPanelBackgroundColor,
         textColor: normalizeHexColor(textColor, "textColor"),
         dimmedTextColor: normalizeHexColor(
             dimmedTextColor,
@@ -323,6 +453,11 @@ function tryParseStoredThemePreferences(
 
         const legacyPreferences = validateClickGuiThemePreferences({
             ...parsedValue,
+            offButtonColor: defaultClickGuiThemePreferences.offButtonColor,
+            inputBackgroundColor:
+                defaultClickGuiThemePreferences.inputBackgroundColor,
+            panelBackgroundColor:
+                defaultClickGuiThemePreferences.panelBackgroundColor,
             modulePrimaryInteraction:
                 defaultClickGuiThemePreferences.modulePrimaryInteraction,
             showModuleRowActions:
@@ -343,6 +478,11 @@ function tryParseStoredThemePreferences(
         const legacyPreferences = validateClickGuiThemePreferences({
             ...parsedValue,
             backgroundColor: defaultClickGuiThemePreferences.backgroundColor,
+            offButtonColor: defaultClickGuiThemePreferences.offButtonColor,
+            inputBackgroundColor:
+                defaultClickGuiThemePreferences.inputBackgroundColor,
+            panelBackgroundColor:
+                defaultClickGuiThemePreferences.panelBackgroundColor,
             modulePrimaryInteraction:
                 defaultClickGuiThemePreferences.modulePrimaryInteraction,
             showModuleRowActions:
@@ -363,6 +503,36 @@ function tryParseStoredThemePreferences(
         const legacyPreferences = validateClickGuiThemePreferences({
             ...parsedValue,
             backgroundColor: defaultClickGuiThemePreferences.backgroundColor,
+            offButtonColor: defaultClickGuiThemePreferences.offButtonColor,
+            inputBackgroundColor:
+                defaultClickGuiThemePreferences.inputBackgroundColor,
+            panelBackgroundColor:
+                defaultClickGuiThemePreferences.panelBackgroundColor,
+            modulePrimaryInteraction:
+                defaultClickGuiThemePreferences.modulePrimaryInteraction,
+            showModuleRowActions:
+                defaultClickGuiThemePreferences.showModuleRowActions,
+            moduleAccentMode: defaultClickGuiThemePreferences.moduleAccentMode,
+        });
+
+        return legacyPreferences;
+    }
+
+    if (storageKey === ANCIENT_CLICKGUI_THEME_STORAGE_KEY) {
+        if (!isPlainObject(parsedValue)) {
+            throw new Error(
+                `ClickGUI legacy theme preferences must be a plain object payload. Storage key: ${storageKey}.`,
+            );
+        }
+
+        const legacyPreferences = validateClickGuiThemePreferences({
+            ...parsedValue,
+            backgroundColor: defaultClickGuiThemePreferences.backgroundColor,
+            offButtonColor: defaultClickGuiThemePreferences.offButtonColor,
+            inputBackgroundColor:
+                defaultClickGuiThemePreferences.inputBackgroundColor,
+            panelBackgroundColor:
+                defaultClickGuiThemePreferences.panelBackgroundColor,
             modulePrimaryInteraction:
                 defaultClickGuiThemePreferences.modulePrimaryInteraction,
             showModuleRowActions:
@@ -405,10 +575,26 @@ export function readStoredClickGuiThemePreferences(): ClickGuiThemePreferences {
         return oldestPreferences;
     }
 
+    const ancientPreferences = tryParseStoredThemePreferences(
+        ANCIENT_CLICKGUI_THEME_STORAGE_KEY,
+    );
+    if (ancientPreferences !== null) {
+        return ancientPreferences;
+    }
+
     return {
         ...defaultClickGuiThemePreferences,
         backgroundColor: {
             ...defaultClickGuiThemePreferences.backgroundColor,
+        },
+        offButtonColor: {
+            ...defaultClickGuiThemePreferences.offButtonColor,
+        },
+        inputBackgroundColor: {
+            ...defaultClickGuiThemePreferences.inputBackgroundColor,
+        },
+        panelBackgroundColor: {
+            ...defaultClickGuiThemePreferences.panelBackgroundColor,
         },
     };
 }
@@ -443,6 +629,12 @@ export function buildClickGuiThemeInlineStyle(
         `--clickgui-base-rgb:${hexColorToRgbChannels(validatedPreferences.baseColor)}`,
         `--clickgui-backdrop-color:${rgbaColorToCssString(validatedPreferences.backgroundColor)}`,
         `--clickgui-backdrop-rgb:${rgbaColorToRgbChannels(validatedPreferences.backgroundColor)}`,
+        `--clickgui-control-off-color:${rgbaColorToCssString(validatedPreferences.offButtonColor)}`,
+        `--clickgui-control-off-rgb:${rgbaColorToRgbChannels(validatedPreferences.offButtonColor)}`,
+        `--clickgui-input-background-color:${rgbaColorToCssString(validatedPreferences.inputBackgroundColor)}`,
+        `--clickgui-input-background-rgb:${rgbaColorToRgbChannels(validatedPreferences.inputBackgroundColor)}`,
+        `--clickgui-panel-background-color:${rgbaColorToCssString(validatedPreferences.panelBackgroundColor)}`,
+        `--clickgui-panel-background-rgb:${rgbaColorToRgbChannels(validatedPreferences.panelBackgroundColor)}`,
         `--clickgui-text-color:${validatedPreferences.textColor}`,
         `--clickgui-text-rgb:${hexColorToRgbChannels(validatedPreferences.textColor)}`,
         `--clickgui-text-dimmed-color:${validatedPreferences.dimmedTextColor}`,
@@ -461,6 +653,18 @@ export function matchesClickGuiThemePreset(
         preferences.backgroundColor.green === preset.backgroundColor.green &&
         preferences.backgroundColor.blue === preset.backgroundColor.blue &&
         preferences.backgroundColor.alpha === preset.backgroundColor.alpha &&
+        preferences.offButtonColor.red === preset.offButtonColor.red &&
+        preferences.offButtonColor.green === preset.offButtonColor.green &&
+        preferences.offButtonColor.blue === preset.offButtonColor.blue &&
+        preferences.offButtonColor.alpha === preset.offButtonColor.alpha &&
+        preferences.inputBackgroundColor.red === preset.inputBackgroundColor.red &&
+        preferences.inputBackgroundColor.green === preset.inputBackgroundColor.green &&
+        preferences.inputBackgroundColor.blue === preset.inputBackgroundColor.blue &&
+        preferences.inputBackgroundColor.alpha === preset.inputBackgroundColor.alpha &&
+        preferences.panelBackgroundColor.red === preset.panelBackgroundColor.red &&
+        preferences.panelBackgroundColor.green === preset.panelBackgroundColor.green &&
+        preferences.panelBackgroundColor.blue === preset.panelBackgroundColor.blue &&
+        preferences.panelBackgroundColor.alpha === preset.panelBackgroundColor.alpha &&
         preferences.textColor === preset.textColor &&
         preferences.dimmedTextColor === preset.dimmedTextColor &&
         preferences.settingsSplitCount === preset.settingsSplitCount

@@ -42,6 +42,11 @@
 
         return "Only enabled toggle actions use accent fill.";
     }
+
+    function handleCloseDetailViewContextMenu(event: MouseEvent): void {
+        event.preventDefault();
+        onCloseDetailView();
+    }
 </script>
 
 <div class="category-page" use:revealContainer={subsectionRevealOptions}>
@@ -51,6 +56,7 @@
                 class="btn category-back-btn"
                 type="button"
                 onclick={onCloseDetailView}
+                oncontextmenu={handleCloseDetailViewContextMenu}
                 use:revealItem={moduleRevealItemOptions}
             >
                 <span class="reveal-press-content">
@@ -144,19 +150,12 @@
         z-index: 2;
         margin: 0 -10px 0;
         padding: 20px 10px 6px;
-        background:
-            linear-gradient(
-                180deg,
-                rgb(var(--clickgui-text-rgb, 255 255 255) / 0.12) 0%,
-                rgb(var(--clickgui-text-rgb, 255 255 255) / 0.05) 58%,
-                rgb(var(--clickgui-text-rgb, 255 255 255) / 0.02) 100%
-            ),
-            var(--clickgui-surface-strong-color);
+        background: var(--clickgui-surface-strong-color);
         border-bottom: 1px solid rgb(var(--clickgui-text-rgb, 255 255 255) / 0.24);
         backdrop-filter: blur(8px) saturate(125%);
         box-shadow: 0 10px 16px rgb(var(--clickgui-base-rgb, 0 0 0) / 0.32);
         transition:
-            background 140ms ease,
+            background-color 140ms ease,
             border-color 140ms ease,
             backdrop-filter 140ms ease,
             box-shadow 140ms ease;
@@ -194,7 +193,7 @@
                 rgb(var(--clickgui-text-rgb, 255 255 255) / 0.06) 0%,
                 rgb(var(--clickgui-text-rgb, 255 255 255) / 0.03) 100%
             ),
-            rgb(var(--clickgui-base-rgb, 0 0 0) / 0.38);
+            var(--clickgui-panel-background-color);
     }
 
     .theme-summary-section {

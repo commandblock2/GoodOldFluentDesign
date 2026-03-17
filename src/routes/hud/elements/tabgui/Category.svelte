@@ -31,33 +31,43 @@
 
     .name {
         font-weight: 500;
-        color: $tabgui-text-color;
+        color: rgba($tabgui-text-dimmed-color, 0.96);
         font-size: 14px;
         width: 100%;
         padding: 7px 12px 7px 12px;
-
-        background: linear-gradient(
-            to left,
-            rgba(0, 0, 0, 0.5) 50%,
-            $accent-color 50%
-        );
-        background-size: 200% 100%;
-        background-position: right bottom;
-        will-change: background-position;
-        transition: background-position 0.2s ease-out;
+        background: transparent;
+        transition:
+            color 140ms ease,
+            text-shadow 140ms ease;
         overflow: hidden;
     }
 
     .category {
         display: flex;
+        border: 1px solid rgba($tabgui-text-color, 0.16);
+        background-color: rgba($tabgui-base-color, 0.62);
+        transition:
+            border-color 140ms ease,
+            box-shadow 140ms ease,
+            background-color 140ms ease;
+
+        &.selected {
+            border-color: rgba($accent-color, 0.66);
+            background-color: rgba($tabgui-base-color, 0.76);
+            box-shadow:
+                inset 0 0 0 1px rgba($accent-color, 0.22),
+                0 0 10px rgba($accent-color, 0.3);
+        }
 
         &.selected .name {
-            background-position: left bottom;
+            color: $tabgui-text-color;
+            text-shadow: 0 0 8px rgba($accent-color, 0.34);
         }
     }
 
     .icon {
-        background-color: rgba($tabgui-base-color, 0.68);
+        background-color: rgba($tabgui-base-color, 0.72);
+        border-right: 1px solid rgba($tabgui-text-color, 0.14);
         width: 62px;
         position: relative;
 
@@ -69,5 +79,9 @@
             right: 0;
             margin: auto;
         }
+    }
+
+    .category.selected .icon {
+        border-right-color: rgba($accent-color, 0.38);
     }
 </style>

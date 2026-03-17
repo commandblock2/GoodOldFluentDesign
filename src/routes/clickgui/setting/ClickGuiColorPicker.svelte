@@ -1079,9 +1079,7 @@
         --setting-control-border-color: rgb(
             var(--clickgui-text-rgb, 255 255 255) / 0.36
         );
-        --setting-control-background-color: rgb(
-            var(--clickgui-text-rgb, 255 255 255) / 0.18
-        );
+        --setting-control-background-color: var(--clickgui-control-off-color);
     }
 
     .clickgui-color-picker-trigger > .reveal-press-content {
@@ -1301,9 +1299,7 @@
         --setting-control-border-color: rgb(
             var(--clickgui-text-rgb, 255 255 255) / 0.14
         );
-        --setting-control-background-color: rgb(
-            var(--clickgui-text-rgb, 255 255 255) / 0.08
-        );
+        --setting-control-background-color: var(--clickgui-input-background-color);
     }
 
     .clickgui-color-picker-value-shell:focus-within {
@@ -1345,9 +1341,7 @@
         --setting-control-border-color: rgb(
             var(--clickgui-text-rgb, 255 255 255) / 0.14
         );
-        --setting-control-background-color: rgb(
-            var(--clickgui-text-rgb, 255 255 255) / 0.05
-        );
+        --setting-control-background-color: var(--clickgui-control-off-color);
     }
 
     .clickgui-color-picker-mode-button.clickgui-color-picker-mode-button--active {
