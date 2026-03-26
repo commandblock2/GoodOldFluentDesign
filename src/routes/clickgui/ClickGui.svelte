@@ -174,7 +174,7 @@
     );
     const activeConfigDescription = $derived(
         activeConfigPage.type === "theme-settings"
-            ? "Adjust Click GUI accent, contrast, module settings layout, and module row behavior."
+            ? "Adjust Click GUI accent, contrast, sticky surface intensity, module settings layout, and module row behavior."
             : activeConfigPage.type === "quick-settings"
               ? "Quick settings are not wired yet."
               : activeConfigPage.type !== "module" ||
@@ -416,6 +416,8 @@
             showModuleRowActions:
                 clickGuiThemePreferences.showModuleRowActions,
             moduleAccentMode: clickGuiThemePreferences.moduleAccentMode,
+            stickySurfaceIntensity:
+                clickGuiThemePreferences.stickySurfaceIntensity,
         });
     }
 
@@ -746,6 +748,9 @@
         themeTextColor={clickGuiThemePreferences.textColor}
         themeDimmedTextColor={clickGuiThemePreferences.dimmedTextColor}
         themeSettingsColumnCount={settingsColumnCount}
+        themeStickySurfaceIntensity={
+            clickGuiThemePreferences.stickySurfaceIntensity
+        }
         modulePrimaryInteraction={clickGuiThemePreferences.modulePrimaryInteraction}
         showModuleRowActions={clickGuiThemePreferences.showModuleRowActions}
         moduleAccentMode={clickGuiThemePreferences.moduleAccentMode}
@@ -809,6 +814,10 @@
             updateClickGuiThemePreference({
                 moduleAccentMode,
             })}
+        onStickySurfaceIntensityChange={(stickySurfaceIntensity) =>
+            updateClickGuiThemePreference({
+                stickySurfaceIntensity,
+            })}
         onApplyThemePreset={applyClickGuiThemePreset}
         onResetThemeDefaults={resetClickGuiThemePreferences}
     />
@@ -828,9 +837,14 @@
         --clickgui-control-off-color: rgb(var(--clickgui-text-rgb, 255 255 255) / 0.14);
         --clickgui-input-background-color: rgb(var(--clickgui-text-rgb, 255 255 255) / 0.14);
         --clickgui-panel-background-color: rgb(var(--clickgui-base-rgb, 0 0 0) / 0.7);
-        --clickgui-surface-color: rgb(var(--clickgui-base-rgb, 0 0 0) / 0.7);
+        --clickgui-sticky-intensity: 0.5;
+        --clickgui-surface-color: rgb(
+            var(--clickgui-base-rgb, 0 0 0) /
+                calc(0.62 + (var(--clickgui-sticky-intensity, 0.5) * 0.16))
+        );
         --clickgui-surface-strong-color: rgb(
-            var(--clickgui-base-rgb, 0 0 0) / 0.85
+            var(--clickgui-base-rgb, 0 0 0) /
+                calc(0.74 + (var(--clickgui-sticky-intensity, 0.5) * 0.22))
         );
         --clickgui-shadow-color: rgb(var(--clickgui-base-rgb, 0 0 0) / 0.5);
 

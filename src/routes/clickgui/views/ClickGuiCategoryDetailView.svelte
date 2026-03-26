@@ -193,9 +193,22 @@
         margin: 0 -10px 0;
         padding: 20px 10px 6px;
         background: var(--clickgui-surface-strong-color);
-        border-bottom: 1px solid rgb(var(--clickgui-text-rgb, 255 255 255) / 0.24);
-        backdrop-filter: blur(8px) saturate(125%);
-        box-shadow: 0 10px 16px rgb(var(--clickgui-base-rgb, 0 0 0) / 0.32);
+        border-bottom: 1px solid
+            rgb(
+                var(--clickgui-text-rgb, 255 255 255) /
+                    calc(0.18 + (var(--clickgui-sticky-intensity, 0.5) * 0.12))
+            );
+        backdrop-filter: blur(
+                calc(6px + (var(--clickgui-sticky-intensity, 0.5) * 4px))
+            )
+            saturate(
+                calc(112% + (var(--clickgui-sticky-intensity, 0.5) * 26%))
+            );
+        box-shadow: 0 10px 16px
+            rgb(
+                var(--clickgui-base-rgb, 0 0 0) /
+                    calc(0.2 + (var(--clickgui-sticky-intensity, 0.5) * 0.24))
+            );
         transition:
             background-color 140ms ease,
             border-color 140ms ease,

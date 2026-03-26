@@ -84,6 +84,7 @@ For repeated on/off behavior, promote keybind assignment as the intended path.
    - Inline action buttons can be shown or hidden.
    - Enabled-row accent can target the whole row, only the toggle action, or accent-colored text.
 9. Settings search filters visible top-level module setting sections and switches `CHOICE` tabs to the first matching tab when needed.
+10. Sticky surface intensity is now theme-configurable (`Soft`, `Balanced`, `Strong`) and applies to sticky search/back regions.
 
 ### Visual system currently applied
 
@@ -100,6 +101,8 @@ For repeated on/off behavior, promote keybind assignment as the intended path.
 4. Settings input controls:
    - Shared rectangular control language.
    - Accent focus ring for keyboard/mouse focus.
+5. Sticky intensity profiles:
+   - `Soft`, `Balanced`, and `Strong` tune sticky tint, blur, and shadow emphasis.
 
 ### Interaction details
 
@@ -137,8 +140,7 @@ For repeated on/off behavior, promote keybind assignment as the intended path.
 ## Open UX Follow-Ups
 
 1. Add explicit loading/empty/error states in main content panel for non-module pages.
-2. Decide whether sticky surface intensity should be user-theme-configurable.
-3. Show short explanation/description snippets for separate modules in sidebar module lists (deferred, not part of this implementation pass).
+2. Show short explanation/description snippets for separate modules in sidebar module lists (deferred, not part of this implementation pass).
 
 ## New Feature Note
 

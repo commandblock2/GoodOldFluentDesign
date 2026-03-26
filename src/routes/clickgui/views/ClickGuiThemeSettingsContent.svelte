@@ -14,6 +14,7 @@
         matchesClickGuiThemePreset,
         type ClickGuiModuleAccentMode,
         type ClickGuiModulePrimaryInteraction,
+        type ClickGuiStickySurfaceIntensity,
         type ClickGuiThemePreferences,
         type ClickGuiThemePreset,
     } from "../clickGuiThemePreferences";
@@ -44,6 +45,9 @@
         onModuleAccentModeChange?: (
             accentMode: ClickGuiModuleAccentMode,
         ) => void;
+        onStickySurfaceIntensityChange?: (
+            stickySurfaceIntensity: ClickGuiStickySurfaceIntensity,
+        ) => void;
         onApplyPreset?: (preset: ClickGuiThemePreset) => void;
         onResetToDefaults?: () => void;
     }
@@ -58,6 +62,9 @@
     const defaultModuleRowActionsHandler = (_showModuleRowActions: boolean) => {};
     const defaultModuleAccentModeHandler = (
         _accentMode: ClickGuiModuleAccentMode,
+    ) => {};
+    const defaultStickySurfaceIntensityHandler = (
+        _stickySurfaceIntensity: ClickGuiStickySurfaceIntensity,
     ) => {};
     const defaultPresetHandler = (_preset: ClickGuiThemePreset) => {};
     const defaultResetHandler = () => {};
@@ -122,6 +129,30 @@
         title: string;
         description: string;
     }[];
+    const stickySurfaceIntensityOptions = [
+        {
+            value: "soft",
+            title: "Soft",
+            description:
+                "Reduce sticky backdrop tint, blur, and shadow depth for a lighter feel.",
+        },
+        {
+            value: "balanced",
+            title: "Balanced",
+            description:
+                "Keep the current sticky surface emphasis used by default.",
+        },
+        {
+            value: "strong",
+            title: "Strong",
+            description:
+                "Increase sticky tint, blur, and shadow for stronger section separation.",
+        },
+    ] as const satisfies readonly {
+        value: ClickGuiStickySurfaceIntensity;
+        title: string;
+        description: string;
+    }[];
 
     let {
         themePreferences,
@@ -140,6 +171,7 @@
         onModulePrimaryInteractionChange = defaultModulePrimaryInteractionHandler,
         onShowModuleRowActionsChange = defaultModuleRowActionsHandler,
         onModuleAccentModeChange = defaultModuleAccentModeHandler,
+        onStickySurfaceIntensityChange = defaultStickySurfaceIntensityHandler,
         onApplyPreset = defaultPresetHandler,
         onResetToDefaults = defaultResetHandler,
     }: Props = $props();
@@ -676,6 +708,47 @@
                     {/each}
                 </div>
             </div>
+        </div>
+    </section>
+
+    <section class="theme-section">
+        <div class="theme-section-header">
+            <div>
+                <h3 class="theme-section-title">Sticky Surfaces</h3>
+                <p class="theme-section-description">
+                    Controls sticky search/backdrop intensity for pinned regions
+                    like sidebar search, module settings search, and detail-view
+                    back bands.
+                </p>
+            </div>
+        </div>
+
+        <div class="theme-layout-grid">
+            {#each stickySurfaceIntensityOptions as option (option.value)}
+                {@const isActive =
+                    themePreferences.stickySurfaceIntensity === option.value}
+
+                <div class="theme-layout-shell" use:revealBorder>
+                    <button
+                        class="setting-input-control theme-layout-btn"
+                        class:theme-layout-btn--active={isActive}
+                        type="button"
+                        onclick={() => onStickySurfaceIntensityChange(option.value)}
+                        use:revealItem={revealItemOptions}
+                    >
+                        <span class="reveal-press-content">
+                            <span class="theme-layout-copy">
+                                <span class="theme-layout-title">
+                                    {option.title}
+                                </span>
+                                <span class="theme-layout-description">
+                                    {option.description}
+                                </span>
+                            </span>
+                        </span>
+                    </button>
+                </div>
+            {/each}
         </div>
     </section>
 

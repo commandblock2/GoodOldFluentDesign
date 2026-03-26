@@ -11,6 +11,7 @@
     import type {
         ClickGuiModuleAccentMode,
         ClickGuiModulePrimaryInteraction,
+        ClickGuiStickySurfaceIntensity,
     } from "./clickGuiThemePreferences";
     import { scrollbarHoverSurface } from "./clickGuiActions";
     import ClickGuiCategoryDetailView from "./views/ClickGuiCategoryDetailView.svelte";
@@ -34,6 +35,7 @@
         themeTextColor: string;
         themeDimmedTextColor: string;
         themeSettingsColumnCount: number;
+        themeStickySurfaceIntensity: ClickGuiStickySurfaceIntensity;
         modulePrimaryInteraction: ClickGuiModulePrimaryInteraction;
         showModuleRowActions: boolean;
         moduleAccentMode: ClickGuiModuleAccentMode;
@@ -70,6 +72,7 @@
         themeTextColor,
         themeDimmedTextColor,
         themeSettingsColumnCount,
+        themeStickySurfaceIntensity,
         modulePrimaryInteraction,
         showModuleRowActions,
         moduleAccentMode,
@@ -133,6 +136,7 @@
             textColor={themeTextColor}
             dimmedTextColor={themeDimmedTextColor}
             settingsColumnCount={themeSettingsColumnCount}
+            stickySurfaceIntensity={themeStickySurfaceIntensity}
             {modulePrimaryInteraction}
             {showModuleRowActions}
             {moduleAccentMode}
@@ -216,15 +220,42 @@
     }
 
     .sidebar.sidebar-scrolled > .search {
-        background-color: rgb(var(--clickgui-base-rgb, 0 0 0) / 0.72);
-        backdrop-filter: blur(12px) saturate(130%);
-        box-shadow: 0 8px 14px rgb(var(--clickgui-base-rgb, 0 0 0) / 0.35);
+        background-color: rgb(
+            var(--clickgui-base-rgb, 0 0 0) /
+                calc(0.6 + (var(--clickgui-sticky-intensity, 0.5) * 0.24))
+        );
+        backdrop-filter: blur(
+                calc(8px + (var(--clickgui-sticky-intensity, 0.5) * 8px))
+            )
+            saturate(
+                calc(110% + (var(--clickgui-sticky-intensity, 0.5) * 40%))
+            );
+        box-shadow: 0 8px 14px
+            rgb(
+                var(--clickgui-base-rgb, 0 0 0) /
+                    calc(0.22 + (var(--clickgui-sticky-intensity, 0.5) * 0.26))
+            );
     }
 
     .sidebar.sidebar-scrolled :global(.category-back-shell) {
-        background: rgb(var(--clickgui-base-rgb, 0 0 0) / 0.94);
-        border-bottom-color: rgb(var(--clickgui-text-rgb, 255 255 255) / 0.34);
-        backdrop-filter: blur(14px) saturate(135%);
-        box-shadow: 0 12px 18px rgb(var(--clickgui-base-rgb, 0 0 0) / 0.52);
+        background: rgb(
+            var(--clickgui-base-rgb, 0 0 0) /
+                calc(0.88 + (var(--clickgui-sticky-intensity, 0.5) * 0.12))
+        );
+        border-bottom-color: rgb(
+            var(--clickgui-text-rgb, 255 255 255) /
+                calc(0.24 + (var(--clickgui-sticky-intensity, 0.5) * 0.2))
+        );
+        backdrop-filter: blur(
+                calc(10px + (var(--clickgui-sticky-intensity, 0.5) * 8px))
+            )
+            saturate(
+                calc(120% + (var(--clickgui-sticky-intensity, 0.5) * 30%))
+            );
+        box-shadow: 0 12px 18px
+            rgb(
+                var(--clickgui-base-rgb, 0 0 0) /
+                    calc(0.34 + (var(--clickgui-sticky-intensity, 0.5) * 0.36))
+            );
     }
 </style>

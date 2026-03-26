@@ -11,6 +11,7 @@
     } from "../../integration/types";
     import {
         defaultClickGuiThemePreferences,
+        type ClickGuiStickySurfaceIntensity,
         type ClickGuiThemePreferences,
         type ClickGuiThemePreset,
     } from "./clickGuiThemePreferences";
@@ -68,6 +69,9 @@
         onModuleAccentModeChange?: (
             accentMode: ClickGuiThemePreferences["moduleAccentMode"],
         ) => void | Promise<void>;
+        onStickySurfaceIntensityChange?: (
+            stickySurfaceIntensity: ClickGuiStickySurfaceIntensity,
+        ) => void | Promise<void>;
         onApplyThemePreset?: (
             preset: ClickGuiThemePreset,
         ) => void | Promise<void>;
@@ -97,6 +101,9 @@
     ) => {};
     const noopModuleAccentModeChange = (
         _accentMode: ClickGuiThemePreferences["moduleAccentMode"],
+    ) => {};
+    const noopStickySurfaceIntensityChange = (
+        _stickySurfaceIntensity: ClickGuiStickySurfaceIntensity,
     ) => {};
     const noopPresetChange = (_preset: ClickGuiThemePreset) => {};
     let mainContentScrolled = $state(false);
@@ -130,6 +137,7 @@
         onModulePrimaryInteractionChange = noopModulePrimaryInteractionChange,
         onShowModuleRowActionsChange = noopModuleRowActionsChange,
         onModuleAccentModeChange = noopModuleAccentModeChange,
+        onStickySurfaceIntensityChange = noopStickySurfaceIntensityChange,
         onApplyThemePreset = noopPresetChange,
         onResetThemeDefaults = noop,
     }: Props = $props();
@@ -251,6 +259,7 @@
             onModulePrimaryInteractionChange={onModulePrimaryInteractionChange}
             onShowModuleRowActionsChange={onShowModuleRowActionsChange}
             onModuleAccentModeChange={onModuleAccentModeChange}
+            onStickySurfaceIntensityChange={onStickySurfaceIntensityChange}
             onApplyPreset={onApplyThemePreset}
             onResetToDefaults={onResetThemeDefaults}
         />
@@ -365,9 +374,21 @@
     }
 
     .main-content.main-content-scrolled .main-content-search {
-        background-color: rgb(var(--clickgui-base-rgb, 0 0 0) / 0.72);
-        backdrop-filter: blur(12px) saturate(130%);
-        box-shadow: 0 8px 14px rgb(var(--clickgui-base-rgb, 0 0 0) / 0.35);
+        background-color: rgb(
+            var(--clickgui-base-rgb, 0 0 0) /
+                calc(0.6 + (var(--clickgui-sticky-intensity, 0.5) * 0.24))
+        );
+        backdrop-filter: blur(
+                calc(8px + (var(--clickgui-sticky-intensity, 0.5) * 8px))
+            )
+            saturate(
+                calc(110% + (var(--clickgui-sticky-intensity, 0.5) * 40%))
+            );
+        box-shadow: 0 8px 14px
+            rgb(
+                var(--clickgui-base-rgb, 0 0 0) /
+                    calc(0.22 + (var(--clickgui-sticky-intensity, 0.5) * 0.26))
+            );
     }
 
     .settings-split-layout {

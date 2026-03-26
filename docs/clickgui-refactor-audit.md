@@ -202,6 +202,17 @@
    - show/hide inline action buttons
    - enabled-row accent mode (`All Tiles`, `Action Toggle`, `Accent Text`)
 
+## Recent Progress Update (2026-03-20)
+
+1. Added sticky surface intensity as a persisted ClickGUI theme preference:
+   - modes: `Soft`, `Balanced`, `Strong`
+   - storage version bump and legacy migration path to include the new field
+2. Wired sticky intensity into the documented sticky regions:
+   - sidebar search sticky treatment
+   - main-content settings-search sticky treatment
+   - category/theme detail sticky back-band treatment
+3. Added sticky-surface controls to `Theme Settings` and reflected the active mode in `Theme Detail` summary copy.
+
 ## Confirmed Doc/Code Mismatches (2026-03-08)
 
 1. No confirmed doc/code mismatches remain in the implemented ClickGUI scope after this pass.
